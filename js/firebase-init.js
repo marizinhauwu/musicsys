@@ -1122,60 +1122,39 @@ let _unsubComments = null;
 let _projectFiles = [];
 let _uploadingFiles = new Map();
 
-// ─── MIGRAÇÃO: backfill memberUids em equipes antigas ─────────────────────────
-// Equipes criadas antes de v5.20.1 possuem apenas o campo `members` (array de
-// objetos) mas NÃO possuem `memberUids` (array plano de UIDs). Esta função
-// corrige isso automaticamente, sem alterar nenhum dado existente.
-async function migrateTeamsMemberUids() {
-  const uid = currentUser?.uid; if (!uid) return;
-  try {
-    // Busca TODAS as equipes visíveis (rules permitem list para autenticados)
-    const allSnap = await getDocs(collection(db, 'teams'));
-    for (const d of allSnap.docs) {
-      const data = d.data();
-      // Verifica se o usuário está no array members (objetos com uid)
-      const isMember = data.members && Array.isArray(data.members) &&
-        data.members.some(m => m.uid === uid);
-      if (!isMember) continue;
-      // Se já tem memberUids correto (inclui o uid), pula
-      if (data.memberUids && Array.isArray(data.memberUids) && data.memberUids.includes(uid)) continue;
-      // Constrói memberUids a partir de members
-      const uids = data.members.map(m => m.uid).filter(Boolean);
-      if (uids.length > 0) {
-        await updateDoc(doc(db, 'teams', d.id), { memberUids: uids });
-        console.info('[Migration] memberUids backfilled for team:', d.id);
-      }
-    }
-  } catch (e) {
-    console.warn('[Migration] Erro ao migrar memberUids:', e.message);
-  }
-}
-
+// ─── LOAD MY TEAMS ────────────────────────────────────────────────────────────
+// Estratégia robusta em 2 fases:
+// 1. Tenta query rápida por memberUids (funciona para equipes novas v5.20.1+)
+// 2. SEMPRE faz fallback: busca todas as equipes e verifica client-side se
+//    o UID do usuário está no array members (objetos). Isso garante que equipes
+//    antigas (sem memberUids) também apareçam.
 async function loadMyTeams() {
   const uid = currentUser?.uid; if (!uid) return;
-
-  // Fase 0: migrar equipes antigas que não possuem memberUids
-  await migrateTeamsMemberUids();
-
-  // Fase 1: query principal por memberUids (rápida, usa índice)
-  const snap = await getDocs(query(collection(db, 'teams'), where('memberUids', 'array-contains', uid)));
   const teamsById = {};
-  snap.docs.forEach(d => { teamsById[d.id] = { id: d.id, ...d.data() }; });
 
-  // Fase 2: fallback — se a query principal não encontrou nada,
-  // busca todas as equipes e filtra client-side pelo array members
-  if (Object.keys(teamsById).length === 0) {
-    try {
-      const allSnap = await getDocs(collection(db, 'teams'));
-      allSnap.docs.forEach(d => {
-        const data = d.data();
-        const isMember = data.members && Array.isArray(data.members) &&
-          data.members.some(m => m.uid === uid);
-        if (isMember && !teamsById[d.id]) {
-          teamsById[d.id] = { id: d.id, ...data };
-        }
-      });
-    } catch (e) { console.warn('[loadMyTeams] Fallback error:', e.message); }
+  // Fase 1: query rápida por memberUids (pode falhar para equipes antigas)
+  try {
+    const snap = await getDocs(query(collection(db, 'teams'), where('memberUids', 'array-contains', uid)));
+    snap.docs.forEach(d => { teamsById[d.id] = { id: d.id, ...d.data() }; });
+  } catch (e) {
+    console.warn('[loadMyTeams] memberUids query failed (esperado se não há equipes novas):', e.message);
+  }
+
+  // Fase 2: SEMPRE busca todas as equipes e filtra client-side pelo array members
+  // Isso garante que equipes antigas (sem campo memberUids) apareçam
+  try {
+    const allSnap = await getDocs(collection(db, 'teams'));
+    allSnap.docs.forEach(d => {
+      if (teamsById[d.id]) return; // já encontrada na Fase 1
+      const data = d.data();
+      const isMember = data.members && Array.isArray(data.members) &&
+        data.members.some(m => m.uid === uid);
+      if (isMember) {
+        teamsById[d.id] = { id: d.id, ...data };
+      }
+    });
+  } catch (e) {
+    console.warn('[loadMyTeams] Full scan error:', e.message);
   }
 
   _myTeams = Object.values(teamsById);
