@@ -1,3 +1,10 @@
 .gemini/
 *.ps1
 # Se houver outros arquivos que você não queira no GitHub, adicione aqui.
+
+# Dependências
+node_modules/
+
+# Ambiente e Logs
+.env
+*.log

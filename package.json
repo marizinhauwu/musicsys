@@ -1,0 +1,13 @@
+{
+  "name": "freqsys",
+  "version": "5.20.5",
+  "description": "Sistema de gestão e automação para processos técnicos e operacionais.",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "npx serve .",
+    "verify": "powershell -File verify.ps1"
+  },
+  "author": "Mariana",
+  "license": "ISC"
+}

@@ -1124,8 +1124,9 @@ let _uploadingFiles = new Map();
 
 async function loadMyTeams() {
   const uid = currentUser?.uid; if (!uid) return;
-  const snap = await getDocs(query(collection(db, 'teams'), where('memberUids', 'array-contains', uid)));
-  _myTeams = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const snap = await getDocs(collection(db, 'teams'));
+  _myTeams = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+    .filter(t => t.members && t.members.some(m => m.uid === uid));
   window._myTeams = _myTeams;
   renderTeamsList();
   // Always refresh profile extras whenever teams reload
@@ -1242,9 +1243,8 @@ window.createTeam = async function () {
 window.joinTeamByCode = async function () {
   const code = document.getElementById('join-team-code').value.trim().toUpperCase();
   if (!code) { toast('Insira um código', 'error'); return; }
-  // Query filtrada por inviteCode — respeita security rules
-  const snap = await getDocs(query(collection(db, 'teams'), where('inviteCode', '==', code)));
-  const team = snap.docs.map(d => ({ id: d.id, ...d.data() }))[0];
+  const snap = await getDocs(collection(db, 'teams'));
+  const team = snap.docs.map(d => ({ id: d.id, ...d.data() })).find(t => t.inviteCode === code);
   if (!team) { toast('Código inválido', 'error'); return; }
   await joinTeam(team);
 };
@@ -1318,29 +1318,17 @@ function showMainApp() {
 
   // P2-A: initNotifications é global — sem dependência de _currentTeamId
   if (currentUser) initNotifications();
-
-  // Revela/esconde botões baseado no papel do usuário na equipe
-  refreshVisibility();
-
-  // Popula modal de convite com o código da equipe ativa
-  const _activeTeam = _myTeams.find(t => t.id === _currentTeamId);
-  const _invCodeEl = document.getElementById('modal-invite-code');
-  if (_invCodeEl && _activeTeam) _invCodeEl.textContent = _activeTeam.inviteCode || '——';
 }
 
 window.acceptTeamInvite = async function () {
   if (!_pendingInviteTeamId) return;
-  try {
-    const teamSnap = await getDoc(doc(db, 'teams', _pendingInviteTeamId));
-    if (!teamSnap.exists()) { toast('Equipe não encontrada', 'error'); return; }
-    const team = { id: teamSnap.id, ...teamSnap.data() };
-    _myTeams = [..._myTeams.filter(t => t.id !== team.id), team];
-    window._myTeams = _myTeams;
-    await joinTeam(team);
-    document.getElementById('teams-invite-banner').style.display = 'none';
-  } catch (e) {
-    toast('Erro ao aceitar convite. Tente entrar com o código.', 'error');
-  }
+  const snap = await getDocs(collection(db, 'teams'));
+  const team = snap.docs.map(d => ({ id: d.id, ...d.data() })).find(t => t.id === _pendingInviteTeamId);
+  if (!team) { toast('Equipe não encontrada', 'error'); return; }
+  _myTeams = [..._myTeams.filter(t => t.id !== team.id), team];
+  window._myTeams = _myTeams;
+  await joinTeam(team);
+  document.getElementById('teams-invite-banner').style.display = 'none';
 };
 
 window.dismissTeamInvite = function () {
@@ -1412,9 +1400,10 @@ onAuthStateChanged(auth, async user => {
   const urlParams = new URLSearchParams(window.location.search);
   const urlInviteCode = urlParams.get('code'); // novo parâmetro seguro
 
-  // Load teams — usa query filtrada para respeitar security rules (P1-B)
-  const teamsSnap = await getDocs(query(collection(db, 'teams'), where('memberUids', 'array-contains', user.uid)));
-  _myTeams = teamsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  // Load teams — retorna apenas equipes das quais o usuário já é membro (rule P1-B)
+  const teamsSnap = await getDocs(collection(db, 'teams'));
+  _myTeams = teamsSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+    .filter(t => t.members && t.members.some(m => m.uid === user.uid));
   window._myTeams = _myTeams;
 
   hideLoading();
@@ -1438,13 +1427,19 @@ onAuthStateChanged(auth, async user => {
     const codeInput = document.getElementById('join-team-code');
     if (codeInput) codeInput.value = urlInviteCode;
 
-    // Busca equipe pelo código: usa query filtrada (security rules bloqueiam list sem filtro).
-    // Como não somos membros ainda, tentamos buscar pelo inviteCode diretamente.
-    // Se não conseguir, joinTeamByCode() faz o fallback.
+    // Busca equipe pelo código via getDocs (auth ok; a rule P1-B bloqueia docs de não-membros,
+    // mas o Firestore retorna lista vazia — não error — em collection query).
+    // joinTeamByCode usa o mesmo getDocs e encontra a equipe pelo inviteCode.
     try {
-      // Tenta via getDocs com filtro — retornará vazio se não for membro,
-      // mas joinTeamByCode(urlInviteCode) resolve pelo servidor.
-      toast('Digite o código acima e clique em Entrar para ingressar na equipe.');
+      const allSnap = await getDocs(collection(db, 'teams'));
+      const inviteTeam = allSnap.docs.map(d => ({ id: d.id, ...d.data() })).find(t => t.inviteCode === urlInviteCode);
+      if (inviteTeam) {
+        _pendingInviteTeamId = inviteTeam.id;
+        document.getElementById('teams-invite-banner').style.display = 'block';
+        document.getElementById('teams-invite-desc').textContent = `Equipe: ${inviteTeam.name} · ${inviteTeam.members?.length || 0} membros`;
+      } else {
+        toast('Código de convite inválido ou expirado.', 'error');
+      }
     } catch (e) {
       toast('Cole o código acima e clique em Entrar para ingressar na equipe.');
     }
@@ -1790,8 +1785,8 @@ function _mdrLoadDashboard() {
   getDocs(collection(db, 'users'))
     .then(s => set('mdr-stat-users', s.size))
     .catch(e => { console.warn('[MDR/users]', e.code); set('mdr-stat-users', 'ERR'); });
-  getCountFromServer(collection(db, 'teams'))
-    .then(s => set('mdr-stat-teams', s.data().count))
+  getDocs(collection(db, 'teams'))
+    .then(s => set('mdr-stat-teams', s.size))
     .catch(e => { console.warn('[MDR/teams]', e.code); set('mdr-stat-teams', 'ERR'); });
   getDocs(query(collection(db, 'tickets'), where('status', '==', 'open')))
     .then(s => set('mdr-stat-tickets', s.size))
@@ -2053,34 +2048,6 @@ function showPage(name) {
   if (name === 'team-settings') loadTeamSettingsPage();
   // Close mobile sidebar
   document.getElementById('sidebar')?.classList.remove('open');
-
-  // Re-aplica visibilidade dos botões baseada em permissões
-  refreshVisibility();
-}
-
-/**
- * Atualiza a visibilidade de todos os elementos protegidos (admin-only, etc)
- * com base nas permissões atuais do usuário na equipe ativa.
- */
-function refreshVisibility() {
-  const _admin = canAdmin();
-  const _create = hasPerm('perm_create_project');
-
-  // 1. Botão "Novo Projeto" (pode ser admin ou editor)
-  const btnNew = document.getElementById('btn-new-project');
-  if (btnNew) btnNew.style.display = _create ? '' : 'none';
-
-  // 2. Todos os outros elementos 'admin-only' genéricos
-  document.querySelectorAll('.admin-only').forEach(el => {
-    // Se for o botão de novo projeto que já tratamos por ID, pula
-    if (el.id === 'btn-new-project') return;
-
-    // Outros botões específicos podem ser adicionados aqui
-    const isInviteBtn = el.textContent?.includes('Convidar');
-    el.style.display = (isInviteBtn ? _admin : _admin) ? '' : 'none';
-  });
-
-  console.info('[Visibility] role:', currentUserData?.role, 'admin:', _admin, 'create:', _create);
 }
 
 function showPageChecked(name, requiredPlan) {
@@ -2311,7 +2278,7 @@ function renderDashboardCharts(ps) {
     },
   };
 
-  // Chart: Progress per project (disponível para todos os planos)
+  // Chart: Progress per project
   const progressData = ps.map(p => p.progress || 0);
   const progressColors = progressData.map(v => v >= 100 ? 'rgba(57,255,143,0.7)' : v >= 50 ? 'rgba(255,107,61,0.7)' : 'rgba(255,60,180,0.7)');
   ['dash-chart-progress', 'dash-chart-days', 'dash-chart-status', 'dash-chart-stages'].forEach(id => {
@@ -2325,58 +2292,6 @@ function renderDashboardCharts(ps) {
       ...chartBase, plugins: { ...chartBase.plugins, tooltip: { callbacks: { label: ctx => `${ctx.raw}% concluído` } } },
       scales: { ...chartBase.scales, y: { ...chartBase.scales.y, min: 0, max: 100 } }
     }
-  });
-
-  // ── PLAN GATE: Charts avançados requerem hasFullDashboard + hasAdvancedCharts ──
-  const _canFullDash = hasFeature(currentUserData, 'hasFullDashboard');
-  const _canAdvCharts = hasFeature(currentUserData, 'hasAdvancedCharts');
-
-  // Elementos dos charts avançados
-  const advancedChartIds = ['dash-chart-days', 'dash-chart-status', 'dash-chart-stages'];
-  const advChartsParent = document.getElementById('dashboard-insights');
-
-  // Remove banner anterior, se existir
-  advChartsParent?.querySelector('.plan-upgrade-insight-banner')?.remove();
-
-  if (!_canFullDash || !_canAdvCharts) {
-    // Esconde canvas dos charts avançados
-    advancedChartIds.forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.closest('.card, [style]')?.style && (el.style.display = 'none');
-    });
-    // Mostra banner de upgrade elegante
-    if (advChartsParent) {
-      const banner = document.createElement('div');
-      banner.className = 'plan-upgrade-insight-banner';
-      banner.innerHTML = `
-        <div style="background:linear-gradient(135deg,rgba(124,58,237,0.12),rgba(61,139,255,0.08));
-                    border:1px solid rgba(139,92,246,0.3);border-radius:14px;padding:24px 20px;margin-top:16px;
-                    text-align:center;cursor:pointer;transition:border-color 0.2s"
-             onclick="openPlansModal()"
-             onmouseover="this.style.borderColor='rgba(139,92,246,0.6)'"
-             onmouseout="this.style.borderColor='rgba(139,92,246,0.3)'">
-          <div style="font-size:22px;margin-bottom:8px">📊</div>
-          <div style="font-family:var(--font-body);font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px">
-            Dashboard Completo · Gráficos Avançados
-          </div>
-          <div style="font-family:var(--font-mono);font-size:10px;color:var(--text2);line-height:1.6;margin-bottom:12px">
-            Dias em produção · Status por projeto · Etapas concluídas<br>
-            Disponível nos planos <strong style="color:var(--a2)">PRO</strong> e <strong style="color:var(--a3)">ADVANCED</strong>
-          </div>
-          <span style="font-family:var(--font-mono);font-size:10px;letter-spacing:1px;padding:6px 16px;
-                       border-radius:8px;background:linear-gradient(135deg,var(--a1),var(--a2));color:white">
-            💎 VER PLANOS
-          </span>
-        </div>`;
-      advChartsParent.appendChild(banner);
-    }
-    return; // Não renderiza charts avançados
-  }
-
-  // ── Charts avançados (PRO+ / ADVANCED) ──────────────────────
-  advancedChartIds.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = '';
   });
 
   // Chart: Days in production
@@ -3311,15 +3226,11 @@ function saveProject() {
         actionLabel: 'reativar',
       })) return;
     }
-    updateProject(editId, data)
-      .then(() => { toast('Projeto atualizado!'); closeModal('modal-project'); renderDetail(editId); })
-      .catch(e => { console.error(e); toast('Erro ao atualizar: ' + e.message, 'error'); });
+    updateProject(editId, data).then(() => { toast('Projeto atualizado!'); closeModal('modal-project'); renderDetail(editId); });
   } else {
     // FASE 2A — Criação: check de limite antes de qualquer escrita no Firestore
     if (!_checkProjectLimit(currentUserData, { actionLabel: 'criar' })) return;
-    createProject(data)
-      .then(() => { toast('Projeto criado!'); closeModal('modal-project'); loadDashboard(); })
-      .catch(e => { console.error(e); toast('Erro ao criar: ' + e.message, 'error'); });
+    createProject(data).then(() => { toast('Projeto criado!'); closeModal('modal-project'); loadDashboard(); });
   }
 }
 
@@ -3782,7 +3693,7 @@ function hasPerm(permId) {
   const editorDefaults = ['perm_create_project', 'perm_edit_project', 'perm_manage_stages',
     'perm_view_team', 'perm_view_chat', 'perm_send_chat'];
   const viewerDefaults = ['perm_view_team', 'perm_view_chat'];
-  if (currentUserData.role === 'editor' || currentUserData.role === 'member') return editorDefaults.includes(permId);
+  if (currentUserData.role === 'editor') return editorDefaults.includes(permId);
   if (currentUserData.role === 'viewer') return viewerDefaults.includes(permId);
   // Fallback para roles desconhecidas: apenas view
   return viewerDefaults.includes(permId);
@@ -3790,7 +3701,7 @@ function hasPerm(permId) {
 
 // Override canAdmin/canEdit to also check granular perms where needed
 function canAdmin() { return currentUserData?.role === 'admin'; }
-function canEdit() { return currentUserData?.role === 'admin' || currentUserData?.role === 'editor' || currentUserData?.role === 'member' || (currentUserData?.role !== 'viewer' && hasPerm('perm_edit_project')); } // P2-B: viewer excluído
+function canEdit() { return currentUserData?.role === 'admin' || currentUserData?.role === 'editor' || (currentUserData?.role !== 'viewer' && hasPerm('perm_edit_project')); } // P2-B: viewer excluído
 function canView() { return !!currentUserData && currentUserData.status === 'approved'; }
 
 // P4-A: Staff check — verifica campo staffRole em users/{uid} + fallback email hardcoded
@@ -4738,7 +4649,7 @@ async function pmLoadRightPanel(uid, name, photo) {
     const [userSnap, tpSnap, allTeamsSnap] = await Promise.all([
       getDoc(doc(db, 'users', uid)).catch(() => null),
       getDoc(doc(db, 'talent_profiles', uid)).catch(() => null),
-      getDocs(query(collection(db, 'teams'), where('memberUids', 'array-contains', currentUser?.uid || '_'))).catch(() => ({ docs: [] })),
+      getDocs(collection(db, 'teams')).catch(() => ({ docs: [] })),
     ]);
     const userData = userSnap?.exists() ? userSnap.data() : {};
     const tpData = tpSnap?.exists() ? tpSnap.data() : {};
@@ -6284,10 +6195,10 @@ window.nsSaveAll = async function () {
       const _savedHandle = window._p3dHandle !== undefined ? window._p3dHandle : handle;
       await setDoc(doc(db, 'talent_profiles', uid), {
         name, bio, handle: _savedHandle, skills, social, availability: avail,
-        photo: photoURL || '', banner: bannerURL || '', uid,
+        photo: photoURL || '', uid,
         updatedAt: serverTimestamp(),
       }, { merge: true });
-      window._myTalentProfile = { ...(window._myTalentProfile || {}), name, bio, handle: _savedHandle, skills, social, availability: avail, banner: bannerURL || '' };
+      window._myTalentProfile = { ...(window._myTalentProfile || {}), name, bio, handle: _savedHandle, skills, social, availability: avail };
     } catch (e) { console.warn('talent_profiles save:', e); }
 
     currentUserData = { ...currentUserData, name, photoURL: photoURL || '', bio, bannerURL };
@@ -6985,8 +6896,6 @@ window.copyTeamInviteCode = function () {
     .then(() => toast('✅ Código copiado: ' + code))
     .catch(() => { toast(code); });
 };
-// Alias para o botão do modal de convite (index.html usa este nome)
-window.copyModalInviteCode = function () { copyTeamInviteCode(); };
 
 // Expose invite link button in teams page — also add it in the main app equipe page
 window.loadTeamInviteSection = function () {
