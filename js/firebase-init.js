@@ -1122,10 +1122,53 @@ let _unsubComments = null;
 let _projectFiles = [];
 let _uploadingFiles = new Map();
 
+// ─── MIGRAÇÃO: backfill memberUids em equipes antigas ─────────────────────────
+// Equipes criadas antes de v5.20.1 possuem apenas o campo `members` (array de
+// objetos) mas NÃO possuem `memberUids` (array plano de UIDs). Esta função
+// corrige isso automaticamente, sem alterar nenhum dado existente.
+async function migrateTeamsMemberUids() {
+  const uid = currentUser?.uid; if (!uid) return;
+  try {
+    // Busca equipes criadas por este usuário que podem estar sem memberUids
+    const createdSnap = await getDocs(query(collection(db, 'teams'), where('createdBy', '==', uid)));
+    for (const d of createdSnap.docs) {
+      const data = d.data();
+      // Se já tem memberUids preenchido, pula
+      if (data.memberUids && Array.isArray(data.memberUids) && data.memberUids.length > 0) continue;
+      // Constrói memberUids a partir de members
+      if (data.members && Array.isArray(data.members)) {
+        const uids = data.members.map(m => m.uid).filter(Boolean);
+        if (uids.length > 0) {
+          await updateDoc(doc(db, 'teams', d.id), { memberUids: uids });
+          console.info('[Migration] memberUids backfilled for team:', d.id);
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[Migration] Erro ao migrar memberUids:', e.message);
+  }
+}
+
 async function loadMyTeams() {
   const uid = currentUser?.uid; if (!uid) return;
+
+  // Fase 0: migrar equipes antigas que não possuem memberUids
+  await migrateTeamsMemberUids();
+
+  // Fase 1: query principal por memberUids
   const snap = await getDocs(query(collection(db, 'teams'), where('memberUids', 'array-contains', uid)));
-  _myTeams = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const teamsById = {};
+  snap.docs.forEach(d => { teamsById[d.id] = { id: d.id, ...d.data() }; });
+
+  // Fase 2: fallback — equipes criadas pelo usuário que podem não ter memberUids ainda
+  try {
+    const createdSnap = await getDocs(query(collection(db, 'teams'), where('createdBy', '==', uid)));
+    createdSnap.docs.forEach(d => {
+      if (!teamsById[d.id]) teamsById[d.id] = { id: d.id, ...d.data() };
+    });
+  } catch (e) { /* fallback silencioso */ }
+
+  _myTeams = Object.values(teamsById);
   window._myTeams = _myTeams;
   renderTeamsList();
   // Always refresh profile extras whenever teams reload
