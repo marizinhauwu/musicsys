@@ -1444,10 +1444,8 @@ onAuthStateChanged(auth, async user => {
   const urlParams = new URLSearchParams(window.location.search);
   const urlInviteCode = urlParams.get('code'); // novo parâmetro seguro
 
-  // Load teams — usa query filtrada para respeitar security rules (P1-B)
-  const teamsSnap = await getDocs(query(collection(db, 'teams'), where('memberUids', 'array-contains', user.uid)));
-  _myTeams = teamsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-  window._myTeams = _myTeams;
+  // Load teams — usa loadMyTeams() com fallback robusto para equipes antigas (sem memberUids)
+  await loadMyTeams();
 
   hideLoading();
 
