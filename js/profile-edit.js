@@ -435,7 +435,7 @@ window.upeGetProfileForDisplay = function (p) {
     }),
     activity: p.activity || [],
     badges: p.badges || { earned: [], locked: [] },
-    links: p.links || {},
+    links: p.links || p.social || {},
     languages: p.languages || [],
   };
 };

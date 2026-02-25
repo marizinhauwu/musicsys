@@ -1395,6 +1395,10 @@ onAuthStateChanged(auth, async user => {
     const sb = document.getElementById('sidebar'); if (sb) sb.style.display = 'none';
     const mc = document.querySelector('.main-content'); if (mc) mc.style.display = 'none';
     document.querySelector('.app').style.display = 'none';
+    // FIX: Reset profile caches on logout to prevent stale data on account switch
+    window._myTalentProfile = null;
+    window._adbCurrentProfile = null;
+    currentUserData = null;
     hideLoading();
     return;
   }
@@ -4118,38 +4122,41 @@ window.openSettingsModal = function (tabId) {
     }
   }
 
-  // Handle arroba (from talent profile if available)
-  if (typeof _myTalentProfile !== 'undefined' && _myTalentProfile) {
+  // FIX: Always fetch fresh talent profile from Firestore (never trust stale cache)
+  // This prevents showing handle from a previously logged-in account
+  const _nsPopulateTalentFields = (tp) => {
+    if (!tp) return;
     const handleEl = document.getElementById('ns-inp-handle');
-    if (handleEl && _myTalentProfile.handle) { handleEl.value = _myTalentProfile.handle; document.getElementById('ns-live-handle').textContent = _myTalentProfile.handle; }
-    const socialYt = document.getElementById('ns-social-yt'); if (socialYt && _myTalentProfile.social?.youtube) socialYt.value = _myTalentProfile.social.youtube;
-    const socialSp = document.getElementById('ns-social-spotify'); if (socialSp && _myTalentProfile.social?.spotify) socialSp.value = _myTalentProfile.social.spotify;
-    const socialIg = document.getElementById('ns-social-ig'); if (socialIg && _myTalentProfile.social?.instagram) socialIg.value = _myTalentProfile.social.instagram;
-    const socialTt = document.getElementById('ns-social-tt'); if (socialTt && _myTalentProfile.social?.tiktok) socialTt.value = _myTalentProfile.social.tiktok;
-    const socialDc = document.getElementById('ns-social-dc'); if (socialDc && _myTalentProfile.social?.discord) socialDc.value = _myTalentProfile.social.discord;
-    const socialWeb = document.getElementById('ns-social-web'); if (socialWeb && _myTalentProfile.social?.website) socialWeb.value = _myTalentProfile.social.website;
-    // Availability
-    const avail = _myTalentProfile.availability || 'open';
+    if (handleEl) {
+      handleEl.value = tp.handle || '';
+      // Store the original handle to detect changes later in nsSaveAll
+      handleEl.dataset.originalHandle = tp.handle || '';
+      const liveHandle = document.getElementById('ns-live-handle');
+      if (liveHandle) liveHandle.textContent = tp.handle || '@';
+    }
+    const socialMap = { youtube: 'ns-social-yt', spotify: 'ns-social-spotify', instagram: 'ns-social-ig', tiktok: 'ns-social-tt', discord: 'ns-social-dc', website: 'ns-social-web' };
+    Object.entries(socialMap).forEach(([key, elId]) => {
+      const el = document.getElementById(elId);
+      if (el) el.value = tp.social?.[key] || tp.links?.[key] || '';
+    });
+    const avail = tp.availability || 'open';
     document.querySelectorAll('.ns-avail-pill').forEach(p => p.classList.remove('active-ns-avail'));
     const activePill = document.getElementById('ns-avail-' + avail);
     if (activePill) activePill.classList.add('active-ns-avail');
-  } else {
-    // Try to load talent profile
-    if (currentUser) {
-      getDoc(doc(db, 'talent_profiles', currentUser.uid)).then(snap => {
-        if (snap.exists()) {
-          window._myTalentProfile = { id: currentUser.uid, ...snap.data() };
-          // Re-populate social fields
-          const tp = window._myTalentProfile;
-          if (tp.handle) { const el = document.getElementById('ns-inp-handle'); if (el) el.value = tp.handle; document.getElementById('ns-live-handle').textContent = tp.handle; }
-          ['youtube', 'spotify', 'instagram', 'tiktok', 'discord'].forEach(net => {
-            const el = document.getElementById('ns-social-' + (net === 'website' ? 'web' : net));
-            if (el && tp.social?.[net]) el.value = tp.social[net];
-          });
-          const webEl = document.getElementById('ns-social-web'); if (webEl && tp.social?.website) webEl.value = tp.social.website;
-        }
-      }).catch(() => { });
-    }
+  };
+
+  // Clear fields first (prevents stale data flash)
+  const handleEl = document.getElementById('ns-inp-handle');
+  if (handleEl) { handleEl.value = ''; handleEl.dataset.originalHandle = ''; }
+  document.getElementById('ns-live-handle').textContent = '@';
+
+  if (currentUser) {
+    getDoc(doc(db, 'talent_profiles', currentUser.uid)).then(snap => {
+      if (snap.exists()) {
+        window._myTalentProfile = { id: currentUser.uid, ...snap.data() };
+        _nsPopulateTalentFields(window._myTalentProfile);
+      }
+    }).catch(() => { });
   }
 
   // Build skill grid
@@ -6268,26 +6275,30 @@ window.nsSaveAll = async function () {
     if (newPass) await updatePassword(currentUser, newPass);
 
     // Save talent profile extras (handle, social, skills, availability)
-    const handle = document.getElementById('ns-inp-handle')?.value.trim() || '';
+    const handleInputEl = document.getElementById('ns-inp-handle');
+    const handle = handleInputEl?.value.trim() || '';
+    const originalHandle = handleInputEl?.dataset.originalHandle || '';
     // P3-D: Validação de unicidade do @handle antes de salvar
     if (handle) {
       const handleClean = handle.startsWith('@') ? handle.slice(1).toLowerCase() : handle.toLowerCase();
       const normalizedHandle = handleClean;
-      // Verifica se algum outro usuário já usa esse handle
-      const existingSnap = await getDocs(
-        query(collection(db, 'talent_profiles'),
-          where('handle', '==', '@' + normalizedHandle),
-          limit(2))
-      );
-      const conflict = existingSnap.docs.find(d => d.id !== currentUser.uid);
-      if (conflict) {
-        toast(`@${normalizedHandle} já está em uso. Escolha outro handle.`, 'error');
-        return;
+      const normalizedWithAt = '@' + normalizedHandle;
+      // FIX: Skip uniqueness check if handle hasn't changed from what the user already has
+      const handleChanged = normalizedWithAt !== originalHandle;
+      if (handleChanged) {
+        // Verifica se algum outro usuário já usa esse handle
+        const existingSnap = await getDocs(
+          query(collection(db, 'talent_profiles'),
+            where('handle', '==', normalizedWithAt),
+            limit(2))
+        );
+        const conflict = existingSnap.docs.find(d => d.id !== currentUser.uid);
+        if (conflict) {
+          toast(`@${normalizedHandle} já está em uso. Escolha outro handle.`, 'error');
+          return;
+        }
       }
       // Normaliza o handle com @ antes de salvar
-      // (garante consistência independente do que o usuário digitou)
-      const normalizedWithAt = '@' + normalizedHandle;
-      // reatribui para o bloco de save abaixo
       Object.defineProperty(window, '_p3dHandle', { value: normalizedWithAt, writable: true, configurable: true });
     } else {
       Object.defineProperty(window, '_p3dHandle', { value: '', writable: true, configurable: true });
@@ -6309,21 +6320,32 @@ window.nsSaveAll = async function () {
       discord: document.getElementById('ns-social-dc')?.value.trim() || '',
       website: document.getElementById('ns-social-web')?.value.trim() || '',
     };
+    // Resolve handle before try block so it's accessible in post-save sync
+    const _savedHandle = window._p3dHandle !== undefined ? window._p3dHandle : handle;
     try {
-      // P3-D: usa o handle normalizado (com @ e lowercase) validado acima
-      const _savedHandle = window._p3dHandle !== undefined ? window._p3dHandle : handle;
       await setDoc(doc(db, 'talent_profiles', uid), {
         name, bio, handle: _savedHandle, skills, social, availability: avail,
         photo: photoURL || '', banner: bannerURL || '', uid,
         updatedAt: serverTimestamp(),
       }, { merge: true });
-      window._myTalentProfile = { ...(window._myTalentProfile || {}), name, bio, handle: _savedHandle, skills, social, availability: avail, banner: bannerURL || '' };
+      window._myTalentProfile = { ...(window._myTalentProfile || {}), name, bio, handle: _savedHandle, skills, social, links: social, availability: avail, photo: photoURL || '', banner: bannerURL || '' };
     } catch (e) { console.warn('talent_profiles save:', e); }
 
-    currentUserData = { ...currentUserData, name, photoURL: photoURL || '', bio, bannerURL };
+    currentUserData = { ...currentUserData, name, photoURL: photoURL || '', bio, bannerURL, handle: _savedHandle };
     if (typeof _tsUpdateUserBar === 'function') _tsUpdateUserBar();
     if (typeof renderTeamsScreenExtras === 'function') renderTeamsScreenExtras();
     if (typeof applyPermissions === 'function') applyPermissions();
+    // FIX: Refresh all profile UIs after save (header, mini-card, open popup)
+    if (typeof adbRefreshHeader === 'function') adbRefreshHeader();
+    if (typeof updateMiniCard === 'function') updateMiniCard(window._myTalentProfile);
+    // If profile popup is open showing own profile, refresh it with fresh data
+    if (document.getElementById('pp-overlay')?.classList.contains('open') &&
+      window._ppCurrentData?.uid === uid) {
+      const freshData = typeof upeGetProfileForDisplay === 'function'
+        ? upeGetProfileForDisplay(window._myTalentProfile)
+        : window._ppCurrentData;
+      if (typeof openProfilePopup === 'function') openProfilePopup(freshData, window._ppCurrentContext || 'match');
+    }
     // Sync to teams
     for (const team of (_myTeams || [])) {
       const isMember = (team.members || []).some(m => m.uid === uid);

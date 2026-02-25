@@ -4574,3 +4574,986 @@ textarea:focus, select:focus {
   animation: confettiFall linear forwards;
 }
 @keyframes confettiFall { to { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
+
+
+/* ╔══════════════════════════════════════════════════════════════════════════════╗
+   ║   MOCKUP VISUAL OVERRIDES                                                   ║
+   ║   Bloco isolado — NÃO alterar CSS acima. Apenas override via especificidade. ║
+   ╚══════════════════════════════════════════════════════════════════════════════╝ */
+
+
+/* === MOCKUP UI OVERRIDE START — UI 4: LANDING PAGE === */
+
+/* -- Nav -- */
+#auth-screen #landing-nav {
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  background: rgba(8,8,16,0.85);
+  border-bottom: 1px solid rgba(255,60,180,0.08);
+  height: 68px;
+  padding: 0 48px;
+}
+#auth-screen .landing-nav-link {
+  background: none;
+  border: none;
+  color: rgba(248,238,246,0.5);
+  font-family: 'Space Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  padding: 6px 14px;
+  border-radius: 6px;
+  transition: color 0.2s, background 0.2s;
+}
+#auth-screen .landing-nav-link:hover {
+  color: var(--text);
+  background: rgba(255,60,180,0.06);
+}
+
+/* -- Hero section polish -- */
+#landing-hero {
+  min-height: 94vh !important;
+  padding: 100px 40px 80px !important;
+}
+#landing-hero h1 {
+  font-family: 'Syne', var(--font-body), sans-serif !important;
+  font-weight: 800 !important;
+  letter-spacing: -1.5px !important;
+  line-height: 1.08 !important;
+}
+#landing-hero p {
+  font-family: 'Space Mono', var(--font-mono), monospace !important;
+  font-size: 15px !important;
+  line-height: 1.9 !important;
+  color: rgba(248,238,246,0.4) !important;
+}
+
+/* -- Hero badge glow -- */
+#auth-screen .lp-badge-dot {
+  box-shadow: 0 0 8px var(--a1), 0 0 16px rgba(255,60,180,0.3);
+}
+
+/* -- Hero stats row -- */
+#landing-hero .u-text-center {
+  position: relative;
+}
+#landing-hero .u-text-center div:first-child {
+  font-family: 'Syne', var(--font-body), sans-serif !important;
+}
+
+/* -- Hero buttons glow -- */
+#auth-screen .btn-primary {
+  background: linear-gradient(135deg, var(--a1), var(--a2)) !important;
+  border: none !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 20px rgba(255,60,180,0.35), 0 0 40px rgba(255,60,180,0.15) !important;
+  font-family: 'Syne', var(--font-body), sans-serif !important;
+  font-weight: 700 !important;
+  transition: all 0.25s !important;
+}
+#auth-screen .btn-primary:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 28px rgba(255,60,180,0.5), 0 0 56px rgba(255,60,180,0.2) !important;
+}
+#auth-screen .btn-ghost {
+  border-color: rgba(255,60,180,0.2) !important;
+  color: rgba(248,238,246,0.6) !important;
+  border-radius: 10px !important;
+  font-family: 'Space Mono', var(--font-mono), monospace !important;
+  backdrop-filter: blur(8px);
+}
+#auth-screen .btn-ghost:hover {
+  border-color: rgba(255,60,180,0.45) !important;
+  color: var(--a1) !important;
+  background: rgba(255,60,180,0.05) !important;
+}
+
+/* -- Marquee strip glow -- */
+.lp-marquee-strip {
+  background: linear-gradient(135deg, var(--a1), var(--a2), var(--a3)) !important;
+  box-shadow: 0 0 24px rgba(255,60,180,0.2);
+  padding: 14px 0 !important;
+}
+.lp-marquee-item {
+  font-family: 'Syne', var(--font-body), sans-serif !important;
+  font-size: 11px !important;
+  letter-spacing: 3px !important;
+}
+
+/* -- Features section -- */
+#landing-features {
+  background: rgba(13,13,18,0.6) !important;
+  backdrop-filter: blur(20px);
+}
+#landing-features h2 {
+  font-family: 'Syne', var(--font-body), sans-serif !important;
+  letter-spacing: -0.5px !important;
+}
+#landing-features h3 {
+  font-family: 'Syne', var(--font-body), sans-serif !important;
+  letter-spacing: -0.5px !important;
+}
+#landing-features p {
+  font-family: 'Space Mono', var(--font-mono), monospace !important;
+  font-size: 13px !important;
+  line-height: 1.85 !important;
+}
+
+/* Feature section number labels */
+#auth-screen [style*="letter-spacing:3px"][style*="font-size:9px"] {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+}
+
+/* Feature card glassmorphism */
+#landing-features [style*="background:var(--card)"] {
+  background: rgba(19,17,24,0.65) !important;
+  backdrop-filter: blur(16px) saturate(1.1);
+  border: 1px solid rgba(255,60,180,0.1) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+/* Green check marks in features */
+.u-green-icon {
+  text-shadow: 0 0 8px rgba(114,239,221,0.4);
+}
+.u-flex-row-gap10-md {
+  font-family: 'Space Mono', var(--font-mono), monospace !important;
+  font-size: 13px !important;
+}
+
+/* -- Plans section -- */
+#landing-plans h2 {
+  font-family: 'Syne', var(--font-body), sans-serif !important;
+  letter-spacing: -0.5px !important;
+}
+
+/* Plan cards glassmorphism */
+#landing-plans [style*="background:var(--card)"],
+#landing-plans [style*="background:linear-gradient(160deg"] {
+  backdrop-filter: blur(12px);
+  border-radius: 22px !important;
+  transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+}
+#landing-plans [style*="background:var(--card)"]:hover,
+#landing-plans [style*="background:linear-gradient(160deg"]:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(255,60,180,0.15);
+}
+
+/* Plan toggle pill styling */
+#landing-plans [style*="border-radius:30px"] {
+  backdrop-filter: blur(8px);
+}
+
+/* -- Contact section -- */
+#landing-contact {
+  background: rgba(13,13,18,0.6) !important;
+}
+#landing-contact h2 {
+  font-family: 'Syne', var(--font-body), sans-serif !important;
+}
+#landing-contact a {
+  border-radius: 16px !important;
+  backdrop-filter: blur(8px);
+  transition: all 0.25s !important;
+}
+#landing-contact a:hover {
+  box-shadow: 0 8px 24px rgba(255,60,180,0.1) !important;
+}
+
+/* -- Security section -- */
+#landing-security h2 {
+  font-family: 'Syne', var(--font-body), sans-serif !important;
+}
+#landing-security [style*="border-radius:16px"][style*="background:var(--card)"] {
+  backdrop-filter: blur(12px);
+  background: rgba(19,17,24,0.55) !important;
+  transition: all 0.3s !important;
+}
+#landing-security [style*="border-radius:16px"][style*="background:var(--card)"]:hover {
+  box-shadow: 0 8px 32px rgba(255,60,180,0.1) !important;
+}
+
+/* Trust badge bar */
+#landing-security [style*="display:flex"][style*="gap:40px"] {
+  backdrop-filter: blur(8px);
+  background: rgba(19,17,24,0.5) !important;
+}
+
+/* -- CTA Final -- */
+#auth-screen section:last-of-type h2 {
+  font-family: 'Syne', var(--font-body), sans-serif !important;
+}
+
+/* -- Footer -- */
+#auth-screen footer {
+  backdrop-filter: blur(8px);
+  background: rgba(8,8,16,0.5);
+}
+#auth-screen footer button {
+  font-family: 'Space Mono', var(--font-mono), monospace !important;
+  transition: color 0.2s;
+}
+#auth-screen footer button:hover {
+  color: var(--a1) !important;
+}
+
+/* -- Auth panel slide-in -- */
+#auth-panel {
+  backdrop-filter: blur(24px) !important;
+  background: rgba(13,13,26,0.95) !important;
+  border-left: 1px solid rgba(255,60,180,0.12) !important;
+}
+.auth-tab-row {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.auth-tab {
+  flex: 1;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  color: var(--text2);
+  font-family: 'Space Mono', var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.auth-tab.active {
+  background: rgba(255,60,180,0.1);
+  color: var(--a1);
+}
+.auth-input {
+  background: rgba(255,60,180,0.04) !important;
+  border: 1px solid rgba(255,60,180,0.12) !important;
+  border-radius: 10px !important;
+  padding: 12px 16px !important;
+  font-family: 'Space Mono', var(--font-mono), monospace !important;
+  font-size: 13px !important;
+  color: var(--text) !important;
+  transition: border-color 0.2s, box-shadow 0.2s !important;
+}
+.auth-input:focus {
+  border-color: rgba(255,60,180,0.35) !important;
+  box-shadow: 0 0 0 3px rgba(255,60,180,0.08) !important;
+}
+.auth-btn {
+  width: 100%;
+  padding: 13px;
+  background: linear-gradient(135deg, var(--a1), var(--a2));
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-family: 'Syne', var(--font-body), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.25s;
+  box-shadow: 0 4px 16px rgba(255,60,180,0.25);
+}
+.auth-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(255,60,180,0.4);
+}
+.auth-btn-google {
+  width: 100%;
+  padding: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  color: var(--text2);
+  font-family: 'Space Mono', var(--font-mono), monospace;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.2s;
+}
+.auth-btn-google:hover {
+  border-color: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.06);
+}
+.auth-label {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+  font-size: 9px !important;
+  letter-spacing: 3px !important;
+  color: rgba(248,238,246,0.3) !important;
+}
+.auth-divider {
+  text-align: center;
+  color: var(--text3);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  margin: 16px 0;
+  letter-spacing: 2px;
+}
+.auth-form-group {
+  margin-bottom: 14px;
+}
+.auth-error {
+  background: rgba(255,92,124,0.08);
+  border: 1px solid rgba(255,92,124,0.2);
+  color: var(--red);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  margin-bottom: 12px;
+  display: none;
+}
+.auth-error:not(:empty) { display: block; }
+.auth-success {
+  background: rgba(114,239,221,0.08);
+  border: 1px solid rgba(114,239,221,0.2);
+  color: var(--green);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  margin-bottom: 12px;
+  display: none;
+}
+.auth-success:not(:empty) { display: block; }
+
+/* -- Hero grid & orbs enhanced -- */
+.lp-hero-grid {
+  opacity: 0.7;
+}
+.lp-orb {
+  filter: blur(100px) !important;
+}
+.lp-orb-1 {
+  width: 700px !important;
+  height: 700px !important;
+}
+
+/* -- Cursor enhancements -- */
+#lp-cursor-dot.lp-visible {
+  box-shadow: 0 0 12px var(--a1), 0 0 24px rgba(255,60,180,0.3);
+}
+#lp-cursor-scope.lp-visible {
+  border-color: rgba(255,60,180,0.35) !important;
+}
+
+/* === MOCKUP UI OVERRIDE END — UI 4: LANDING PAGE === */
+
+
+/* === MOCKUP UI OVERRIDE START — UI 3: TEAMS SCREEN === */
+
+/* -- Sidebar refinements -- */
+.ts-sidebar {
+  width: 290px !important;
+  background: rgba(8,8,16,0.98) !important;
+  padding: 32px 24px !important;
+  border-right: 1px solid rgba(255,60,180,0.08) !important;
+  backdrop-filter: blur(20px);
+}
+.ts-sidebar::before {
+  height: 240px !important;
+  background: radial-gradient(ellipse at 50% 0%, rgba(255,60,180,0.08), transparent 70%) !important;
+}
+
+/* Logo area */
+.ts-wordmark {
+  font-family: 'Syne', var(--font-body), sans-serif !important;
+  font-size: 19px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.5px !important;
+}
+.ts-wordmark sup {
+  font-family: 'Space Mono', var(--font-mono), monospace !important;
+}
+
+/* Section labels */
+.ts-nav-sec {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+  font-size: 8px !important;
+  letter-spacing: 3px !important;
+  color: rgba(248,238,246,0.18) !important;
+}
+
+/* Nav items */
+.ts-nav-item {
+  padding: 10px 12px !important;
+  border-radius: 10px !important;
+  font-family: 'Syne', var(--font-body), sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  transition: all 0.2s !important;
+}
+.ts-nav-item:hover {
+  background: rgba(255,60,180,0.05) !important;
+}
+.ts-nav-item.ts-active {
+  background: rgba(255,60,180,0.08) !important;
+  color: var(--a1) !important;
+  box-shadow: inset 3px 0 0 var(--a1);
+}
+
+/* Sidebar team mini items */
+.ts-mini {
+  padding: 10px 12px !important;
+  border-radius: 10px !important;
+}
+.ts-mini-av {
+  border-radius: 10px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.ts-mini-name {
+  font-family: 'Syne', var(--font-body), sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+}
+.ts-mini-role {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+  font-size: 9px !important;
+}
+
+/* -- Main area -- */
+.ts-main {
+  padding: 48px 56px !important;
+  background: rgba(13,13,18,0.4);
+}
+.ts-title {
+  font-family: 'Syne', var(--font-body), sans-serif !important;
+  font-size: 24px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.5px !important;
+}
+.ts-sub {
+  font-family: 'Space Mono', var(--font-mono), monospace !important;
+  font-size: 12px !important;
+  color: rgba(248,238,246,0.35) !important;
+}
+
+/* Action cards */
+.ts-card {
+  border-radius: 16px !important;
+  background: rgba(19,17,24,0.55) !important;
+  backdrop-filter: blur(12px);
+  padding: 24px !important;
+  border: 1px solid rgba(255,60,180,0.08) !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.ts-card:hover {
+  border-color: rgba(255,60,180,0.2) !important;
+  box-shadow: 0 8px 32px rgba(255,60,180,0.08) !important;
+}
+.ts-card-title {
+  font-family: 'Syne', var(--font-body), sans-serif !important;
+  font-size: 15px !important;
+  font-weight: 800 !important;
+}
+.ts-card-sub {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+  font-size: 10px !important;
+  color: rgba(248,238,246,0.3) !important;
+}
+
+/* Team rows */
+.ts-team-row {
+  border-radius: 14px !important;
+  background: rgba(19,17,24,0.45) !important;
+  border: 1px solid rgba(255,60,180,0.06) !important;
+  padding: 16px 20px !important;
+  backdrop-filter: blur(8px);
+}
+.ts-team-row:hover {
+  border-color: rgba(255,60,180,0.18) !important;
+  box-shadow: 0 4px 16px rgba(255,60,180,0.06);
+}
+.ts-row-av {
+  border-radius: 12px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.ts-row-name {
+  font-family: 'Syne', var(--font-body), sans-serif !important;
+  font-weight: 700 !important;
+}
+.ts-row-meta {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+  font-size: 10px !important;
+}
+
+/* Section headers */
+.ts-sec-title {
+  font-family: 'Syne', var(--font-body), sans-serif !important;
+  font-weight: 800 !important;
+}
+.ts-sec-count {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+}
+
+/* Invite banner */
+.ts-invite-wrap {
+  border-radius: 12px !important;
+  backdrop-filter: blur(8px);
+}
+
+/* UMP (User Mini Profile) enhancements */
+.ump {
+  border-top: 1px solid rgba(255,60,180,0.08) !important;
+}
+.ump-identity {
+  padding: 12px !important;
+  border-radius: 12px !important;
+  transition: background 0.2s !important;
+}
+.ump-identity:hover {
+  background: rgba(255,60,180,0.04) !important;
+}
+.ump-name {
+  font-family: 'Syne', var(--font-body), sans-serif !important;
+  font-weight: 700 !important;
+}
+.ump-plan {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+}
+.ump-action-btn {
+  border-radius: 8px !important;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+  font-size: 9px !important;
+  transition: all 0.2s !important;
+}
+.ump-action-btn:hover {
+  background: rgba(255,60,180,0.06) !important;
+  border-color: rgba(255,60,180,0.2) !important;
+}
+
+/* Pending screen */
+.pending-box {
+  backdrop-filter: blur(16px);
+}
+.pending-title {
+  font-family: 'Syne', var(--font-body), sans-serif !important;
+}
+
+/* === MOCKUP UI OVERRIDE END — UI 3: TEAMS SCREEN === */
+
+
+/* === MOCKUP UI OVERRIDE START — UI 2: MATCH / PROCURAR EQUIPE === */
+
+/* Match system cards */
+.match-card,
+[class*="spotlight-card"],
+[class*="talent-card"] {
+  border-radius: 16px !important;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,60,180,0.08) !important;
+  transition: all 0.3s !important;
+}
+.match-card:hover,
+[class*="spotlight-card"]:hover,
+[class*="talent-card"]:hover {
+  border-color: rgba(255,60,180,0.18) !important;
+  box-shadow: 0 8px 32px rgba(255,60,180,0.08);
+}
+
+/* Filter buttons in match */
+#page-talents .filter-btn,
+#page-talents [class*="filter-"] {
+  border-radius: 8px !important;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+}
+
+/* Match section titles */
+#page-talents .section-title {
+  font-family: 'Syne', var(--font-body), sans-serif !important;
+}
+
+/* Skills/role tags in match */
+[class*="match-tag"],
+[class*="match-role"],
+[class*="spot-skill"] {
+  border-radius: 20px !important;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+  font-size: 9px !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* Swipe-style cards */
+[class*="swipe-card"] {
+  border-radius: 20px !important;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+/* Match stats */
+[class*="spot-stats"],
+[class*="match-stats"] {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+}
+
+/* === MOCKUP UI OVERRIDE END — UI 2: MATCH / PROCURAR EQUIPE === */
+
+
+/* === MOCKUP UI OVERRIDE START — UI 1A: PAINEL ADMIN === */
+
+/* Admin drawer / master panel */
+[class*="admin-drawer"],
+[class*="master-drawer"],
+[class*="admin-panel"] {
+  backdrop-filter: blur(20px) saturate(1.2);
+  border: 1px solid rgba(255,60,180,0.08) !important;
+}
+
+/* Admin titles */
+[class*="admin-title"],
+[class*="master-title"] {
+  font-family: 'Syne', var(--font-body), sans-serif !important;
+  font-weight: 800 !important;
+}
+
+/* Admin action buttons */
+[class*="admin-action"],
+[class*="master-action"] {
+  border-radius: 10px !important;
+  font-family: 'Syne', var(--font-body), sans-serif !important;
+  transition: all 0.2s !important;
+}
+
+/* Admin stats cards */
+[class*="admin-stat"],
+[class*="master-stat"] {
+  border-radius: 14px !important;
+  backdrop-filter: blur(8px);
+  background: rgba(19,17,24,0.5) !important;
+}
+
+/* Admin ticket list */
+#page-admin-tickets .ticket-item {
+  border-radius: 12px !important;
+  backdrop-filter: blur(8px);
+}
+#page-admin-tickets .ticket-subject {
+  font-family: 'Syne', var(--font-body), sans-serif !important;
+  font-weight: 700 !important;
+}
+#page-admin-tickets .ticket-badge,
+#page-admin-tickets .tbadge {
+  border-radius: 6px !important;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+}
+#page-admin-tickets .ticket-meta {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+}
+
+/* Thread bubbles */
+.thread-msg {
+  border-radius: 12px !important;
+  backdrop-filter: blur(4px);
+}
+
+/* Ticket status select */
+.ticket-status-select {
+  border-radius: 8px !important;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+}
+
+/* === MOCKUP UI OVERRIDE END — UI 1A: PAINEL ADMIN === */
+
+
+/* === MOCKUP UI OVERRIDE START — UI 1B: POPUP PERFIL GERAL === */
+
+/* Popup card */
+.tpb-card {
+  border-radius: 22px !important;
+  border: 1px solid rgba(255,60,180,0.1) !important;
+  box-shadow: 0 16px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,60,180,0.06) !important;
+  backdrop-filter: blur(16px);
+}
+
+/* Header */
+.tpb-header {
+  background: linear-gradient(135deg, rgba(13,5,32,0.95), rgba(18,10,40,0.95)) !important;
+  border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+  padding: 22px 22px 18px !important;
+}
+
+/* Name */
+.tpb-name {
+  font-family: 'Syne', 'Bebas Neue', var(--font-body), sans-serif !important;
+  font-size: 28px !important;
+  letter-spacing: 1px !important;
+}
+
+/* Type pill */
+.tpb-type-pill {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+  border-radius: 20px !important;
+  backdrop-filter: blur(4px);
+}
+
+/* Genre chips */
+.tpb-gc {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+  border-radius: 20px !important;
+}
+
+/* Tagline */
+.tpb-tagline {
+  font-family: 'Space Mono', var(--font-mono), monospace !important;
+}
+
+/* Body section */
+.tpb-body {
+  padding: 18px 22px !important;
+}
+.tpb-section-label {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+  font-size: 7px !important;
+  letter-spacing: 3px !important;
+}
+
+/* Bio text */
+.tpb-bio {
+  font-family: 'Space Mono', var(--font-mono), monospace !important;
+  font-size: 12px !important;
+  line-height: 1.7 !important;
+  color: rgba(248,238,246,0.5) !important;
+}
+
+/* Tags */
+.tpb-tag {
+  border-radius: 20px !important;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+}
+
+/* Stats */
+.tpb-stats {
+  gap: 10px !important;
+}
+.tpb-stat {
+  border-radius: 12px !important;
+  background: rgba(255,255,255,0.02) !important;
+  border: 1px solid rgba(255,255,255,0.05) !important;
+  backdrop-filter: blur(4px);
+}
+.tpb-stat-val {
+  font-family: 'Syne', 'Bebas Neue', var(--font-body), sans-serif !important;
+}
+.tpb-stat-lbl {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+}
+
+/* Urgency section */
+.tpb-urgency {
+  border-radius: 12px !important;
+  backdrop-filter: blur(4px);
+}
+.tpb-urgency-role {
+  font-family: 'Syne', var(--font-body), sans-serif !important;
+  font-weight: 800 !important;
+}
+.tpb-urgency-badge {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+}
+
+/* Actions */
+.tpb-actions {
+  padding: 16px 22px !important;
+}
+.tpb-btn {
+  border-radius: 12px !important;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+}
+.tpb-btn-primary {
+  box-shadow: 0 4px 20px rgba(255,60,180,0.3) !important;
+}
+.tpb-btn-primary:hover {
+  box-shadow: 0 6px 28px rgba(255,60,180,0.45) !important;
+}
+
+/* Close button */
+.tpb-close-btn {
+  border-radius: 10px !important;
+  backdrop-filter: blur(4px);
+}
+
+/* Link buttons */
+.tpb-link-btn {
+  border-radius: 8px !important;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+}
+
+/* Cluster avatars */
+.tpb-cluster-av:hover {
+  transform: translateY(-5px) scale(1.2) !important;
+  box-shadow: 0 4px 12px rgba(255,60,180,0.3);
+}
+
+/* === MOCKUP UI OVERRIDE END — UI 1B: POPUP PERFIL GERAL === */
+
+
+/* === MOCKUP UI OVERRIDE START — UI 1C: PERFIL COMPLETO === */
+
+/* Panel */
+.tfp-panel {
+  background: rgba(13,13,18,0.98) !important;
+  border-left: 1px solid rgba(255,60,180,0.08) !important;
+  box-shadow: -40px 0 120px rgba(0,0,0,0.8) !important;
+  backdrop-filter: blur(20px);
+}
+
+/* Panel header */
+.tfp-panel-header {
+  backdrop-filter: blur(24px) saturate(1.2) !important;
+  border-bottom: 1px solid rgba(255,60,180,0.06) !important;
+}
+.tfp-panel-label {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+}
+.tfp-close {
+  border-radius: 10px !important;
+  backdrop-filter: blur(4px);
+}
+
+/* Hero */
+.tfp-hero-banner {
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+.tfp-hero-av {
+  border-radius: 20px !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+}
+
+/* Name */
+.tfp-name {
+  font-family: 'Syne', 'Bebas Neue', var(--font-body), sans-serif !important;
+  font-size: 40px !important;
+  letter-spacing: 2px !important;
+}
+
+/* Subtitle */
+.tfp-subtitle {
+  font-family: 'Space Mono', var(--font-mono), monospace !important;
+}
+
+/* Stats bar */
+.tfp-stats-bar {
+  border-radius: 16px !important;
+  overflow: hidden !important;
+}
+.tfp-stat-block {
+  background: rgba(15,15,26,0.8) !important;
+  backdrop-filter: blur(4px);
+}
+.tfp-stat-val {
+  font-family: 'Syne', 'Bebas Neue', var(--font-body), sans-serif !important;
+}
+.tfp-stat-lbl {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+}
+
+/* Sections */
+.tfp-section,
+.tfp-section-full {
+  border-radius: 16px !important;
+  backdrop-filter: blur(8px);
+  background: rgba(255,255,255,0.02) !important;
+  border: 1px solid rgba(255,60,180,0.06) !important;
+}
+.tfp-sec-title {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+  font-size: 7px !important;
+  letter-spacing: 3px !important;
+}
+
+/* Genre tags */
+.tfp-genre-tag {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+  border-radius: 20px !important;
+}
+
+/* Member cards */
+.tfp-member-card {
+  border-radius: 12px !important;
+  backdrop-filter: blur(4px);
+}
+.tfp-member-card:hover {
+  box-shadow: 0 4px 12px rgba(255,60,180,0.06);
+}
+
+/* Vacancy items */
+.tfp-vacancy-item {
+  border-radius: 12px !important;
+  backdrop-filter: blur(4px);
+}
+
+/* Activity items */
+.tfp-activity-icon {
+  border-radius: 10px !important;
+}
+
+/* Action buttons */
+.tfp-action-btn {
+  border-radius: 14px !important;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+}
+.tfp-action-primary {
+  box-shadow: 0 4px 20px rgba(255,60,180,0.3) !important;
+}
+.tfp-action-primary:hover {
+  box-shadow: 0 6px 28px rgba(255,60,180,0.45) !important;
+  transform: translateY(-1px);
+}
+.tfp-action-ghost:hover {
+  border-color: rgba(255,60,180,0.2) !important;
+}
+
+/* Hero right avatar */
+.tfp-hero-av-right {
+  box-shadow: 0 0 24px rgba(255,60,180,0.15) !important;
+}
+
+/* Hero badges */
+.tfp-hero-badge {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+  border-radius: 20px !important;
+}
+
+/* === MOCKUP UI OVERRIDE END — UI 1C: PERFIL COMPLETO === */
+
+
+/* === GLOBAL MOCKUP FONT OVERRIDES === */
+
+/* Apply Syne to all display headings where applicable */
+#auth-screen h1,
+#auth-screen h2,
+#auth-screen h3,
+.ts-title,
+.ts-card-title,
+.ts-row-name,
+.tpb-name,
+.tfp-name,
+.pending-title {
+  font-family: 'Syne', var(--font-body), sans-serif !important;
+}
+
+/* Apply JetBrains Mono to micro labels */
+#auth-screen [style*="letter-spacing:3px"],
+#auth-screen [style*="letter-spacing:2px"],
+.ts-nav-sec,
+.tpb-section-label,
+.tfp-sec-title,
+.tfp-stat-lbl,
+.tpb-stat-lbl {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+}
+
+/* Apply Space Mono to body copy */
+#auth-screen [style*="line-height:1.8"],
+#auth-screen [style*="line-height:1.7"],
+.ts-sub,
+.tpb-bio,
+.tpb-tagline {
+  font-family: 'Space Mono', var(--font-mono), monospace !important;
+}
+
+/* === END GLOBAL MOCKUP FONT OVERRIDES === */
