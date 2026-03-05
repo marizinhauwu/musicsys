@@ -1129,33 +1129,12 @@ const db = getFirestore(fbApp);
 const auth = getAuth(fbApp);
 const gProvider = new GoogleAuthProvider();
 
-// ─── INTEGRAÇÃO DISCORD DIRETA (Bot API) ──────────────────────────────────────
-const BOT_API_URL = 'http://localhost:3000'; // Em produção: https://sua-url-do-bot.onrender.com
-
-// Helpers para comunicação cliente->bot
-async function _botApiCall(endpoint, payload = {}) {
-  const currentUser = auth.currentUser;
-  if (!currentUser) throw new Error('unauthenticated');
-
-  const token = await currentUser.getIdToken();
-  const res = await fetch(`${BOT_API_URL}${endpoint}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify({ data: payload })
-  });
-
-  const responseData = await res.json();
-  if (!res.ok) throw new Error(responseData.error || 'Erro na comunicação com o Bot');
-
-  return { data: responseData };
-}
-
-window._callLinkDiscord = (payload) => _botApiCall('/link-account', payload);
-window._callUnlinkDiscord = () => _botApiCall('/unlink-account', {});
-window._callNotifyBot = (payload) => _botApiCall('/events', payload);
+// ─── CLOUD FUNCTIONS (Discord Integration) ────────────────────────────────────
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-functions.js";
+const _fbFunctions = getFunctions(fbApp);
+window._callLinkDiscord = httpsCallable(_fbFunctions, 'linkDiscordAccount');
+window._callUnlinkDiscord = httpsCallable(_fbFunctions, 'unlinkDiscordAccount');
+window._callNotifyBot = httpsCallable(_fbFunctions, 'notifyDiscordBot');
 
 // Expose Firebase functions to non-module scripts
 window.db = db;

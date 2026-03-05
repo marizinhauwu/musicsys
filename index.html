@@ -88,7 +88,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Figtree:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=mmd4sd85">
+  <link rel="stylesheet" href="css/main.css?v=mme4hlib">
 </head>
 
 <body>
@@ -2743,7 +2743,8 @@
                   <div class="ns-linked-name">Discord</div>
                   <div class="ns-linked-status">Conecte para login rapido</div>
                 </div>
-                <button class="ns-linked-btn" onclick="toast('Discord em breve!','info')">CONECTAR</button>
+                <button class="ns-linked-btn"
+                  onclick="closeModal('system-settings-overlay'); openUnifiedProfileEdit();">VINCULAR NO PERFIL</button>
               </div>
               <div class="ns-linked-row">
                 <div class="ns-linked-icon">S</div>
@@ -3695,8 +3696,8 @@
     onerror="console.warn('[FREQsys] Google GSI client não carregou (normal em ambiente local). Autenticação YouTube indisponível.')"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <!-- Script auxiliar landing (executado antes do módulo) -->
-  <script src="js/landing.js?v=mmd4sd85"></script>
-  <script type="module" src="js/firebase-init.js?v=mmd4sd85"></script>
+  <script src="js/landing.js?v=mme4hlib"></script>
+  <script type="module" src="js/firebase-init.js?v=mme4hlib"></script>
 
   <!-- ═══════════════════════════════════════════════════════
      TEAM PROFILE MODAL
@@ -4192,7 +4193,7 @@
       </div>
     </div>
   </div>
-  <script src="js/spotlight.js?v=mmd4sd85"></script>
+  <script src="js/spotlight.js?v=mme4hlib"></script>
 
   <!-- ═══════════════════════════════════════════════════════
      PROFILE POPUP OVERLAY (Discord-style mini card)
@@ -4459,7 +4460,7 @@
     </div>
   </div>
 
-  <script src="js/profile-popup.js?v=mmd4sd85"></script>
+  <script src="js/profile-popup.js?v=mme4hlib"></script>
 
 
   <!-- ══ PRIVATE MESSAGING SYSTEM ══ -->
@@ -4614,7 +4615,7 @@
 
 
 
-  <script src="js/profile-edit.js?v=mmd4sd85"></script>
+  <script src="js/profile-edit.js?v=mme4hlib"></script>
   <!-- ═══════════════════════════════════════════════════════
      UNIFIED PROFILE EDIT MODAL
      ═══════════════════════════════════════════════════════ -->
@@ -4727,6 +4728,16 @@
           </div>
         </div>
 
+        <!-- ── VINCULAR DISCORD ── -->
+        <div class="upe-section">
+          <div class="upe-section-title">— VINCULAR CONTA DISCORD —</div>
+          <div id="upe-discord-link-area">
+            <!-- Renderizado dinamicamente por upeRenderDiscordLink() -->
+            <div style="font-family:var(--font-mono);font-size:11px;color:var(--text3);text-align:center;padding:16px">
+              Carregando...</div>
+          </div>
+        </div>
+
         <!-- ── EQUIPES ── -->
         <div class="upe-section">
           <div class="upe-section-title">— EQUIPES —</div>
@@ -4783,7 +4794,7 @@
   <div class="toast-container" id="toasts"></div>
 
   <!-- ══ MATCH SYSTEM v2 ══ -->
-  <script src="js/match-system.js?v=mmd4sd85"></script>
+  <script src="js/match-system.js?v=mme4hlib"></script>
 
 
 
@@ -5155,7 +5166,7 @@
   </div>
 
 
-  <script src="js/global-match-listener.js?v=mmd4sd85"></script>
+  <script src="js/global-match-listener.js?v=mme4hlib"></script>
 
 </body>
 

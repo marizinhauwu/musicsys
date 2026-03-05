@@ -33,7 +33,7 @@ service cloud.firestore {
         (request.auth.uid == userId &&
          !request.resource.data.diff(resource.data).affectedKeys().hasAny(
            ['plan', 'planOverride', 'staffRole', 'boostCredits', 'boostActiveUntil',
-            'effectivePriority', 'monthlyMatchesCount', 'monthlyScore']
+            'effectivePriority', 'monthlyMatchesCount', 'monthlyScore', 'discordId']
          ))
       );
     }
