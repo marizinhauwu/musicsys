@@ -11,9 +11,11 @@ service cloud.firestore {
     function isMemberOfTeam(teamId) {
       return teamId != null &&
         exists(/databases/$(database)/documents/teams/$(teamId)) && (
+          // Caminho 1: memberUids existe e contém o UID (equipes v5.20.1+)
           (get(/databases/$(database)/documents/teams/$(teamId)).data.keys().hasAll(['memberUids']) &&
            get(/databases/$(database)/documents/teams/$(teamId)).data.memberUids.hasAny([request.auth.uid]))
           ||
+          // Caminho 2: criador da equipe (fallback para equipes antigas sem memberUids)
           get(/databases/$(database)/documents/teams/$(teamId)).data.createdBy == request.auth.uid
         );
     }
@@ -30,7 +32,7 @@ service cloud.firestore {
         // Próprio usuário pode atualizar, EXCETO campos protegidos
         (request.auth.uid == userId &&
          !request.resource.data.diff(resource.data).affectedKeys().hasAny(
-           ['plan', 'staffRole', 'boostCredits', 'boostActiveUntil',
+           ['plan', 'planOverride', 'staffRole', 'boostCredits', 'boostActiveUntil',
             'effectivePriority', 'monthlyMatchesCount', 'monthlyScore']
          ))
       );
@@ -191,7 +193,12 @@ service cloud.firestore {
     // ── Notificações do usuário ────────────────────────────────────────────
     match /user_notifications/{userId}/notifs/{notifId} {
       allow read, delete, update: if request.auth != null && request.auth.uid == userId;
-      allow create: if request.auth != null;
+      // CORREÇÃO DE SEGURANÇA: exige que o remetente se identifique corretamente
+      // e que a notificação contenha campos obrigatórios (anti-spam/anti-spoofing)
+      allow create: if request.auth != null
+        && request.resource.data.senderUid == request.auth.uid
+        && request.resource.data.keys().hasAll(['type', 'title', 'message', 'createdAt', 'read'])
+        && request.resource.data.read == false;
     }
     match /user_notifications/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;

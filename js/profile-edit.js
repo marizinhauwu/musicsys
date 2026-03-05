@@ -250,11 +250,34 @@ window.upeFormatHandle = function () {
   el.value = v;
 };
 
-// ── Save ──────────────────────────────────────────────────────────────────────
 window.upeSave = async function () {
-  const name = document.getElementById('upe-name')?.value.trim();
-  const bio = document.getElementById('upe-bio')?.value.trim();
-  if (!name) { toast('Preencha seu nome de usuário', 'error'); return; }
+  const name = FormValidator.val('upe-name');
+  if (!FormValidator.require(name, 'Nome')) return;
+
+  const bio = FormValidator.val('upe-bio');
+
+  // Validar e auto-corrigir Handle P1-5
+  let handleRaw = FormValidator.val('upe-handle');
+  if (!handleRaw) {
+    handleRaw = name.toLowerCase().replace(/\s+/g, '');
+  }
+  const cleanHandle = FormValidator.isHandle(handleRaw, true);
+  if (!cleanHandle) return; // Erro já despachado pelo FormValidator
+
+  // Validar URLs de Social P1-5
+  const links = {
+    youtube: FormValidator.isUrl(FormValidator.val('upe-youtube')),
+    spotify: FormValidator.isUrl(FormValidator.val('upe-spotify')),
+    discord: FormValidator.val('upe-discord'), // Discord costuma ser username/tag, não URL. Deixando string pura.
+    instagram: FormValidator.isUrl(FormValidator.val('upe-instagram')),
+    tiktok: FormValidator.isUrl(FormValidator.val('upe-tiktok')),
+    portfolio: FormValidator.isUrl(FormValidator.val('upe-portfolio')),
+  };
+
+  // Se alguma URL retornou null na normalização, travamos o save
+  if (links.youtube === null || links.spotify === null || links.instagram === null || links.tiktok === null || links.portfolio === null) {
+    return;
+  }
 
   // Collect skills
   const skills = {};
@@ -273,25 +296,15 @@ window.upeSave = async function () {
     teamsVisible[t.id] = chk ? chk.checked : true;
   });
 
-  const handle = document.getElementById('upe-handle')?.value.trim() ||
-    ('@' + name.toLowerCase().replace(/\s+/g, ''));
-
   const profileData = {
     uid: currentUser.uid,
     name,
-    handle,
+    handle: cleanHandle,
     title: _getFirstSkillLabel(skills),
     bio: bio || '',
-    story: document.getElementById('upe-story')?.value.trim() || '',
+    story: FormValidator.val('upe-story'),
     availability: document.getElementById('upe-availability')?.value || 'available',
-    links: {
-      youtube: document.getElementById('upe-youtube')?.value.trim() || '',
-      spotify: document.getElementById('upe-spotify')?.value.trim() || '',
-      discord: document.getElementById('upe-discord')?.value.trim() || '',
-      instagram: document.getElementById('upe-instagram')?.value.trim() || '',
-      tiktok: document.getElementById('upe-tiktok')?.value.trim() || '',
-      portfolio: document.getElementById('upe-portfolio')?.value.trim() || '',
-    },
+    links: links,
     skills,
     languages: window._upeLangs || [],
     teamsVisible,
@@ -333,10 +346,17 @@ window.upeSave = async function () {
       const _ep = typeof _epCurrent?.effectivePriority === 'number'
         ? _epCurrent.effectivePriority : 1;
       await updateDoc(doc(db, 'talent_profiles', currentUser.uid), {
-        plan: _epCurrent?.plan || 'free',
+        plan: typeof window.resolveUserPlan === 'function' ? window.resolveUserPlan(_epCurrent) : (_epCurrent?.plan || 'free'),
         effectivePriority: _ep
       });
     } catch (e) { }
+
+    // Refletir as normalizações na UI
+    const elH = document.getElementById('upe-handle');
+    if (elH) elH.value = '@' + profileData.handle;
+    if (document.getElementById('upe-youtube') && profileData.links.youtube) document.getElementById('upe-youtube').value = profileData.links.youtube;
+    if (document.getElementById('upe-instagram') && profileData.links.instagram) document.getElementById('upe-instagram').value = profileData.links.instagram;
+    if (document.getElementById('upe-portfolio') && profileData.links.portfolio) document.getElementById('upe-portfolio').value = profileData.links.portfolio;
 
     if (typeof hideLoading === 'function') hideLoading();
     closeUnifiedProfileEdit();

@@ -883,1278 +883,1324 @@
               id="auth-panel-title">Entrar</div>
             <div class="u-fs12-muted" id="auth-panel-sub">Bem-vindo de volta!</div>
           </div>
-          <div class="auth-tab-row" style="margin-bottom:20px">
-            <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Entrar</button>
-            <button class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Cadastrar</button>
-          </div>
-          <div id="auth-error" class="auth-error"></div>
-          <div id="auth-success" class="auth-success"></div>
-          <div id="form-login">
-            <div class="auth-form-group"><label class="auth-label">Email</label><input class="auth-input" type="email"
-                id="login-email" placeholder="seu@email.com"></div>
-            <div class="auth-form-group"><label class="auth-label">Senha</label><input class="auth-input"
-                type="password" id="login-password" placeholder="••••••••"></div>
-            <button class="auth-btn" id="login-btn" onclick="doLogin()">Entrar</button>
-            <div class="auth-divider">ou</div>
-            <button class="auth-btn-google" onclick="doGoogleLogin()"><svg width="18" height="18" viewBox="0 0 48 48">
-                <path fill="#FFC107"
-                  d="M43.6 20H24v8h11.3C33.7 33 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-8 19.7-20 0-1.3-.1-2.7-.1-4z" />
-                <path fill="#FF3D00"
-                  d="M6.3 14.7l6.6 4.8C14.5 15.1 18.9 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
-                <path fill="#4CAF50"
-                  d="M24 44c5.2 0 9.9-1.9 13.5-5l-6.2-5.2C29.5 35.5 26.9 36 24 36c-5.3 0-9.7-3-11.3-7.3l-6.6 4.8C9.7 39.6 16.3 44 24 44z" />
-                <path fill="#1976D2"
-                  d="M43.6 20H24v8h11.3c-.7 2-2.1 3.7-3.9 4.9l6.2 5.2C41.6 34.6 44 29.7 44 24c0-1.3-.1-2.7-.4-4z" />
-              </svg>Continuar com Google</button>
-          </div>
-          <div id="form-register" style="display:none">
-            <div class="auth-form-group"><label class="auth-label">Nome</label><input class="auth-input" type="text"
-                id="reg-name" placeholder="Seu nome"></div>
-            <div class="auth-form-group"><label class="auth-label">Email</label><input class="auth-input" type="email"
-                id="reg-email" placeholder="seu@email.com"></div>
-            <div class="auth-form-group"><label class="auth-label">Senha</label><input class="auth-input"
-                type="password" id="reg-password" placeholder="mínimo 6 caracteres"></div>
-            <button class="auth-btn" id="register-btn" onclick="doRegister()">Criar Conta</button>
-            <div class="auth-divider">ou</div>
-            <button class="auth-btn-google" onclick="doGoogleLogin()"><svg width="18" height="18" viewBox="0 0 48 48">
-                <path fill="#FFC107"
-                  d="M43.6 20H24v8h11.3C33.7 33 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-8 19.7-20 0-1.3-.1-2.7-.1-4z" />
-                <path fill="#FF3D00"
-                  d="M6.3 14.7l6.6 4.8C14.5 15.1 18.9 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
-                <path fill="#4CAF50"
-                  d="M24 44c5.2 0 9.9-1.9 13.5-5l-6.2-5.2C29.5 35.5 26.9 36 24 36c-5.3 0-9.7-3-11.3-7.3l-6.6 4.8C9.7 39.6 16.3 44 24 44z" />
-                <path fill="#1976D2"
-                  d="M43.6 20H24v8h11.3c-.7 2-2.1 3.7-3.9 4.9l6.2 5.2C41.6 34.6 44 29.7 44 24c0-1.3-.1-2.7-.4-4z" />
-              </svg>Continuar com Google</button>
+          <!-- P1-3: wrapper para controle de visibilidade durante boot do Firebase -->
+          <div id="auth-forms-container">
+            <div class="auth-tab-row" style="margin-bottom:20px">
+              <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Entrar</button>
+              <button class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Cadastrar</button>
+            </div>
+            <div id="auth-error" class="auth-error"></div>
+            <div id="auth-success" class="auth-success"></div>
+            <div id="form-login">
+              <div class="auth-form-group"><label class="auth-label">Email</label><input class="auth-input" type="email"
+                  id="login-email" placeholder="seu@email.com"></div>
+              <div class="auth-form-group"><label class="auth-label">Senha</label><input class="auth-input"
+                  type="password" id="login-password" placeholder="••••••••"></div>
+              <button class="auth-btn" id="login-btn" onclick="doLogin()">Entrar</button>
+              <div class="auth-divider">ou</div>
+              <button class="auth-btn-google" onclick="doGoogleLogin()"><svg width="18" height="18" viewBox="0 0 48 48">
+                  <path fill="#FFC107"
+                    d="M43.6 20H24v8h11.3C33.7 33 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-8 19.7-20 0-1.3-.1-2.7-.1-4z" />
+                  <path fill="#FF3D00"
+                    d="M6.3 14.7l6.6 4.8C14.5 15.1 18.9 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
+                  <path fill="#4CAF50"
+                    d="M24 44c5.2 0 9.9-1.9 13.5-5l-6.2-5.2C29.5 35.5 26.9 36 24 36c-5.3 0-9.7-3-11.3-7.3l-6.6 4.8C9.7 39.6 16.3 44 24 44z" />
+                  <path fill="#1976D2"
+                    d="M43.6 20H24v8h11.3c-.7 2-2.1 3.7-3.9 4.9l6.2 5.2C41.6 34.6 44 29.7 44 24c0-1.3-.1-2.7-.4-4z" />
+                </svg>Continuar com Google</button>
+            </div>
+            <div id="form-register" style="display:none">
+              <div class="auth-form-group"><label class="auth-label">Nome</label><input class="auth-input" type="text"
+                  id="reg-name" placeholder="Seu nome"></div>
+              <div class="auth-form-group"><label class="auth-label">Email</label><input class="auth-input" type="email"
+                  id="reg-email" placeholder="seu@email.com"></div>
+              <div class="auth-form-group"><label class="auth-label">Senha</label><input class="auth-input"
+                  type="password" id="reg-password" placeholder="mínimo 6 caracteres"></div>
+              <button class="auth-btn" id="register-btn" onclick="doRegister()">Criar Conta</button>
+              <div class="auth-divider">ou</div>
+              <button class="auth-btn-google" onclick="doGoogleLogin()"><svg width="18" height="18" viewBox="0 0 48 48">
+                  <path fill="#FFC107"
+                    d="M43.6 20H24v8h11.3C33.7 33 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-8 19.7-20 0-1.3-.1-2.7-.1-4z" />
+                  <path fill="#FF3D00"
+                    d="M6.3 14.7l6.6 4.8C14.5 15.1 18.9 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
+                  <path fill="#4CAF50"
+                    d="M24 44c5.2 0 9.9-1.9 13.5-5l-6.2-5.2C29.5 35.5 26.9 36 24 36c-5.3 0-9.7-3-11.3-7.3l-6.6 4.8C9.7 39.6 16.3 44 24 44z" />
+                  <path fill="#1976D2"
+                    d="M43.6 20H24v8h11.3c-.7 2-2.1 3.7-3.9 4.9l6.2 5.2C41.6 34.6 44 29.7 44 24c0-1.3-.1-2.7-.4-4z" />
+                </svg>Continuar com Google</button>
+            </div>
           </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- PENDING APPROVAL SCREEN -->
-    <div class="pending-screen" id="pending-screen" style="display:none">
-      <div class="pending-box">
-        <div class="pending-icon">✅</div>
-        <div class="pending-title">Conta Criada!</div>
-        <div class="pending-text">Seu workspace está pronto.</div>
-        <div class="pending-email" id="pending-email"></div>
-        <button class="pending-logout" onclick="doLogout()">Sair</button>
-      </div>
+  <!-- PENDING APPROVAL SCREEN -->
+  <div class="pending-screen" id="pending-screen" style="display:none">
+    <div class="pending-box">
+      <div class="pending-icon">✅</div>
+      <div class="pending-title">Conta Criada!</div>
+      <div class="pending-text">Seu workspace está pronto.</div>
+      <div class="pending-email" id="pending-email"></div>
+      <button class="pending-logout" onclick="doLogout()">Sair</button>
     </div>
+  </div>
 
-    <!-- TEAMS SCREEN — Split Sidebar Layout -->
-    <div id="teams-screen"
-      style="display:none;position:fixed;inset:0;background:var(--bg);z-index:200;flex-direction:row">
+  <!-- TEAMS SCREEN — Split Sidebar Layout -->
+  <div id="teams-screen"
+    style="display:none;position:fixed;inset:0;background:var(--bg);z-index:200;flex-direction:row">
 
-      <!-- ── SIDEBAR ── -->
-      <div class="ts-sidebar">
+    <!-- ── SIDEBAR ── -->
+    <div class="ts-sidebar">
 
-        <!-- Logo -->
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:36px" class="ts-s1">
-          <div class="ts-bars">
-            <div class="ts-bar"></div>
-            <div class="ts-bar"></div>
-            <div class="ts-bar"></div>
-            <div class="ts-bar"></div>
-            <div class="ts-bar"></div>
-          </div>
-          <div class="ts-wordmark">FREQ<sup>sys</sup></div>
+      <!-- Logo -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:36px" class="ts-s1">
+        <div class="ts-bars">
+          <div class="ts-bar"></div>
+          <div class="ts-bar"></div>
+          <div class="ts-bar"></div>
+          <div class="ts-bar"></div>
+          <div class="ts-bar"></div>
         </div>
+        <div class="ts-wordmark">FREQ<sup>sys</sup></div>
+      </div>
 
-        <!-- Suas equipes -->
-        <div class="ts-nav-sec ts-s2">SUAS EQUIPES</div>
-        <div id="ts-sidebar-list" class="ts-s2">
-          <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);padding:8px 10px">Carregando...
-          </div>
-        </div>
-
-        <!-- Perfil -->
-        <div class="ts-nav-sec ts-s3">PERFIL</div>
-        <div class="ts-nav-item ts-active ts-s3" onclick="expandFindTeamSection()">
-          <span style="font-size:15px">🎤</span><span>Meu Perfil</span>
-        </div>
-        <!-- Procurar Equipe (ex-"Conta") -->
-        <div class="ts-nav-item ts-s3" onclick="showTalentsStandalone()">
-          <span style="font-size:15px">🔍</span><span>Procurar Equipe</span>
-        </div>
-
-        <!-- Painel Master — visível apenas para staff (isStaff()) -->
-        <div id="ts-staff-section" style="display:none">
-          <div class="ts-nav-item ts-s3" id="ts-nav-admin-master" onclick="toggleMasterDrawer()"
-            style="color:var(--a1);margin-top:8px">
-            <span style="font-size:15px">🔐</span><span>Painel Master</span>
-          </div>
-        </div>
-
-        <!-- Bottom bar: User Mini Profile (UMP) — componente reutilizável -->
-        <div class="ump ts-bottom-bar ts-s4">
-
-          <!-- Bloco de identidade: avatar + nome + plano + ícones -->
-          <div class="ump-identity"
-            onclick="window._myTalentProfile ? _openMyTalentPopup(event) : openUnifiedProfileEdit()" title="Meu perfil"
-            tabindex="0" role="button">
-            <!-- Avatar — ID mantido para JS injetar foto/inicial -->
-            <div class="ump-av ts-user-av" id="ts-user-av">?</div>
-            <!-- Nome + plano sublabel -->
-            <div class="ump-info">
-              <span class="ump-name ts-user-name" id="ts-user-name">—</span>
-              <span class="ump-plan" id="ts-plan-value" style="display:none"></span>
-            </div>
-            <!-- Ícones de notificação à direita -->
-            <div class="ump-icons global-action-bar">
-              <button class="ump-icon-btn gab-btn" onclick="event.stopPropagation();pmOpenInbox()" title="Mensagens"
-                id="ts-pm-btn" style="display:none">
-                <svg viewBox="0 0 24 24">
-                  <path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z" />
-                </svg>
-                <span class="gab-badge" id="ts-pm-badge"></span>
-              </button>
-              <button class="ump-icon-btn gab-btn" onclick="event.stopPropagation();showTalentsStandalone()"
-                title="Interesses" id="ts-int-btn">
-                <svg viewBox="0 0 24 24">
-                  <path
-                    d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                </svg>
-                <span class="gab-badge" id="ts-interest-badge"></span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Faixa de ações — 3 colunas: Config / Planos / Sair -->
-          <div class="ump-actions">
-            <button class="ump-action-btn"
-              onclick="if(typeof openSettingsModal==='function')openSettingsModal();else alert('Carregando...')"
-              title="Configurações">
-              <span class="ump-action-icon">⚙</span>Config
-            </button>
-            <button class="ump-action-btn" onclick="if(typeof openPlansModal==='function')openPlansModal()">
-              <span class="ump-action-icon">💎</span>Planos
-            </button>
-            <button class="ump-action-btn" onclick="doLogout()">
-              <span class="ump-action-icon">→</span>Sair
-            </button>
-          </div>
-
+      <!-- Suas equipes -->
+      <div class="ts-nav-sec ts-s2">SUAS EQUIPES</div>
+      <div id="ts-sidebar-list" class="ts-s2">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);padding:8px 10px">Carregando...
         </div>
       </div>
 
-      <!-- ── MAIN ── -->
-      <div class="ts-main">
-
-        <!-- Header -->
-        <div class="ts-s1">
-          <div class="ts-title">Escolha sua equipe</div>
-          <div class="ts-sub">Selecione uma equipe existente, crie uma nova ou encontre colaboradores.</div>
-        </div>
-
-        <!-- Invite banner -->
-        <div id="teams-invite-banner" style="display:none">
-          <div class="ts-invite-wrap">
-            <span style="font-size:20px">🎉</span>
-            <div class="u-flex1">
-              <div
-                style="font-family:var(--font-body);font-size:13px;font-weight:700;color:var(--green);margin-bottom:2px">
-                Você foi convidado para uma equipe!</div>
-              <div id="teams-invite-desc" style="font-family:var(--font-mono);font-size:11px;color:var(--text2)"></div>
-            </div>
-            <button class="btn btn-primary btn-sm" onclick="acceptTeamInvite()" style="flex-shrink:0">✅ Entrar</button>
-            <button class="btn btn-ghost btn-sm" onclick="dismissTeamInvite()" style="flex-shrink:0">✕</button>
-          </div>
-        </div>
-
-        <!-- Action cards -->
-        <div class="ts-action-row ts-s2">
-          <!-- Criar equipe -->
-          <div class="ts-card" style="border-color:rgba(255,60,180,0.25);cursor:pointer"
-            onclick="document.getElementById('create-team-form').style.display=document.getElementById('create-team-form').style.display==='block'?'none':'block';document.getElementById('ts-create-cta').style.display=document.getElementById('create-team-form').style.display==='block'?'none':'block'">
-            <span class="ts-card-icon">🎵</span>
-            <div class="ts-card-title" style="color:var(--a1)">Criar Nova Equipe</div>
-            <div class="ts-card-sub">Comece seu workspace do zero</div>
-            <div id="create-team-form" style="display:none" onclick="event.stopPropagation()">
-              <div class="form-group" style="margin-bottom:10px"><label>Nome da Equipe *</label><input type="text"
-                  id="new-team-name" placeholder="Ex: Remary Studio, Banda XYZ..."></div>
-              <div class="form-group" style="margin-bottom:10px"><label>Descrição (opcional)</label><input type="text"
-                  id="new-team-desc" placeholder="Qual o foco da equipe?"></div>
-              <!-- P2-C: campo de gêneros musicais — especificado no doc conceitual -->
-              <div class="form-group" style="margin-bottom:12px">
-                <label>Gêneros Musicais <span style="color:var(--text3);font-weight:400">(separados por
-                    vírgula)</span></label>
-                <input type="text" id="new-team-genres" placeholder="Ex: Trap Melódico, R&B, Pop Alt..."
-                  style="font-size:12px">
-              </div>
-              <button class="btn btn-primary" style="width:100%" onclick="createTeam()">Criar Equipe</button>
-            </div>
-            <div id="ts-create-cta" class="btn btn-primary"
-              style="width:100%;text-align:center;font-size:12px;padding:9px 0">+ Criar Equipe</div>
-          </div>
-
-          <!-- Entrar via código -->
-          <div class="ts-card" style="border-color:rgba(255,107,61,0.2)">
-            <span class="ts-card-icon">🔗</span>
-            <div class="ts-card-title" style="color:var(--a2)">Entrar via Código</div>
-            <div class="ts-card-sub">Insira o código de convite da equipe</div>
-            <div style="display:flex;gap:8px">
-              <input type="text" id="join-team-code" placeholder="Código de convite..."
-                style="flex:1;font-size:12px;font-family:var(--font-mono);letter-spacing:1px">
-              <button class="btn btn-secondary btn-sm" onclick="joinTeamByCode()" style="flex-shrink:0">Entrar</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Suas equipes -->
-        <div class="ts-s3">
-          <div class="ts-sec-head">
-            <div class="ts-sec-title">Suas Equipes</div>
-            <span class="ts-sec-count" id="ts-teams-count">0</span>
-          </div>
-          <div id="teams-my-list">
-            <div style="font-family:var(--font-mono);font-size:11px;color:var(--text3);text-align:center;padding:20px">
-              Carregando...</div>
-          </div>
-        </div>
-
-        <!-- Compatibilidade: pill oculto usado pelo renderTeamsScreenExtras -->
-        <div id="ts-profile-pill" style="display:none"></div>
-
-      </div><!-- /ts-main -->
-    </div><!-- /teams-screen -->
-
-    <!-- ══ MASTER DRAWER — painel lateral direito sobre teams-screen ══ -->
-    <div id="master-drawer" aria-label="Painel Master" role="dialog" aria-modal="true">
-      <div class="mdr-header">
-        <div style="display:flex;align-items:center;gap:10px">
-          <span style="font-size:16px">🔐</span>
-          <span class="mdr-title">Painel Master</span>
-          <span class="mdr-badge">STAFF ONLY</span>
-        </div>
-        <button class="mdr-close" onclick="toggleMasterDrawer()" title="Fechar">✕</button>
+      <!-- Perfil -->
+      <div class="ts-nav-sec ts-s3">PERFIL</div>
+      <div class="ts-nav-item ts-active ts-s3" onclick="expandFindTeamSection()">
+        <span style="font-size:15px">🎤</span><span>Meu Perfil</span>
       </div>
-      <!-- Abas -->
-      <div class="mdr-tabs">
-        <button id="mdr-tab-dashboard" class="mdr-tab mdr-tab-active" onclick="mdrSwitchTab('dashboard')">📊
-          Dashboard</button>
-        <button id="mdr-tab-tickets" class="mdr-tab" onclick="mdrSwitchTab('tickets')">🎫 Tickets</button>
-        <button id="mdr-tab-workspace" class="mdr-tab" onclick="mdrSwitchTab('workspace')">💾 Workspace</button>
+      <!-- Procurar Equipe (ex-"Conta") -->
+      <div class="ts-nav-item ts-s3" onclick="showTalentsStandalone()">
+        <span style="font-size:15px">🔍</span><span>Procurar Equipe</span>
       </div>
-      <!-- Corpo scrollável -->
-      <div class="mdr-body">
 
-        <!-- ABA: Dashboard -->
-        <div id="mdr-panel-dashboard" class="mdr-panel mdr-panel-visible">
-          <div class="mdr-stats-grid">
-            <div class="mdr-stat-card">
-              <div class="mdr-stat-label">TOTAL USUÁRIOS</div>
-              <div class="mdr-stat-value" id="mdr-stat-users">—</div>
-            </div>
-            <div class="mdr-stat-card">
-              <div class="mdr-stat-label">TOTAL EQUIPES</div>
-              <div class="mdr-stat-value" id="mdr-stat-teams">—</div>
-            </div>
-            <div class="mdr-stat-card">
-              <div class="mdr-stat-label">TICKETS ABERTOS</div>
-              <div class="mdr-stat-value" style="color:var(--a1)" id="mdr-stat-tickets">—</div>
-            </div>
-          </div>
-          <div class="mdr-section">
-            <div class="mdr-section-title">GERENCIAR STAFF</div>
-            <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-              <input id="mdr-staff-uid" class="form-input" placeholder="UID do usuário"
-                style="flex:1;min-width:130px;font-family:var(--font-mono);font-size:12px">
-              <select id="mdr-staff-role" class="form-input"
-                style="width:120px;font-family:var(--font-mono);font-size:12px">
-                <option value="staff">staff</option>
-                <option value="support">support</option>
-                <option value="moderator">moderator</option>
-                <option value="">Remover</option>
-              </select>
-              <button class="btn btn-primary btn-sm" onclick="mdrSetStaffRole()">Aplicar</button>
-            </div>
-            <div id="mdr-staff-list" style="font-family:var(--font-mono);font-size:11px;color:var(--text3)">
-              Carregando...</div>
-          </div>
-          <div class="mdr-section">
-            <div class="mdr-section-title">SESSÃO</div>
-            <div id="mdr-activity-log" style="font-family:var(--font-mono);font-size:11px;color:var(--text3)">—</div>
-          </div>
-        </div>
-
-        <!-- ABA: Tickets -->
-        <div id="mdr-panel-tickets" class="mdr-panel">
-          <!-- Filtro por status -->
-          <div style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap">
-            <button class="btn btn-ghost btn-sm" id="mdrtf-all" onclick="mdrFilterTickets('all',this)"
-              style="font-family:var(--font-mono);font-size:9px;border-color:var(--a1);color:var(--a1)">Todos</button>
-            <button class="btn btn-ghost btn-sm" id="mdrtf-open" onclick="mdrFilterTickets('open',this)"
-              style="font-family:var(--font-mono);font-size:9px">Abertos</button>
-            <button class="btn btn-ghost btn-sm" id="mdrtf-inprogress" onclick="mdrFilterTickets('inprogress',this)"
-              style="font-family:var(--font-mono);font-size:9px">Em andamento</button>
-            <button class="btn btn-ghost btn-sm" id="mdrtf-waiting" onclick="mdrFilterTickets('waiting',this)"
-              style="font-family:var(--font-mono);font-size:9px">Aguardando</button>
-            <button class="btn btn-ghost btn-sm" id="mdrtf-resolved" onclick="mdrFilterTickets('resolved',this)"
-              style="font-family:var(--font-mono);font-size:9px">Resolvidos</button>
-            <button class="btn btn-ghost btn-sm" id="mdrtf-closed" onclick="mdrFilterTickets('closed',this)"
-              style="font-family:var(--font-mono);font-size:9px">Fechados</button>
-          </div>
-          <!-- Filtro por prioridade + categoria -->
-          <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
-            <select class="tfilter-sel" id="mdr-fpri" onchange="_mdrApplyFilters()">
-              <option value="">Todas prioridades</option>
-              <option value="urgent">🔴 Urgente</option>
-              <option value="high">🟠 Alta</option>
-              <option value="medium">🟡 Média</option>
-              <option value="low">🟢 Baixa</option>
-            </select>
-            <select class="tfilter-sel" id="mdr-fcat" onchange="_mdrApplyFilters()">
-              <option value="">Todas categorias</option>
-              <option value="bug">🐛 Bug</option>
-              <option value="sugestao">💡 Sugestão</option>
-              <option value="financeiro">💳 Financeiro</option>
-              <option value="conta">👤 Conta</option>
-              <option value="duvida">❓ Dúvida</option>
-              <option value="outro">📋 Outro</option>
-            </select>
-          </div>
-          <div id="mdr-tickets-list">
-            <div style="font-family:var(--font-mono);font-size:11px;color:var(--text3);padding:20px;text-align:center">
-              Conectando...</div>
-          </div>
-        </div>
-
-        <!-- ABA: Workspace -->
-        <div id="mdr-panel-workspace" class="mdr-panel">
-          <div class="mdr-section">
-            <div class="mdr-section-title">BACKUP DE WORKSPACE</div>
-            <div
-              style="font-family:var(--font-mono);font-size:11px;color:var(--text3);margin-bottom:16px;line-height:1.7">
-              Exporta/importa projetos e colaboradores de uma equipe.<br>
-              <strong style="color:var(--text2)">Requer equipe ativa.</strong> Entre em uma equipe antes de usar.
-            </div>
-            <div style="display:flex;gap:10px;flex-wrap:wrap">
-              <button class="btn btn-ghost btn-sm" onclick="masterExportWorkspace()" style="padding:8px 16px">⬇ Exportar
-                backup</button>
-              <label class="btn btn-ghost btn-sm" style="cursor:pointer;padding:8px 16px">⬆ Importar backup
-                <input type="file" accept=".json" style="display:none" onchange="masterImportWorkspace(this)">
-              </label>
-            </div>
-          </div>
-        </div>
-
-      </div><!-- /mdr-body -->
-    </div><!-- /master-drawer -->
-    <!-- Overlay escuro sob o drawer -->
-    <div id="master-drawer-overlay" onclick="toggleMasterDrawer()"></div>
-
-    <!-- MODAL CONVITE -->
-    <div class="modal-overlay hidden" id="modal-invite">
-      <div class="modal" style="max-width:480px;padding:32px">
-        <button class="close-btn" onclick="closeModal('modal-invite')">×</button>
-        <h3 style="font-family:var(--font-body);font-size:18px;font-weight:800;margin-bottom:6px;color:var(--a1)">🔗
-          Convidar Membros</h3>
-        <p style="font-family:var(--font-mono);font-size:10px;color:var(--text3);letter-spacing:2px;margin-bottom:24px">
-          COMPARTILHE O CÓDIGO COM QUEM DESEJA CONVIDAR</p>
-        <div
-          style="background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:20px;text-align:center;margin-bottom:20px">
-          <div style="font-family:var(--font-mono);font-size:28px;letter-spacing:8px;color:var(--a2);font-weight:700"
-            id="modal-invite-code">——</div>
-          <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-top:6px">// Código de
-            convite da equipe</div>
-        </div>
-        <button class="btn btn-primary" style="width:100%;margin-bottom:12px" onclick="copyModalInviteCode()">📋 Copiar
-          Código</button>
-        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);text-align:center">O membro insere
-          este código na tela de equipes para entrar</div>
-      </div>
-    </div>
-
-    <!-- MODAL PERFIL PROFISSIONAL (para quem quer procurar equipe) -->
-    <div class="modal-overlay hidden" id="modal-talent-create">
-      <div class="modal" style="max-width:600px;max-height:92vh;overflow-y:auto;padding:32px">
-        <button class="close-btn" onclick="closeModal('modal-talent-create')">×</button>
-        <h3 style="font-family:var(--font-display);font-size:20px;font-weight:700;margin-bottom:4px;color:var(--a3)">🎤
-          Seu Perfil Profissional</h3>
-        <p style="font-family:var(--font-mono);font-size:10px;color:var(--text3);letter-spacing:2px;margin-bottom:24px">
-          CRIE SEU PERFIL PARA APARECER NAS BUSCAS DAS EQUIPES</p>
-
-        <!-- Foto -->
-        <div style="display:flex;align-items:center;gap:16px;margin-bottom:22px">
-          <div id="tc-photo-preview" onclick="document.getElementById('tc-photo-input').click()"
-            style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;overflow:hidden;border:2px solid var(--border2);flex-shrink:0">
-            📷
-            <img id="tc-photo-img" style="display:none;width:100%;height:100%;object-fit:cover">
-          </div>
-          <input type="file" id="tc-photo-input" accept="image/*" style="display:none" onchange="tcHandlePhoto(this)">
-          <div>
-            <div
-              style="font-family:var(--font-body);font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">
-              Foto de perfil</div>
-            <div class="u-mono-label2">Clique para adicionar</div>
-          </div>
-        </div>
-
-        <div class="form-group"><label>Nome artístico / profissional *</label><input type="text" id="tc-name"
-            placeholder="Como você quer ser encontrado?"></div>
-        <div class="form-group"><label>Bio / Apresentação *</label><textarea id="tc-bio"
-            placeholder="Conte sobre você, seu estilo, seus projetos passados..."
-            style="min-height:80px;resize:vertical"></textarea></div>
-        <div class="form-group"><label>Contato (WhatsApp, Instagram...)</label><input type="text" id="tc-contact"
-            placeholder="Ex: @seuperfil ou +55 11 99999-9999"></div>
-        <div class="form-group"><label>Disponibilidade</label>
-          <select id="tc-availability">
-            <option value="available">✅ Disponível para projetos</option>
-            <option value="partial">⏳ Disponível parcialmente</option>
-            <option value="unavailable">🔴 Indisponível no momento</option>
-            <option value="hidden">👻 Não aparecer nas buscas</option>
-          </select>
-        </div>
-
-        <div
-          style="font-family:var(--font-body);font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;margin-top:8px">
-          Habilidades e Nível</div>
-        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:16px">Marque suas áreas
-          e escolha o nível em cada uma</div>
-        <div id="tc-skills-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px"></div>
-
-        <button class="btn btn-primary" style="width:100%" onclick="saveTcProfile()">✅ Salvar e Procurar
-          Equipes</button>
-      </div>
-    </div>
-
-    <!-- MODAL ENCONTRAR EQUIPES (hub para talentos) -->
-    <div class="modal-overlay hidden" id="modal-find-teams">
-      <div class="modal" style="max-width:900px;max-height:94vh;overflow-y:auto;padding:32px">
-        <button class="close-btn" onclick="closeModal('modal-find-teams')">×</button>
-        <div
-          style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px">
-          <h3 style="font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--a3)">🔎 Encontre sua
-            Equipe</h3>
-          <button onclick="openModal('modal-talent-create');closeModal('modal-find-teams')" class="btn btn-ghost btn-sm"
-            style="border-color:var(--a2);color:var(--a2)">✏️ Editar Meu Perfil</button>
-        </div>
-        <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
-          <input id="ft-search" type="text" placeholder="🔍 Buscar por nome ou descrição da equipe..."
-            oninput="_dbRenderFindTeams()"
-            style="background:var(--input-bg);border:1px solid var(--border2);color:var(--text);padding:8px 14px;border-radius:8px;font-family:var(--font-body);font-size:13px;flex:1;min-width:180px">
-        </div>
-        <div id="ft-teams-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px">
-        </div>
-      </div>
-    </div>
-
-    <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
-
-    <!-- SIDEBAR -->
-    <aside class="sidebar collapsed" id="sidebar">
-      <button class="sidebar-toggle" id="sidebar-toggle-btn" onclick="toggleSidebarCollapse()" title="Expandir sidebar"
-        style="margin-bottom:8px">▶</button>
-      <div class="sidebar-logo">
-        <div class="logo freq-logo-wrap">
-          <div class="freq-waveform">
-            <div class="fw-bar"></div>
-            <div class="fw-bar"></div>
-            <div class="fw-bar"></div>
-            <div class="fw-bar"></div>
-            <div class="fw-bar"></div>
-          </div>
-          <div class="freq-wordmark">
-            <div>
-              <span class="freq-part">FREQ</span><span class="sys-part">sys</span>
-              <div class="logo-sub">music project system</div>
-            </div>
-          </div>
+      <!-- Painel Master — visível apenas para staff (isStaff()) -->
+      <div id="ts-staff-section" style="display:none">
+        <div class="ts-nav-item ts-s3" id="ts-nav-admin-master" onclick="toggleMasterDrawer()"
+          style="color:var(--a1);margin-top:8px">
+          <span style="font-size:15px">🔐</span><span>Painel Master</span>
         </div>
       </div>
 
-      <nav class="sidebar-nav">
-        <div class="nav-section-label">Principal</div>
-        <button class="nav-btn active" id="nav-dashboard" onclick="showPage('dashboard')">
-          <span class="nav-icon">⊞</span> <span class="nav-btn-label">Geral</span>
-        </button>
-        <button class="nav-btn" id="nav-projects" onclick="showPage('projects')">
-          <span class="nav-icon">🎵</span> <span class="nav-btn-label">Projetos</span>
-        </button>
-        <button class="nav-btn" id="nav-collaborators" onclick="showPage('collaborators')">
-          <span class="nav-icon">👥</span> <span class="nav-btn-label">Membros</span>
-        </button>
-
-        <div class="nav-section-label">Ferramentas</div>
-        <button class="nav-btn" id="nav-analytics" onclick="showPageChecked('analytics','pro')">
-          <span class="nav-icon">📊</span> <span class="nav-btn-label">Analytics</span>
-          <span class="nav-plan-badge" id="analytics-plan-badge">PRO</span>
-        </button>
-        <button class="nav-btn" id="nav-productivity" onclick="showPageChecked('productivity','pro')">
-          <span class="nav-icon">🧠</span> <span class="nav-btn-label">Produtividade</span>
-          <span class="nav-plan-badge">PRO</span>
-        </button>
-        <button class="nav-btn" id="nav-team-settings" onclick="showPage('team-settings')">
-          <span class="nav-icon">🛠</span> <span class="nav-btn-label">Gerenciamento</span>
-        </button>
-
-        <div class="nav-section-label">Configurações</div>
-        <button class="nav-btn" onclick="openSettingsModal()">
-          <span class="nav-icon">⚙</span> <span class="nav-btn-label">Configurações Gerais</span>
-        </button>
-      </nav>
-
-      <!-- User card at bottom — layout unificado igual ao teams-screen -->
-      <!-- User Mini Profile (UMP) — componente reutilizável, mesma estrutura que ts-bottom-bar -->
-      <div class="ump sidebar-user" id="sidebar-user-section" style="display:none">
+      <!-- Bottom bar: User Mini Profile (UMP) — componente reutilizável -->
+      <div class="ump ts-bottom-bar ts-s4">
 
         <!-- Bloco de identidade: avatar + nome + plano + ícones -->
-        <!-- sidebar-user-card mantido para compat com applyPermissions/JS -->
-        <div class="ump-identity sidebar-user-card" style="width:auto;height:auto;padding:0"
+        <div class="ump-identity"
           onclick="window._myTalentProfile ? _openMyTalentPopup(event) : openUnifiedProfileEdit()" title="Meu perfil"
-          id="sidebar-profile-card" tabindex="0" role="button">
-          <!-- Avatar — user-avatar mantido pois JS popula por essa classe -->
-          <div class="ump-av user-avatar" id="header-avatar" style="cursor:pointer">?</div>
-          <!-- Nome + role sublabel — sidebar-user-info mantido para collapsed state JS -->
-          <div class="ump-info sidebar-user-info">
-            <span class="ump-name sidebar-user-name" id="header-username">—</span>
-            <span class="ump-plan sidebar-user-role" id="header-role"></span>
+          tabindex="0" role="button">
+          <!-- Avatar — ID mantido para JS injetar foto/inicial -->
+          <div class="ump-av ts-user-av" id="ts-user-av">?</div>
+          <!-- Nome + plano sublabel -->
+          <div class="ump-info">
+            <span class="ump-name ts-user-name" id="ts-user-name">—</span>
+            <span class="ump-plan" id="ts-plan-value" style="display:none"></span>
           </div>
-          <!-- Ícones de ação à direita -->
-          <div class="ump-icons global-action-bar" style="margin-left:auto;flex-shrink:0">
-            <button class="ump-icon-btn gab-btn" id="pm-sidebar-btn" onclick="event.stopPropagation();pmOpenInbox()"
-              title="Mensagens Privadas" style="display:none">
+          <!-- Ícones de notificação à direita -->
+          <div class="ump-icons global-action-bar">
+            <button class="ump-icon-btn gab-btn" onclick="event.stopPropagation();pmOpenInbox()" title="Mensagens"
+              id="ts-pm-btn" style="display:none">
               <svg viewBox="0 0 24 24">
                 <path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z" />
               </svg>
-              <span class="gab-badge" id="pm-sidebar-badge"></span>
+              <span class="gab-badge" id="ts-pm-badge"></span>
             </button>
-            <button class="ump-icon-btn gab-btn"
-              onclick="event.stopPropagation();if(window._currentTeamId){openTeamProfileHub();}else{showTalentsStandalone();}"
-              id="interest-sidebar-btn" title="Interesses">
+            <button class="ump-icon-btn gab-btn" onclick="event.stopPropagation();showTalentsStandalone()"
+              title="Interesses" id="ts-int-btn">
               <svg viewBox="0 0 24 24">
                 <path
                   d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
               </svg>
-              <span class="gab-badge" id="interest-sidebar-badge"></span>
-            </button>
-            <button class="ump-icon-btn gab-btn ump-notif gab-notif"
-              onclick="event.stopPropagation();showPage('notifications')" id="nav-notifications" title="Notificações">
-              <svg viewBox="0 0 24 24">
-                <path
-                  d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
-              </svg>
-              <span class="gab-badge" id="notif-badge"></span>
+              <span class="gab-badge" id="ts-interest-badge"></span>
             </button>
           </div>
         </div>
 
-        <!-- Faixa de ações — 4 colunas: Config / Planos / Equipe / Sair -->
-        <!-- sidebar-user-actions mantido para collapsed state JS -->
-        <div class="ump-actions ump-cols-4 sidebar-user-actions">
-          <button class="ump-action-btn sidebar-action-btn" onclick="openSettingsModal()" title="Configurações">
+        <!-- Faixa de ações — 3 colunas: Config / Planos / Sair -->
+        <div class="ump-actions">
+          <button class="ump-action-btn"
+            onclick="if(typeof openSettingsModal==='function')openSettingsModal();else alert('Carregando...')"
+            title="Configurações">
             <span class="ump-action-icon">⚙</span>Config
           </button>
-          <button class="ump-action-btn sidebar-action-btn" onclick="openPlansModal()">
+          <button class="ump-action-btn" onclick="if(typeof openPlansModal==='function')openPlansModal()">
             <span class="ump-action-icon">💎</span>Planos
           </button>
-          <button class="ump-action-btn sidebar-action-btn" onclick="switchTeam()">
-            <span class="ump-action-icon">🔄</span>Equipe
-          </button>
-          <button class="ump-action-btn sidebar-action-btn" onclick="doLogout()">
+          <button class="ump-action-btn" onclick="doLogout()">
             <span class="ump-action-icon">→</span>Sair
           </button>
         </div>
 
-        <!-- Clock — mantido, controlado por sidebar collapsed state -->
-        <div class="ump-time sidebar-time" id="sys-time">--:--:--</div>
+      </div>
+    </div>
 
+    <!-- ── MAIN ── -->
+    <div class="ts-main">
+
+      <!-- Header -->
+      <div class="ts-s1">
+        <div class="ts-title">Escolha sua equipe</div>
+        <div class="ts-sub">Selecione uma equipe existente, crie uma nova ou encontre colaboradores.</div>
       </div>
 
-    </aside>
-
-    <!-- needed for applyPermissions compat -->
-    <div id="header-user-info" style="display:none"></div>
-
-    <div class="main-content">
-      <header style="display:none"></header>
-
-      <div class="app" style="display:none">
-        <div id="page-dashboard" class="page active">
-          <div id="admin-panel-container"></div>
-
-          <!-- SPLIT B: Header editorial -->
-          <div
-            style="display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:20px;border-bottom:1px solid var(--border);margin-bottom:28px;flex-wrap:wrap;gap:16px">
-            <div>
-              <div
-                style="font-family:var(--font-mono);font-size:10px;letter-spacing:3px;color:var(--a2);text-transform:uppercase;margin-bottom:8px"
-                id="dash-eyebrow">// Dashboard</div>
-              <h1
-                style="font-family:var(--font-display);font-size:clamp(28px,4vw,40px);font-weight:700;color:var(--text);line-height:1;margin:0"
-                id="dash-greeting">Visão Geral</h1>
-              <div style="font-family:var(--font-mono);font-size:11px;color:var(--text2);margin-top:6px" id="dash-date">
-              </div>
-            </div>
-            <div style="display:flex;gap:10px;flex-wrap:wrap">
-              <button class="btn btn-ghost admin-only" onclick="openNewProject()" style="display:none">+ Novo
-                Projeto</button>
-              <button class="btn btn-primary admin-only" onclick="openModal('modal-invite')" style="display:none"
-                id="dash-invite-btn">Convidar</button>
-            </div>
-          </div>
-
-          <!-- Stats -->
-          <div class="stats-grid" style="margin-bottom:32px">
-            <div class="card stat-card s-total">
-              <div class="stat-number" id="stat-total">0</div>
-              <div class="stat-label">Projetos</div>
-            </div>
-            <div class="card stat-card s-active">
-              <div class="stat-number" id="stat-active">0</div>
-              <div class="stat-label">Ativos</div>
-            </div>
-            <div class="card stat-card s-done">
-              <div class="stat-number" id="stat-completed">0</div>
-              <div class="stat-label">Lançados</div>
-            </div>
-            <div class="card stat-card s-team">
-              <div class="stat-number" id="stat-collabs">0</div>
-              <div class="stat-label">Equipe</div>
-            </div>
-          </div>
-
-          <!-- Split: lista + painel direito -->
-          <div class="dash-split-layout">
-            <div>
-              <!-- P3-C: título dinâmico — alterna entre "em Destaque" e "Recentes" -->
-              <div style="font-family:var(--font-display);font-size:20px;font-weight:700;margin-bottom:0">
-                <span id="dashboard-projects-label">🎵 Projetos Recentes</span>
-              </div>
-              <div id="dashboard-projects-list"></div>
-              <div id="deadline-section" style="display:none;margin-top:28px">
-                <div style="font-family:var(--font-display);font-size:18px;font-weight:700;margin-bottom:12px">
-                  Prazos <em style="font-style:italic;color:var(--red)">Próximos</em>
-                </div>
-                <div id="deadline-list"></div>
-              </div>
-            </div>
-            <div class="dash-right-panel">
-              <div class="card" style="padding:20px">
-                <div style="font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:14px">
-                  <em style="font-style:italic;color:var(--a2)">Equipe</em>
-                </div>
-                <div id="dash-team-members"></div>
-                <button class="btn btn-ghost admin-only" onclick="openModal('modal-invite')"
-                  style="display:none;width:100%;justify-content:center;margin-top:12px" id="dash-invite-btn2">+
-                  Convidar</button>
-              </div>
-              <div class="card" style="padding:20px;display:none" id="dash-invite-card">
-              </div>
-            </div>
-          </div>
-
-          <!-- Insights full width -->
-          <div id="dashboard-insights" style="margin-top:40px">
+      <!-- Invite banner -->
+      <div id="teams-invite-banner" style="display:none">
+        <div class="ts-invite-wrap">
+          <span style="font-size:20px">🎉</span>
+          <div class="u-flex1">
             <div
-              style="font-family:var(--font-display);font-size:20px;font-weight:700;margin-bottom:20px;padding-top:20px;border-top:1px solid var(--border)">
-              Insights <em style="font-style:italic;color:var(--a3)">&amp; Desempenho</em>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
-              <div class="card" style="padding:20px">
-                <div
-                  style="font-family:var(--font-mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--a2);margin-bottom:4px">
-                  📈 Progresso por Projeto</div>
-                <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3);margin-bottom:14px">
-                  Comparativo de avanço entre todos os projetos</div>
-                <canvas id="dash-chart-progress" height="200"></canvas>
-              </div>
-              <div class="card" style="padding:20px">
-                <div
-                  style="font-family:var(--font-mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--a3);margin-bottom:4px">
-                  ⏱ Dias em Produção</div>
-                <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3);margin-bottom:14px">Tempo
-                  acumulado de cada projeto</div>
-                <canvas id="dash-chart-days" height="200"></canvas>
-              </div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px">
-              <div class="card" style="padding:20px">
-                <div
-                  style="font-family:var(--font-mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--green);margin-bottom:4px">
-                  ✅ Status</div>
-                <canvas id="dash-chart-status" height="180"></canvas>
-              </div>
-              <div class="card" style="padding:20px;grid-column:span 2">
-                <div
-                  style="font-family:var(--font-mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--yellow);margin-bottom:4px">
-                  🔥 Fases Concluídas</div>
-                <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3);margin-bottom:14px">Quantas
-                  fases cada projeto já finalizou</div>
-                <canvas id="dash-chart-stages" height="140"></canvas>
-              </div>
-            </div>
+              style="font-family:var(--font-body);font-size:13px;font-weight:700;color:var(--green);margin-bottom:2px">
+              Você foi convidado para uma equipe!</div>
+            <div id="teams-invite-desc" style="font-family:var(--font-mono);font-size:11px;color:var(--text2)"></div>
           </div>
+          <button class="btn btn-primary btn-sm" onclick="acceptTeamInvite()" style="flex-shrink:0">✅ Entrar</button>
+          <button class="btn btn-ghost btn-sm" onclick="dismissTeamInvite()" style="flex-shrink:0">✕</button>
+        </div>
+      </div>
+
+      <!-- Action cards -->
+      <div class="ts-action-row ts-s2">
+        <!-- Criar equipe -->
+        <div class="ts-card" style="border-color:rgba(255,60,180,0.25);cursor:pointer"
+          onclick="document.getElementById('create-team-form').style.display=document.getElementById('create-team-form').style.display==='block'?'none':'block';document.getElementById('ts-create-cta').style.display=document.getElementById('create-team-form').style.display==='block'?'none':'block'">
+          <span class="ts-card-icon">🎵</span>
+          <div class="ts-card-title" style="color:var(--a1)">Criar Nova Equipe</div>
+          <div class="ts-card-sub">Comece seu workspace do zero</div>
+          <div id="create-team-form" style="display:none" onclick="event.stopPropagation()">
+            <div class="form-group" style="margin-bottom:10px"><label>Nome da Equipe *</label><input type="text"
+                id="new-team-name" placeholder="Ex: Remary Studio, Banda XYZ..."></div>
+            <div class="form-group" style="margin-bottom:10px"><label>Descrição (opcional)</label><input type="text"
+                id="new-team-desc" placeholder="Qual o foco da equipe?"></div>
+            <!-- P2-C: campo de gêneros musicais — especificado no doc conceitual -->
+            <div class="form-group" style="margin-bottom:12px">
+              <label>Gêneros Musicais <span style="color:var(--text3);font-weight:400">(separados por
+                  vírgula)</span></label>
+              <input type="text" id="new-team-genres" placeholder="Ex: Trap Melódico, R&B, Pop Alt..."
+                style="font-size:12px">
+            </div>
+            <button class="btn btn-primary" style="width:100%" onclick="createTeam()">Criar Equipe</button>
+          </div>
+          <div id="ts-create-cta" class="btn btn-primary"
+            style="width:100%;text-align:center;font-size:12px;padding:9px 0">+ Criar Equipe</div>
         </div>
 
-        <div id="page-projects" class="page">
-          <div class="section-header">
-            <h2 class="section-title">Todos os Projetos</h2>
-            <div style="display:flex;gap:8px;align-items:center">
-              <div class="view-toggle">
-                <button class="view-btn active" id="vbtn-grid" onclick="setView('grid')" title="Grid">⊞</button>
-                <button class="view-btn" id="vbtn-list" onclick="setView('list')" title="Lista">≡</button>
-              </div>
-              <button id="btn-new-project" class="btn btn-primary admin-only" onclick="openNewProject()"
-                style="display:none">+ Novo
-                Projeto</button>
-            </div>
+        <!-- Entrar via código -->
+        <div class="ts-card" style="border-color:rgba(255,107,61,0.2)">
+          <span class="ts-card-icon">🔗</span>
+          <div class="ts-card-title" style="color:var(--a2)">Entrar via Código</div>
+          <div class="ts-card-sub">Insira o código de convite da equipe</div>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="join-team-code" placeholder="Código de convite..."
+              style="flex:1;font-size:12px;font-family:var(--font-mono);letter-spacing:1px">
+            <button class="btn btn-secondary btn-sm" onclick="joinTeamByCode()" style="flex-shrink:0">Entrar</button>
           </div>
-          <div class="filter-bar">
-            <button class="filter-btn active" onclick="setFilter('all',this)">Todos</button>
-            <button class="filter-btn" onclick="setFilter('active',this)">Ativos</button>
-            <button class="filter-btn" onclick="setFilter('paused',this)">Pausados</button>
-            <button class="filter-btn" onclick="setFilter('completed',this)">Lançados</button>
-            <button class="filter-btn" onclick="setFilter('cancelled',this)">Cancelados</button>
-            <input class="search-input" type="text" placeholder="Buscar..." id="search-input"
-              oninput="_dbRenderProjects()" style="margin-left:auto">
-            <select class="sort-select" id="sort-select" onchange="renderAllProjects()">
-              <option value="date_new">↓ Mais Recente</option>
-              <option value="date_old">↑ Mais Antigo</option>
-              <option value="progress_high">↓ Mais Progresso</option>
-              <option value="progress_low">↑ Menos Progresso</option>
-              <option value="title_az">A → Z</option>
-              <option value="deadline">⏰ Prazo</option>
-              <option value="starred">⭐ Favoritos</option>
+        </div>
+      </div>
+
+      <!-- Suas equipes -->
+      <div class="ts-s3">
+        <div class="ts-sec-head">
+          <div class="ts-sec-title">Suas Equipes</div>
+          <span class="ts-sec-count" id="ts-teams-count">0</span>
+        </div>
+        <div id="teams-my-list">
+          <div style="font-family:var(--font-mono);font-size:11px;color:var(--text3);text-align:center;padding:20px">
+            Carregando...</div>
+        </div>
+      </div>
+
+      <!-- Compatibilidade: pill oculto usado pelo renderTeamsScreenExtras -->
+      <div id="ts-profile-pill" style="display:none"></div>
+
+    </div><!-- /ts-main -->
+  </div><!-- /teams-screen -->
+
+  <!-- ══ MASTER DRAWER — painel lateral direito sobre teams-screen ══ -->
+  <div id="master-drawer" aria-label="Painel Master" role="dialog" aria-modal="true">
+    <div class="mdr-header">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:16px">🔐</span>
+        <span class="mdr-title">Painel Master</span>
+        <span class="mdr-badge">STAFF ONLY</span>
+      </div>
+      <button class="mdr-close" onclick="toggleMasterDrawer()" title="Fechar">✕</button>
+    </div>
+    <!-- Abas -->
+    <div class="mdr-tabs">
+      <button id="mdr-tab-dashboard" class="mdr-tab mdr-tab-active" onclick="mdrSwitchTab('dashboard')">📊
+        Dashboard</button>
+      <button id="mdr-tab-tickets" class="mdr-tab" onclick="mdrSwitchTab('tickets')">🎫 Tickets</button>
+      <button id="mdr-tab-overrides" class="mdr-tab" onclick="mdrSwitchTab('overrides')">👑 Overrides</button>
+      <button id="mdr-tab-workspace" class="mdr-tab" onclick="mdrSwitchTab('workspace')">💾 Workspace</button>
+    </div>
+    <!-- Corpo scrollável -->
+    <div class="mdr-body">
+
+      <!-- ABA: Dashboard -->
+      <div id="mdr-panel-dashboard" class="mdr-panel mdr-panel-visible">
+        <div class="mdr-stats-grid">
+          <div class="mdr-stat-card">
+            <div class="mdr-stat-label">TOTAL USUÁRIOS</div>
+            <div class="mdr-stat-value" id="mdr-stat-users">—</div>
+          </div>
+          <div class="mdr-stat-card">
+            <div class="mdr-stat-label">TOTAL EQUIPES</div>
+            <div class="mdr-stat-value" id="mdr-stat-teams">—</div>
+          </div>
+          <div class="mdr-stat-card">
+            <div class="mdr-stat-label">TICKETS ABERTOS</div>
+            <div class="mdr-stat-value" style="color:var(--a1)" id="mdr-stat-tickets">—</div>
+          </div>
+        </div>
+        <div class="mdr-section">
+          <div class="mdr-section-title">GERENCIAR STAFF</div>
+          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+            <input id="mdr-staff-uid" class="form-input" placeholder="UID do usuário"
+              style="flex:1;min-width:130px;font-family:var(--font-mono);font-size:12px">
+            <select id="mdr-staff-role" class="form-input"
+              style="width:120px;font-family:var(--font-mono);font-size:12px">
+              <option value="staff">staff</option>
+              <option value="support">support</option>
+              <option value="moderator">moderator</option>
+              <option value="">Remover</option>
+            </select>
+            <button class="btn btn-primary btn-sm" onclick="mdrSetStaffRole()">Aplicar</button>
+          </div>
+          <div id="mdr-staff-list" style="font-family:var(--font-mono);font-size:11px;color:var(--text3)">
+            Carregando...</div>
+        </div>
+        <div class="mdr-section">
+          <div class="mdr-section-title">SESSÃO</div>
+          <div id="mdr-activity-log" style="font-family:var(--font-mono);font-size:11px;color:var(--text3)">—</div>
+        </div>
+      </div>
+
+      <!-- ABA: Tickets -->
+      <div id="mdr-panel-tickets" class="mdr-panel">
+        <!-- Filtro por status -->
+        <div style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" id="mdrtf-all" onclick="mdrFilterTickets('all',this)"
+            style="font-family:var(--font-mono);font-size:9px;border-color:var(--a1);color:var(--a1)">Todos</button>
+          <button class="btn btn-ghost btn-sm" id="mdrtf-open" onclick="mdrFilterTickets('open',this)"
+            style="font-family:var(--font-mono);font-size:9px">Abertos</button>
+          <button class="btn btn-ghost btn-sm" id="mdrtf-inprogress" onclick="mdrFilterTickets('inprogress',this)"
+            style="font-family:var(--font-mono);font-size:9px">Em andamento</button>
+          <button class="btn btn-ghost btn-sm" id="mdrtf-waiting" onclick="mdrFilterTickets('waiting',this)"
+            style="font-family:var(--font-mono);font-size:9px">Aguardando</button>
+          <button class="btn btn-ghost btn-sm" id="mdrtf-resolved" onclick="mdrFilterTickets('resolved',this)"
+            style="font-family:var(--font-mono);font-size:9px">Resolvidos</button>
+          <button class="btn btn-ghost btn-sm" id="mdrtf-closed" onclick="mdrFilterTickets('closed',this)"
+            style="font-family:var(--font-mono);font-size:9px">Fechados</button>
+        </div>
+        <!-- Filtro por prioridade + categoria -->
+        <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
+          <select class="tfilter-sel" id="mdr-fpri" onchange="_mdrApplyFilters()">
+            <option value="">Todas prioridades</option>
+            <option value="urgent">🔴 Urgente</option>
+            <option value="high">🟠 Alta</option>
+            <option value="medium">🟡 Média</option>
+            <option value="low">🟢 Baixa</option>
+          </select>
+          <select class="tfilter-sel" id="mdr-fcat" onchange="_mdrApplyFilters()">
+            <option value="">Todas categorias</option>
+            <option value="bug">🐛 Bug</option>
+            <option value="sugestao">💡 Sugestão</option>
+            <option value="financeiro">💳 Financeiro</option>
+            <option value="conta">👤 Conta</option>
+            <option value="duvida">❓ Dúvida</option>
+            <option value="outro">📋 Outro</option>
+          </select>
+        </div>
+        <div id="mdr-tickets-list">
+          <div style="font-family:var(--font-mono);font-size:11px;color:var(--text3);padding:20px;text-align:center">
+            Conectando...</div>
+        </div>
+      </div>
+
+      <!-- ABA: Overrides -->
+      <div id="mdr-panel-overrides" class="mdr-panel">
+        <div class="mdr-section">
+          <div class="mdr-section-title">ATIVAR OVERRIDE</div>
+          <div
+            style="font-family:var(--font-mono);font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.5">
+            Força um plano para um usuário temporariamente. O usuário reverte para o base plan ao expirar.
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+            <input type="text" id="mdr-override-uid" class="form-input" placeholder="UID ou @handle (ex: @fulano)"
+              style="flex:1;min-width:140px;font-family:var(--font-mono);font-size:12px">
+            <select id="mdr-override-plan" class="form-input"
+              style="width:110px;font-family:var(--font-mono);font-size:12px">
+              <option value="pro">Pro</option>
+              <option value="advanced">Advanced</option>
+              <option value="free">Free</option>
+            </select>
+            <select id="mdr-override-days" class="form-input"
+              style="width:100px;font-family:var(--font-mono);font-size:12px">
+              <option value="1">1 Dia</option>
+              <option value="7">7 Dias</option>
+              <option value="30">30 Dias</option>
+              <option value="90">90 Dias</option>
+              <option value="365">1 Ano</option>
             </select>
           </div>
-          <div class="projects-grid" id="all-projects"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+            <input type="text" id="mdr-override-note" class="form-input" placeholder="Motivo/Nota (opcional)"
+              style="flex:1;font-family:var(--font-mono);font-size:12px">
+            <button class="btn btn-primary btn-sm" onclick="masterSetOverride()">Aplicar</button>
+          </div>
+        </div>
+        <div class="mdr-section">
+          <div class="mdr-section-title">OVERRIDES ATIVOS</div>
+          <div style="display:flex;gap:10px;margin-bottom:12px">
+            <button class="btn btn-ghost btn-sm" onclick="masterLoadOverrides()">↻ Atualizar</button>
+          </div>
+          <div id="mdr-overrides-list">
+            <div style="font-family:var(--font-mono);font-size:11px;color:var(--text3);text-align:center;padding:20px">
+              Clique em Atualizar para carregar.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ABA: Workspace -->
+      <div id="mdr-panel-workspace" class="mdr-panel">
+        <div class="mdr-section">
+          <div class="mdr-section-title">BACKUP DE WORKSPACE</div>
+          <div
+            style="font-family:var(--font-mono);font-size:11px;color:var(--text3);margin-bottom:16px;line-height:1.7">
+            Exporta/importa projetos e colaboradores de uma equipe.<br>
+            <strong style="color:var(--text2)">Requer equipe ativa.</strong> Entre em uma equipe antes de usar.
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" onclick="masterExportWorkspace()" style="padding:8px 16px">⬇ Exportar
+              backup</button>
+            <label class="btn btn-ghost btn-sm" style="cursor:pointer;padding:8px 16px">⬆ Importar backup
+              <input type="file" accept=".json" style="display:none" onchange="masterImportWorkspace(this)">
+            </label>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /mdr-body -->
+  </div><!-- /master-drawer -->
+  <!-- Overlay escuro sob o drawer -->
+  <div id="master-drawer-overlay" onclick="toggleMasterDrawer()"></div>
+
+  <!-- MODAL CONVITE -->
+  <div class="modal-overlay hidden" id="modal-invite">
+    <div class="modal" style="max-width:480px;padding:32px">
+      <button class="close-btn" onclick="closeModal('modal-invite')">×</button>
+      <h3 style="font-family:var(--font-body);font-size:18px;font-weight:800;margin-bottom:6px;color:var(--a1)">🔗
+        Convidar Membros</h3>
+      <p style="font-family:var(--font-mono);font-size:10px;color:var(--text3);letter-spacing:2px;margin-bottom:24px">
+        COMPARTILHE O CÓDIGO COM QUEM DESEJA CONVIDAR</p>
+      <div
+        style="background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:20px;text-align:center;margin-bottom:20px">
+        <div style="font-family:var(--font-mono);font-size:28px;letter-spacing:8px;color:var(--a2);font-weight:700"
+          id="modal-invite-code">——</div>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-top:6px">// Código de
+          convite da equipe</div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-bottom:12px" onclick="copyModalInviteCode()">📋 Copiar
+        Código</button>
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);text-align:center">O membro insere
+        este código na tela de equipes para entrar</div>
+    </div>
+  </div>
+
+  <!-- MODAL PERFIL PROFISSIONAL (para quem quer procurar equipe) -->
+  <div class="modal-overlay hidden" id="modal-talent-create">
+    <div class="modal" style="max-width:600px;max-height:92vh;overflow-y:auto;padding:32px">
+      <button class="close-btn" onclick="closeModal('modal-talent-create')">×</button>
+      <h3 style="font-family:var(--font-display);font-size:20px;font-weight:700;margin-bottom:4px;color:var(--a3)">🎤
+        Seu Perfil Profissional</h3>
+      <p style="font-family:var(--font-mono);font-size:10px;color:var(--text3);letter-spacing:2px;margin-bottom:24px">
+        CRIE SEU PERFIL PARA APARECER NAS BUSCAS DAS EQUIPES</p>
+
+      <!-- Foto -->
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:22px">
+        <div id="tc-photo-preview" onclick="document.getElementById('tc-photo-input').click()"
+          style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;overflow:hidden;border:2px solid var(--border2);flex-shrink:0">
+          📷
+          <img id="tc-photo-img" style="display:none;width:100%;height:100%;object-fit:cover">
+        </div>
+        <input type="file" id="tc-photo-input" accept="image/*" style="display:none" onchange="tcHandlePhoto(this)">
+        <div>
+          <div style="font-family:var(--font-body);font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">
+            Foto de perfil</div>
+          <div class="u-mono-label2">Clique para adicionar</div>
+        </div>
+      </div>
+
+      <div class="form-group"><label>Nome artístico / profissional *</label><input type="text" id="tc-name"
+          placeholder="Como você quer ser encontrado?"></div>
+      <div class="form-group"><label>Bio / Apresentação *</label><textarea id="tc-bio"
+          placeholder="Conte sobre você, seu estilo, seus projetos passados..."
+          style="min-height:80px;resize:vertical"></textarea></div>
+      <div class="form-group"><label>Contato (WhatsApp, Instagram...)</label><input type="text" id="tc-contact"
+          placeholder="Ex: @seuperfil ou +55 11 99999-9999"></div>
+      <div class="form-group"><label>Disponibilidade</label>
+        <select id="tc-availability">
+          <option value="available">✅ Disponível para projetos</option>
+          <option value="partial">⏳ Disponível parcialmente</option>
+          <option value="unavailable">🔴 Indisponível no momento</option>
+          <option value="hidden">👻 Não aparecer nas buscas</option>
+        </select>
+      </div>
+
+      <div
+        style="font-family:var(--font-body);font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;margin-top:8px">
+        Habilidades e Nível</div>
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:16px">Marque suas áreas
+        e escolha o nível em cada uma</div>
+      <div id="tc-skills-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px"></div>
+
+      <button class="btn btn-primary" style="width:100%" onclick="saveTcProfile()">✅ Salvar e Procurar
+        Equipes</button>
+    </div>
+  </div>
+
+  <!-- MODAL ENCONTRAR EQUIPES (hub para talentos) -->
+  <div class="modal-overlay hidden" id="modal-find-teams">
+    <div class="modal" style="max-width:900px;max-height:94vh;overflow-y:auto;padding:32px">
+      <button class="close-btn" onclick="closeModal('modal-find-teams')">×</button>
+      <div
+        style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px">
+        <h3 style="font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--a3)">🔎 Encontre sua
+          Equipe</h3>
+        <button onclick="openModal('modal-talent-create');closeModal('modal-find-teams')" class="btn btn-ghost btn-sm"
+          style="border-color:var(--a2);color:var(--a2)">✏️ Editar Meu Perfil</button>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+        <input id="ft-search" type="text" placeholder="🔍 Buscar por nome ou descrição da equipe..."
+          oninput="_dbRenderFindTeams()"
+          style="background:var(--input-bg);border:1px solid var(--border2);color:var(--text);padding:8px 14px;border-radius:8px;font-family:var(--font-body);font-size:13px;flex:1;min-width:180px">
+      </div>
+      <div id="ft-teams-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px">
+      </div>
+    </div>
+  </div>
+
+  <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar collapsed" id="sidebar">
+    <button class="sidebar-toggle" id="sidebar-toggle-btn" onclick="toggleSidebarCollapse()" title="Expandir sidebar"
+      style="margin-bottom:8px">▶</button>
+    <div class="sidebar-logo">
+      <div class="logo freq-logo-wrap">
+        <div class="freq-waveform">
+          <div class="fw-bar"></div>
+          <div class="fw-bar"></div>
+          <div class="fw-bar"></div>
+          <div class="fw-bar"></div>
+          <div class="fw-bar"></div>
+        </div>
+        <div class="freq-wordmark">
+          <div>
+            <span class="freq-part">FREQ</span><span class="sys-part">sys</span>
+            <div class="logo-sub">music project system</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Principal</div>
+      <button class="nav-btn active" id="nav-dashboard" onclick="showPage('dashboard')">
+        <span class="nav-icon">⊞</span> <span class="nav-btn-label">Geral</span>
+      </button>
+      <button class="nav-btn" id="nav-projects" onclick="showPage('projects')">
+        <span class="nav-icon">🎵</span> <span class="nav-btn-label">Projetos</span>
+      </button>
+      <button class="nav-btn" id="nav-collaborators" onclick="showPage('collaborators')">
+        <span class="nav-icon">👥</span> <span class="nav-btn-label">Membros</span>
+      </button>
+
+      <div class="nav-section-label">Ferramentas</div>
+      <button class="nav-btn" id="nav-analytics" onclick="showPageChecked('analytics','pro')">
+        <span class="nav-icon">📊</span> <span class="nav-btn-label">Analytics</span>
+        <span class="nav-plan-badge" id="analytics-plan-badge">PRO</span>
+      </button>
+      <button class="nav-btn" id="nav-productivity" onclick="showPageChecked('productivity','pro')">
+        <span class="nav-icon">🧠</span> <span class="nav-btn-label">Produtividade</span>
+        <span class="nav-plan-badge">PRO</span>
+      </button>
+      <button class="nav-btn" id="nav-team-settings" onclick="showPage('team-settings')">
+        <span class="nav-icon">🛠</span> <span class="nav-btn-label">Gerenciamento</span>
+      </button>
+
+      <div class="nav-section-label">Configurações</div>
+      <button class="nav-btn" onclick="openSettingsModal()">
+        <span class="nav-icon">⚙</span> <span class="nav-btn-label">Configurações Gerais</span>
+      </button>
+    </nav>
+
+    <!-- User card at bottom — layout unificado igual ao teams-screen -->
+    <!-- User Mini Profile (UMP) — componente reutilizável, mesma estrutura que ts-bottom-bar -->
+    <div class="ump sidebar-user" id="sidebar-user-section" style="display:none">
+
+      <!-- Bloco de identidade: avatar + nome + plano + ícones -->
+      <!-- sidebar-user-card mantido para compat com applyPermissions/JS -->
+      <div class="ump-identity sidebar-user-card" style="width:auto;height:auto;padding:0"
+        onclick="window._myTalentProfile ? _openMyTalentPopup(event) : openUnifiedProfileEdit()" title="Meu perfil"
+        id="sidebar-profile-card" tabindex="0" role="button">
+        <!-- Avatar — user-avatar mantido pois JS popula por essa classe -->
+        <div class="ump-av user-avatar" id="header-avatar" style="cursor:pointer">?</div>
+        <!-- Nome + role sublabel — sidebar-user-info mantido para collapsed state JS -->
+        <div class="ump-info sidebar-user-info">
+          <span class="ump-name sidebar-user-name" id="header-username">—</span>
+          <span class="ump-plan sidebar-user-role" id="header-role"></span>
+        </div>
+        <!-- Ícones de ação à direita -->
+        <div class="ump-icons global-action-bar" style="margin-left:auto;flex-shrink:0">
+          <button class="ump-icon-btn gab-btn" id="pm-sidebar-btn" onclick="event.stopPropagation();pmOpenInbox()"
+            title="Mensagens Privadas" style="display:none">
+            <svg viewBox="0 0 24 24">
+              <path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z" />
+            </svg>
+            <span class="gab-badge" id="pm-sidebar-badge"></span>
+          </button>
+          <button class="ump-icon-btn gab-btn"
+            onclick="event.stopPropagation();if(window._currentTeamId){openTeamProfileHub();}else{showTalentsStandalone();}"
+            id="interest-sidebar-btn" title="Interesses">
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+            </svg>
+            <span class="gab-badge" id="interest-sidebar-badge"></span>
+          </button>
+          <button class="ump-icon-btn gab-btn ump-notif gab-notif"
+            onclick="event.stopPropagation();showPage('notifications')" id="nav-notifications" title="Notificações">
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
+            </svg>
+            <span class="gab-badge" id="notif-badge"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Faixa de ações — 4 colunas: Config / Planos / Equipe / Sair -->
+      <!-- sidebar-user-actions mantido para collapsed state JS -->
+      <div class="ump-actions ump-cols-4 sidebar-user-actions">
+        <button class="ump-action-btn sidebar-action-btn" onclick="openSettingsModal()" title="Configurações">
+          <span class="ump-action-icon">⚙</span>Config
+        </button>
+        <button class="ump-action-btn sidebar-action-btn" onclick="openPlansModal()">
+          <span class="ump-action-icon">💎</span>Planos
+        </button>
+        <button class="ump-action-btn sidebar-action-btn" onclick="switchTeam()">
+          <span class="ump-action-icon">🔄</span>Equipe
+        </button>
+        <button class="ump-action-btn sidebar-action-btn" onclick="doLogout()">
+          <span class="ump-action-icon">→</span>Sair
+        </button>
+      </div>
+
+      <!-- Clock — mantido, controlado por sidebar collapsed state -->
+      <div class="ump-time sidebar-time" id="sys-time">--:--:--</div>
+
+    </div>
+
+  </aside>
+
+  <!-- needed for applyPermissions compat -->
+  <div id="header-user-info" style="display:none"></div>
+
+  <div class="main-content">
+    <header style="display:none"></header>
+
+    <div class="app" style="display:none">
+      <div id="page-dashboard" class="page active">
+        <div id="admin-panel-container"></div>
+
+        <!-- SPLIT B: Header editorial -->
+        <div
+          style="display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:20px;border-bottom:1px solid var(--border);margin-bottom:28px;flex-wrap:wrap;gap:16px">
+          <div>
+            <div
+              style="font-family:var(--font-mono);font-size:10px;letter-spacing:3px;color:var(--a2);text-transform:uppercase;margin-bottom:8px"
+              id="dash-eyebrow">// Dashboard</div>
+            <h1
+              style="font-family:var(--font-display);font-size:clamp(28px,4vw,40px);font-weight:700;color:var(--text);line-height:1;margin:0"
+              id="dash-greeting">Visão Geral</h1>
+            <div style="font-family:var(--font-mono);font-size:11px;color:var(--text2);margin-top:6px" id="dash-date">
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-ghost admin-only" onclick="openNewProject()" style="display:none">+ Novo
+              Projeto</button>
+            <button class="btn btn-primary admin-only" onclick="openModal('modal-invite')" style="display:none"
+              id="dash-invite-btn">Convidar</button>
+          </div>
         </div>
 
-        <!-- ══════════════════════════════════════════════════════════════════════════════
+        <!-- Stats -->
+        <div class="stats-grid" style="margin-bottom:32px">
+          <div class="card stat-card s-total">
+            <div class="stat-number" id="stat-total">0</div>
+            <div class="stat-label">Projetos</div>
+          </div>
+          <div class="card stat-card s-active">
+            <div class="stat-number" id="stat-active">0</div>
+            <div class="stat-label">Ativos</div>
+          </div>
+          <div class="card stat-card s-done">
+            <div class="stat-number" id="stat-completed">0</div>
+            <div class="stat-label">Lançados</div>
+          </div>
+          <div class="card stat-card s-team">
+            <div class="stat-number" id="stat-collabs">0</div>
+            <div class="stat-label">Equipe</div>
+          </div>
+        </div>
+
+        <!-- Split: lista + painel direito -->
+        <div class="dash-split-layout">
+          <div>
+            <!-- P3-C: título dinâmico — alterna entre "em Destaque" e "Recentes" -->
+            <div style="font-family:var(--font-display);font-size:20px;font-weight:700;margin-bottom:0">
+              <span id="dashboard-projects-label">🎵 Projetos Recentes</span>
+            </div>
+            <div id="dashboard-projects-list"></div>
+            <div id="deadline-section" style="display:none;margin-top:28px">
+              <div style="font-family:var(--font-display);font-size:18px;font-weight:700;margin-bottom:12px">
+                Prazos <em style="font-style:italic;color:var(--red)">Próximos</em>
+              </div>
+              <div id="deadline-list"></div>
+            </div>
+          </div>
+          <div class="dash-right-panel">
+            <div class="card" style="padding:20px">
+              <div style="font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:14px">
+                <em style="font-style:italic;color:var(--a2)">Equipe</em>
+              </div>
+              <div id="dash-team-members"></div>
+              <button class="btn btn-ghost admin-only" onclick="openModal('modal-invite')"
+                style="display:none;width:100%;justify-content:center;margin-top:12px" id="dash-invite-btn2">+
+                Convidar</button>
+            </div>
+            <div class="card" style="padding:20px;display:none" id="dash-invite-card">
+            </div>
+          </div>
+        </div>
+
+        <!-- Insights full width -->
+        <div id="dashboard-insights" style="margin-top:40px">
+          <div
+            style="font-family:var(--font-display);font-size:20px;font-weight:700;margin-bottom:20px;padding-top:20px;border-top:1px solid var(--border)">
+            Insights <em style="font-style:italic;color:var(--a3)">&amp; Desempenho</em>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
+            <div class="card" style="padding:20px">
+              <div
+                style="font-family:var(--font-mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--a2);margin-bottom:4px">
+                📈 Progresso por Projeto</div>
+              <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3);margin-bottom:14px">
+                Comparativo de avanço entre todos os projetos</div>
+              <canvas id="dash-chart-progress" height="200"></canvas>
+            </div>
+            <div class="card" style="padding:20px">
+              <div
+                style="font-family:var(--font-mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--a3);margin-bottom:4px">
+                ⏱ Dias em Produção</div>
+              <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3);margin-bottom:14px">Tempo
+                acumulado de cada projeto</div>
+              <canvas id="dash-chart-days" height="200"></canvas>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px">
+            <div class="card" style="padding:20px">
+              <div
+                style="font-family:var(--font-mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--green);margin-bottom:4px">
+                ✅ Status</div>
+              <canvas id="dash-chart-status" height="180"></canvas>
+            </div>
+            <div class="card" style="padding:20px;grid-column:span 2">
+              <div
+                style="font-family:var(--font-mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--yellow);margin-bottom:4px">
+                🔥 Fases Concluídas</div>
+              <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3);margin-bottom:14px">Quantas
+                fases cada projeto já finalizou</div>
+              <canvas id="dash-chart-stages" height="140"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-projects" class="page">
+        <div class="section-header">
+          <h2 class="section-title">Todos os Projetos</h2>
+          <div style="display:flex;gap:8px;align-items:center">
+            <div class="view-toggle">
+              <button class="view-btn active" id="vbtn-grid" onclick="setView('grid')" title="Grid">⊞</button>
+              <button class="view-btn" id="vbtn-list" onclick="setView('list')" title="Lista">≡</button>
+            </div>
+            <button id="btn-new-project" class="btn btn-primary admin-only" onclick="openNewProject()"
+              style="display:none">+ Novo
+              Projeto</button>
+          </div>
+        </div>
+        <div class="filter-bar">
+          <button class="filter-btn active" onclick="setFilter('all',this)">Todos</button>
+          <button class="filter-btn" onclick="setFilter('active',this)">Ativos</button>
+          <button class="filter-btn" onclick="setFilter('paused',this)">Pausados</button>
+          <button class="filter-btn" onclick="setFilter('completed',this)">Lançados</button>
+          <button class="filter-btn" onclick="setFilter('cancelled',this)">Cancelados</button>
+          <input class="search-input" type="text" placeholder="Buscar..." id="search-input"
+            oninput="_dbRenderProjects()" style="margin-left:auto">
+          <select class="sort-select" id="sort-select" onchange="renderAllProjects()">
+            <option value="date_new">↓ Mais Recente</option>
+            <option value="date_old">↑ Mais Antigo</option>
+            <option value="progress_high">↓ Mais Progresso</option>
+            <option value="progress_low">↑ Menos Progresso</option>
+            <option value="title_az">A → Z</option>
+            <option value="deadline">⏰ Prazo</option>
+            <option value="starred">⭐ Favoritos</option>
+          </select>
+        </div>
+        <div class="projects-grid" id="all-projects"></div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════════════════════════════
      FREQsys - ANALYTICS PAGE HTML
      ══════════════════════════════════════════════════════════════════════════════
      Este arquivo contém toda a estrutura HTML da página de Analytics
      Adicione este código após a página de Calendar (~linha 2400)
      ══════════════════════════════════════════════════════════════════════════════ -->
 
-        <!-- PAGE: ANALYTICS -->
-        <div id="page-analytics" class="page">
+      <!-- PAGE: ANALYTICS -->
+      <div id="page-analytics" class="page">
 
-          <!-- Header da Página -->
-          <div class="page-header">
-            <div>
-              <h1 class="page-title">
-                📈 Analytics
-              </h1>
-              <p class="page-subtitle">Métricas do seu canal no YouTube</p>
-            </div>
+        <!-- Header da Página -->
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">
+              📈 Analytics
+            </h1>
+            <p class="page-subtitle">Métricas do seu canal no YouTube</p>
           </div>
+        </div>
 
-          <!-- Container Principal -->
-          <div id="analytics-content">
+        <!-- Container Principal -->
+        <div id="analytics-content">
 
-            <!-- ═══════════════════════════════════════════════════════════════════════
+          <!-- ═══════════════════════════════════════════════════════════════════════
          SEÇÃO 1: CONFIGURAÇÃO DO CANAL (Apenas para Owners)
          ═══════════════════════════════════════════════════════════════════════ -->
-            <div id="channel-config-section" class="hidden">
-              <div class="channel-config">
-                <div class="channel-config-header">
-                  <h3
-                    style="font-family:var(--font-body);font-size:18px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:1px">
-                    ⚙️ Configuração do Canal
-                  </h3>
-                </div>
+          <div id="channel-config-section" class="hidden">
+            <div class="channel-config">
+              <div class="channel-config-header">
+                <h3
+                  style="font-family:var(--font-body);font-size:18px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:1px">
+                  ⚙️ Configuração do Canal
+                </h3>
+              </div>
 
-                <label>URL do Canal no YouTube</label>
-                <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
-                  <input type="text" id="channel-url-input" placeholder="https://www.youtube.com/@seucanal"
-                    style="flex:1;min-width:250px">
-                  <button class="btn btn-primary" onclick="saveChannelUrl()">
-                    💾 Salvar
-                  </button>
-                </div>
+              <label>URL do Canal no YouTube</label>
+              <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+                <input type="text" id="channel-url-input" placeholder="https://www.youtube.com/@seucanal"
+                  style="flex:1;min-width:250px">
+                <button class="btn btn-primary" onclick="saveChannelUrl()">
+                  💾 Salvar
+                </button>
+              </div>
 
-                <div class="analytics-helper-text">
-                  Dica: Cole a URL completa do seu canal (ex: https://www.youtube.com/@nomedocanal)
-                </div>
+              <div class="analytics-helper-text">
+                Dica: Cole a URL completa do seu canal (ex: https://www.youtube.com/@nomedocanal)
               </div>
             </div>
+          </div>
 
-            <!-- Aviso de erro de API (403) -->
-            <div id="yt-api-key-warning" class="hidden"
-              style="background:rgba(255,92,124,0.08);border:1px solid rgba(255,92,124,0.3);border-radius:10px;padding:16px 20px;margin-bottom:20px">
-              <div
-                style="font-family:var(--font-body);font-size:13px;font-weight:700;color:var(--red);margin-bottom:6px">
-                ⚠️ API Key do YouTube Bloqueada (403)</div>
-              <div style="font-family:var(--font-mono);font-size:10px;color:var(--text2);line-height:1.7">
-                A API key não está autorizada para este domínio. Para corrigir:<br>
-                1. Acesse <strong>console.cloud.google.com</strong> → APIs &amp; Services → Credentials<br>
-                2. Edite sua API Key e adicione o domínio atual em <em>HTTP referrers</em><br>
-                3. Para testes locais, adicione <code
-                  style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:3px">localhost/*</code> ou
-                remova as restrições de referrer
-              </div>
+          <!-- Aviso de erro de API (403) -->
+          <div id="yt-api-key-warning" class="hidden"
+            style="background:rgba(255,92,124,0.08);border:1px solid rgba(255,92,124,0.3);border-radius:10px;padding:16px 20px;margin-bottom:20px">
+            <div style="font-family:var(--font-body);font-size:13px;font-weight:700;color:var(--red);margin-bottom:6px">
+              ⚠️ API Key do YouTube Bloqueada (403)</div>
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--text2);line-height:1.7">
+              A API key não está autorizada para este domínio. Para corrigir:<br>
+              1. Acesse <strong>console.cloud.google.com</strong> → APIs &amp; Services → Credentials<br>
+              2. Edite sua API Key e adicione o domínio atual em <em>HTTP referrers</em><br>
+              3. Para testes locais, adicione <code
+                style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:3px">localhost/*</code> ou
+              remova as restrições de referrer
             </div>
+          </div>
 
-            <!-- ═══════════════════════════════════════════════════════════════════════
+          <!-- ═══════════════════════════════════════════════════════════════════════
          SEÇÃO 2: DISPLAY DE INFORMAÇÕES DO CANAL
          ═══════════════════════════════════════════════════════════════════════ -->
-            <div id="channel-info-display" class="hidden" style="margin-bottom:24px">
-              <!-- Banner com fade -->
-              <div id="channel-banner-wrap"
-                style="position:relative;height:140px;border-radius:12px 12px 0 0;overflow:hidden;background:var(--bg2)">
-                <div id="channel-banner-img"
-                  style="position:absolute;inset:0;background-size:cover;background-position:center"></div>
-                <div
-                  style="position:absolute;inset:0;background:linear-gradient(to left, transparent 30%, var(--bg) 100%)">
-                </div>
-                <!-- Botão editar sobre o banner -->
-                <button id="btn-edit-channel" class="btn btn-secondary btn-sm"
-                  style="position:absolute;top:12px;right:12px;display:none"
-                  onclick="document.getElementById('channel-config-section').classList.remove('hidden'); document.getElementById('channel-url-input').value = _teamYoutubeChannel || '';">
-                  ✏️ Editar Canal
-                </button>
-              </div>
-              <!-- Info do canal abaixo do banner -->
+          <div id="channel-info-display" class="hidden" style="margin-bottom:24px">
+            <!-- Banner com fade -->
+            <div id="channel-banner-wrap"
+              style="position:relative;height:140px;border-radius:12px 12px 0 0;overflow:hidden;background:var(--bg2)">
+              <div id="channel-banner-img"
+                style="position:absolute;inset:0;background-size:cover;background-position:center"></div>
               <div
-                style="background:var(--card);border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:16px 20px;display:flex;align-items:center;gap:16px">
-                <div id="channel-avatar"
-                  style="width:64px;height:64px;border-radius:50%;overflow:hidden;border:3px solid var(--a2);flex-shrink:0;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:24px;margin-top:-32px;position:relative;z-index:1">
-                  📺</div>
-                <div style="flex:1;min-width:0">
-                  <div style="font-family:var(--font-body);font-size:18px;font-weight:800;color:var(--text)"
-                    id="display-channel-name">Carregando...</div>
-                  <div style="font-family:var(--font-mono);font-size:11px;color:var(--text3);margin-top:2px"
-                    id="display-channel-url"></div>
-                  <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-top:4px"
-                    id="display-channel-desc"></div>
-                </div>
+                style="position:absolute;inset:0;background:linear-gradient(to left, transparent 30%, var(--bg) 100%)">
+              </div>
+              <!-- Botão editar sobre o banner -->
+              <button id="btn-edit-channel" class="btn btn-secondary btn-sm"
+                style="position:absolute;top:12px;right:12px;display:none"
+                onclick="document.getElementById('channel-config-section').classList.remove('hidden'); document.getElementById('channel-url-input').value = _teamYoutubeChannel || '';">
+                ✏️ Editar Canal
+              </button>
+            </div>
+            <!-- Info do canal abaixo do banner -->
+            <div
+              style="background:var(--card);border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:16px 20px;display:flex;align-items:center;gap:16px">
+              <div id="channel-avatar"
+                style="width:64px;height:64px;border-radius:50%;overflow:hidden;border:3px solid var(--a2);flex-shrink:0;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:24px;margin-top:-32px;position:relative;z-index:1">
+                📺</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-family:var(--font-body);font-size:18px;font-weight:800;color:var(--text)"
+                  id="display-channel-name">Carregando...</div>
+                <div style="font-family:var(--font-mono);font-size:11px;color:var(--text3);margin-top:2px"
+                  id="display-channel-url"></div>
+                <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-top:4px"
+                  id="display-channel-desc"></div>
               </div>
             </div>
+          </div>
 
-            <!-- ═══════════════════════════════════════════════════════════════════════
+          <!-- ═══════════════════════════════════════════════════════════════════════
          SEÇÃO 3: ESTATÍSTICAS PRINCIPAIS
          ═══════════════════════════════════════════════════════════════════════ -->
-            <div id="analytics-stats-section" class="hidden">
+          <div id="analytics-stats-section" class="hidden">
 
-              <!-- Banner de conexão OAuth -->
-              <div id="yt-connect-banner"
-                style="background:linear-gradient(135deg,rgba(255,0,0,0.08),rgba(139,92,246,0.08));border:1px solid rgba(255,0,0,0.2);border-radius:10px;padding:20px 24px;margin-bottom:24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-                <div style="font-size:32px">🔗</div>
-                <div style="flex:1;min-width:200px">
-                  <div
-                    style="font-family:var(--font-body);font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px">
-                    Conectar YouTube Analytics</div>
-                  <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);line-height:1.5">Autorize
-                    para ver views por dia, variação de inscritos e tempo de exibição reais</div>
-                </div>
-                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-                  <button id="btn-yt-connect" class="btn btn-primary" onclick="connectYouTubeOAuth()"
-                    style="background:linear-gradient(135deg,#ff0000,#cc0000);border-color:#ff0000;display:flex;align-items:center;gap:8px">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
-                      <path
-                        d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z" />
-                    </svg>
-                    Conectar com YouTube
-                  </button>
-                  <button id="btn-yt-disconnect" class="btn btn-ghost btn-sm" onclick="disconnectYouTube()"
-                    style="display:none;color:var(--red);border-color:var(--red)">✕ Desconectar</button>
-                  <div id="yt-connect-status"
-                    style="font-family:var(--font-mono);font-size:10px;color:var(--green);display:none">✓ Conectado
-                  </div>
+            <!-- Banner de conexão OAuth -->
+            <div id="yt-connect-banner"
+              style="background:linear-gradient(135deg,rgba(255,0,0,0.08),rgba(139,92,246,0.08));border:1px solid rgba(255,0,0,0.2);border-radius:10px;padding:20px 24px;margin-bottom:24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+              <div style="font-size:32px">🔗</div>
+              <div style="flex:1;min-width:200px">
+                <div
+                  style="font-family:var(--font-body);font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px">
+                  Conectar YouTube Analytics</div>
+                <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);line-height:1.5">Autorize
+                  para ver views por dia, variação de inscritos e tempo de exibição reais</div>
+              </div>
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                <button id="btn-yt-connect" class="btn btn-primary" onclick="connectYouTubeOAuth()"
+                  style="background:linear-gradient(135deg,#ff0000,#cc0000);border-color:#ff0000;display:flex;align-items:center;gap:8px">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                    <path
+                      d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z" />
+                  </svg>
+                  Conectar com YouTube
+                </button>
+                <button id="btn-yt-disconnect" class="btn btn-ghost btn-sm" onclick="disconnectYouTube()"
+                  style="display:none;color:var(--red);border-color:var(--red)">✕ Desconectar</button>
+                <div id="yt-connect-status"
+                  style="font-family:var(--font-mono);font-size:10px;color:var(--green);display:none">✓ Conectado
                 </div>
               </div>
-
-              <!-- Grid de Estatísticas -->
-              <div class="analytics-stats">
-                <div class="stat-card">
-                  <div class="stat-label">📊 Visualizações</div>
-                  <div class="stat-value" id="stat-views">—</div>
-                  <div class="stat-change neutral" id="stat-views-change-wrap">
-                    <span>●</span><span id="stat-views-period">Conecte o YouTube</span>
-                  </div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-label">👥 Inscritos</div>
-                  <div class="stat-value" id="stat-subscribers">—</div>
-                  <div class="stat-change neutral" id="stat-subs-wrap">
-                    <span id="stat-subs-arrow">●</span><span id="stat-subs-change">Total acumulado</span>
-                  </div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-label">🎬 Vídeos</div>
-                  <div class="stat-value" id="stat-videos">—</div>
-                  <div class="stat-change neutral"><span>●</span><span>Total publicados</span></div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-label">⏱️ Tempo de Exibição</div>
-                  <div class="stat-value" id="stat-watch-time">—</div>
-                  <div class="stat-change neutral" id="stat-watch-wrap">
-                    <span>●</span><span id="stat-time-change">Conecte o YouTube</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="analytics-divider"></div>
-
-              <!-- Gráfico: Views por dia -->
-              <div class="chart-container">
-                <div class="chart-title" style="display:flex;justify-content:space-between;align-items:center">
-                  <span>👁️ Visualizações por Dia (30 dias)</span>
-                  <div style="display:flex;gap:8px">
-                    <button class="btn btn-ghost btn-sm" onclick="changeChartPeriod(7)" id="period-7">7d</button>
-                    <button class="btn btn-ghost btn-sm" onclick="changeChartPeriod(30)" id="period-30"
-                      style="border-color:var(--a2);color:var(--a2)">30d</button>
-                    <button class="btn btn-ghost btn-sm" onclick="changeChartPeriod(90)" id="period-90">90d</button>
-                  </div>
-                </div>
-                <canvas id="views-chart" height="120"></canvas>
-                <div id="views-chart-placeholder"
-                  style="height:200px;display:flex;align-items:center;justify-content:center;background:rgba(139,92,246,0.03);border:1px dashed var(--border);border-radius:8px;color:var(--text3);font-family:var(--font-mono);font-size:11px;text-align:center">
-                  <div>📉<br><br>Conecte o YouTube para ver o gráfico de visualizações</div>
-                </div>
-              </div>
-
-              <!-- Gráfico: Inscritos por dia -->
-              <div class="chart-container">
-                <div class="chart-title">📈 Crescimento de Inscritos (30 dias)</div>
-                <canvas id="subscribers-chart" height="120"></canvas>
-                <div id="subs-chart-placeholder"
-                  style="height:200px;display:flex;align-items:center;justify-content:center;background:rgba(139,92,246,0.03);border:1px dashed var(--border);border-radius:8px;color:var(--text3);font-family:var(--font-mono);font-size:11px;text-align:center">
-                  <div>📊<br><br>Conecte o YouTube para ver o gráfico de inscritos</div>
-                </div>
-              </div>
-
-              <div
-                style="background:rgba(139,92,246,0.05);border:1px solid var(--border);border-radius:8px;padding:16px;margin-top:24px">
-                <div style="font-family:var(--font-mono);font-size:11px;color:var(--text3);line-height:1.6">
-                  <strong style="color:var(--a2)">ℹ️ Nota:</strong> Métricas públicas (inscritos, vídeos) carregam
-                  sempre. Views por dia e tempo de exibição requerem conexão com YouTube Analytics.
-                  <a href="https://studio.youtube.com" target="_blank"
-                    style="color:var(--a2);text-decoration:none;margin-left:8px">→ YouTube Studio</a>
-                </div>
-              </div>
-
             </div>
 
-            <!-- ═══════════════════════════════════════════════════════════════════════
+            <!-- Grid de Estatísticas -->
+            <div class="analytics-stats">
+              <div class="stat-card">
+                <div class="stat-label">📊 Visualizações</div>
+                <div class="stat-value" id="stat-views">—</div>
+                <div class="stat-change neutral" id="stat-views-change-wrap">
+                  <span>●</span><span id="stat-views-period">Conecte o YouTube</span>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">👥 Inscritos</div>
+                <div class="stat-value" id="stat-subscribers">—</div>
+                <div class="stat-change neutral" id="stat-subs-wrap">
+                  <span id="stat-subs-arrow">●</span><span id="stat-subs-change">Total acumulado</span>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">🎬 Vídeos</div>
+                <div class="stat-value" id="stat-videos">—</div>
+                <div class="stat-change neutral"><span>●</span><span>Total publicados</span></div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">⏱️ Tempo de Exibição</div>
+                <div class="stat-value" id="stat-watch-time">—</div>
+                <div class="stat-change neutral" id="stat-watch-wrap">
+                  <span>●</span><span id="stat-time-change">Conecte o YouTube</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="analytics-divider"></div>
+
+            <!-- Gráfico: Views por dia -->
+            <div class="chart-container">
+              <div class="chart-title" style="display:flex;justify-content:space-between;align-items:center">
+                <span>👁️ Visualizações por Dia (30 dias)</span>
+                <div style="display:flex;gap:8px">
+                  <button class="btn btn-ghost btn-sm" onclick="changeChartPeriod(7)" id="period-7">7d</button>
+                  <button class="btn btn-ghost btn-sm" onclick="changeChartPeriod(30)" id="period-30"
+                    style="border-color:var(--a2);color:var(--a2)">30d</button>
+                  <button class="btn btn-ghost btn-sm" onclick="changeChartPeriod(90)" id="period-90">90d</button>
+                </div>
+              </div>
+              <canvas id="views-chart" height="120"></canvas>
+              <div id="views-chart-placeholder"
+                style="height:200px;display:flex;align-items:center;justify-content:center;background:rgba(139,92,246,0.03);border:1px dashed var(--border);border-radius:8px;color:var(--text3);font-family:var(--font-mono);font-size:11px;text-align:center">
+                <div>📉<br><br>Conecte o YouTube para ver o gráfico de visualizações</div>
+              </div>
+            </div>
+
+            <!-- Gráfico: Inscritos por dia -->
+            <div class="chart-container">
+              <div class="chart-title">📈 Crescimento de Inscritos (30 dias)</div>
+              <canvas id="subscribers-chart" height="120"></canvas>
+              <div id="subs-chart-placeholder"
+                style="height:200px;display:flex;align-items:center;justify-content:center;background:rgba(139,92,246,0.03);border:1px dashed var(--border);border-radius:8px;color:var(--text3);font-family:var(--font-mono);font-size:11px;text-align:center">
+                <div>📊<br><br>Conecte o YouTube para ver o gráfico de inscritos</div>
+              </div>
+            </div>
+
+            <div
+              style="background:rgba(139,92,246,0.05);border:1px solid var(--border);border-radius:8px;padding:16px;margin-top:24px">
+              <div style="font-family:var(--font-mono);font-size:11px;color:var(--text3);line-height:1.6">
+                <strong style="color:var(--a2)">ℹ️ Nota:</strong> Métricas públicas (inscritos, vídeos) carregam
+                sempre. Views por dia e tempo de exibição requerem conexão com YouTube Analytics.
+                <a href="https://studio.youtube.com" target="_blank"
+                  style="color:var(--a2);text-decoration:none;margin-left:8px">→ YouTube Studio</a>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ═══════════════════════════════════════════════════════════════════════
          SEÇÃO 4: BANNER DE UPGRADE (Para usuários Free)
          ═══════════════════════════════════════════════════════════════════════ -->
-            <div id="analytics-upgrade-banner" class="hidden">
-              <div class="upgrade-banner">
-                <div style="font-size:48px;margin-bottom:16px">🚀</div>
-                <div class="upgrade-banner-title">
-                  Desbloqueie o Analytics
-                </div>
-                <div class="upgrade-banner-text">
-                  Monitore o crescimento do seu canal no YouTube com métricas em tempo real.<br>
-                  Visualizações, inscritos, tempo de exibição e muito mais!
-                </div>
+          <div id="analytics-upgrade-banner" class="hidden">
+            <div class="upgrade-banner">
+              <div style="font-size:48px;margin-bottom:16px">🚀</div>
+              <div class="upgrade-banner-title">
+                Desbloqueie o Analytics
+              </div>
+              <div class="upgrade-banner-text">
+                Monitore o crescimento do seu canal no YouTube com métricas em tempo real.<br>
+                Visualizações, inscritos, tempo de exibição e muito mais!
+              </div>
 
-                <!-- Lista de Features -->
-                <div
-                  style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:24px auto;max-width:600px;text-align:left">
-                  <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2)">
-                    <span style="color:var(--green)">✓</span>
-                    <span>Métricas em tempo real</span>
-                  </div>
-                  <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2)">
-                    <span style="color:var(--green)">✓</span>
-                    <span>Gráficos de crescimento</span>
-                  </div>
-                  <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2)">
-                    <span style="color:var(--green)">✓</span>
-                    <span>Análise de engagement</span>
-                  </div>
-                  <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2)">
-                    <span style="color:var(--green)">✓</span>
-                    <span>Exportação de relatórios</span>
-                  </div>
+              <!-- Lista de Features -->
+              <div
+                style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:24px auto;max-width:600px;text-align:left">
+                <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2)">
+                  <span style="color:var(--green)">✓</span>
+                  <span>Métricas em tempo real</span>
                 </div>
-
-                <button class="btn btn-primary" onclick="openPlansModal()">
-                  ⭐ Fazer Upgrade para Pro
-                </button>
-
-                <div
-                  style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-top:16px;letter-spacing:1px">
-                  A partir de R$ 29/mês
+                <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2)">
+                  <span style="color:var(--green)">✓</span>
+                  <span>Gráficos de crescimento</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2)">
+                  <span style="color:var(--green)">✓</span>
+                  <span>Análise de engagement</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2)">
+                  <span style="color:var(--green)">✓</span>
+                  <span>Exportação de relatórios</span>
                 </div>
               </div>
-            </div>
 
-            <!-- ═══════════════════════════════════════════════════════════════════════
+              <button class="btn btn-primary" onclick="openPlansModal()">
+                ⭐ Fazer Upgrade para Pro
+              </button>
+
+              <div
+                style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-top:16px;letter-spacing:1px">
+                A partir de R$ 29/mês
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══════════════════════════════════════════════════════════════════════
          SEÇÃO 5: BANNER "SEM CANAL" (Para membros não-owners)
          ═══════════════════════════════════════════════════════════════════════ -->
-            <div id="analytics-no-channel-banner" class="hidden">
-              <div class="upgrade-banner">
-                <div style="font-size:48px;margin-bottom:16px">📺</div>
-                <div class="upgrade-banner-title">
-                  Configure seu Canal
-                </div>
-                <div class="upgrade-banner-text">
-                  O dono da equipe precisa configurar a URL do canal do YouTube<br>
-                  para que você possa visualizar as métricas.
-                </div>
-                <div
-                  style="font-family:var(--font-mono);font-size:11px;color:var(--text3);margin-top:16px;line-height:1.6">
-                  💡 Dica: Entre em contato com o dono da equipe para solicitar a configuração.
-                </div>
+          <div id="analytics-no-channel-banner" class="hidden">
+            <div class="upgrade-banner">
+              <div style="font-size:48px;margin-bottom:16px">📺</div>
+              <div class="upgrade-banner-title">
+                Configure seu Canal
+              </div>
+              <div class="upgrade-banner-text">
+                O dono da equipe precisa configurar a URL do canal do YouTube<br>
+                para que você possa visualizar as métricas.
+              </div>
+              <div
+                style="font-family:var(--font-mono);font-size:11px;color:var(--text3);margin-top:16px;line-height:1.6">
+                💡 Dica: Entre em contato com o dono da equipe para solicitar a configuração.
               </div>
             </div>
-
           </div>
-          <!-- Fim do analytics-content -->
 
         </div>
-        <!-- Fim da PAGE: ANALYTICS -->
+        <!-- Fim do analytics-content -->
 
-        <div id="page-detail" class="page">
-          <button class="back-btn" onclick="goBack()">← Voltar</button>
-          <div id="detail-content"></div>
+      </div>
+      <!-- Fim da PAGE: ANALYTICS -->
+
+      <div id="page-detail" class="page">
+        <button class="back-btn" onclick="goBack()">← Voltar</button>
+        <div id="detail-content"></div>
+      </div>
+
+      <div id="page-collaborators" class="page">
+        <div class="section-header">
+          <h2 class="section-title">Membros</h2>
+          <div style="display:flex;gap:10px;align-items:center">
+            <button class="btn btn-ghost btn-sm" onclick="openTeamProfileHub()"
+              style="border-color:var(--a2);color:var(--a2)">🔍 Encontre Membros</button>
+            <button class="btn btn-primary admin-only" onclick="openNewCollab()" style="display:none">+ Novo
+              Membro</button>
+          </div>
         </div>
+        <!-- Perfil da Equipe resumido -->
+        <div id="members-team-profile-card" style="margin-bottom:24px"></div>
+        <div class="collabs-grid" id="collabs-grid"></div>
+      </div>
 
-        <div id="page-collaborators" class="page">
-          <div class="section-header">
-            <h2 class="section-title">Membros</h2>
-            <div style="display:flex;gap:10px;align-items:center">
-              <button class="btn btn-ghost btn-sm" onclick="openTeamProfileHub()"
-                style="border-color:var(--a2);color:var(--a2)">🔍 Encontre Membros</button>
-              <button class="btn btn-primary admin-only" onclick="openNewCollab()" style="display:none">+ Novo
-                Membro</button>
-            </div>
-          </div>
-          <!-- Perfil da Equipe resumido -->
-          <div id="members-team-profile-card" style="margin-bottom:24px"></div>
-          <div class="collabs-grid" id="collabs-grid"></div>
+      <!-- PRODUCTIVITY PAGE -->
+      <div id="page-productivity" class="page">
+        <div class="section-header">
+          <h2 class="section-title">🧠 Produtividade</h2>
         </div>
-
-        <!-- PRODUCTIVITY PAGE -->
-        <div id="page-productivity" class="page">
-          <div class="section-header">
-            <h2 class="section-title">🧠 Produtividade</h2>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:32px">
-            <!-- Pomodoro -->
-            <div class="card" style="padding:24px;text-align:center">
-              <div
-                style="font-family:var(--font-body);font-size:14px;font-weight:800;letter-spacing:2px;color:var(--a3);margin-bottom:4px">
-                🍅 POMODORO</div>
-              <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:20px">Foco em
-                blocos de 25 min</div>
-              <div id="pomo-display"
-                style="font-family:var(--font-body);font-size:56px;font-weight:800;background:linear-gradient(135deg,var(--a1),var(--a3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;margin-bottom:12px">
-                25:00</div>
-              <div id="pomo-label"
-                style="font-family:var(--font-mono);font-size:10px;color:var(--text3);letter-spacing:2px;margin-bottom:20px">
-                FOCO</div>
-              <div style="display:flex;gap:8px;justify-content:center">
-                <button class="btn btn-primary btn-sm" id="pomo-start" onclick="pomoStart()">▶ Iniciar</button>
-                <button class="btn btn-ghost btn-sm" onclick="pomoReset()">↺ Reset</button>
-              </div>
-              <div style="display:flex;gap:8px;justify-content:center;margin-top:10px">
-                <button class="btn btn-ghost btn-sm" onclick="pomoSetMode('focus',25)">Focus 25m</button>
-                <button class="btn btn-ghost btn-sm" onclick="pomoSetMode('short',5)">Break 5m</button>
-                <button class="btn btn-ghost btn-sm" onclick="pomoSetMode('long',15)">Break 15m</button>
-              </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:32px">
+          <!-- Pomodoro -->
+          <div class="card" style="padding:24px;text-align:center">
+            <div
+              style="font-family:var(--font-body);font-size:14px;font-weight:800;letter-spacing:2px;color:var(--a3);margin-bottom:4px">
+              🍅 POMODORO</div>
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:20px">Foco em
+              blocos de 25 min</div>
+            <div id="pomo-display"
+              style="font-family:var(--font-body);font-size:56px;font-weight:800;background:linear-gradient(135deg,var(--a1),var(--a3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;margin-bottom:12px">
+              25:00</div>
+            <div id="pomo-label"
+              style="font-family:var(--font-mono);font-size:10px;color:var(--text3);letter-spacing:2px;margin-bottom:20px">
+              FOCO</div>
+            <div style="display:flex;gap:8px;justify-content:center">
+              <button class="btn btn-primary btn-sm" id="pomo-start" onclick="pomoStart()">▶ Iniciar</button>
+              <button class="btn btn-ghost btn-sm" onclick="pomoReset()">↺ Reset</button>
             </div>
-            <!-- Task Checklist -->
-            <div class="card" style="padding:24px">
-              <div
-                style="font-family:var(--font-body);font-size:14px;font-weight:800;letter-spacing:2px;color:var(--a2);margin-bottom:4px">
-                ✅ CHECKLIST DA SESSÃO</div>
-              <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:16px">Tarefas
-                rápidas de hoje</div>
-              <div style="display:flex;gap:6px;margin-bottom:12px">
-                <input type="text" id="prod-task-input" placeholder="Nova tarefa..." style="flex:1;font-size:12px"
-                  onkeydown="if(event.key==='Enter')prodAddTask()">
-                <button class="btn btn-primary btn-sm" onclick="prodAddTask()">+</button>
-              </div>
-              <div id="prod-task-list"
-                style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto"></div>
-            </div>
-            <!-- Ideas Bank -->
-            <div class="card" style="padding:24px">
-              <div
-                style="font-family:var(--font-body);font-size:14px;font-weight:800;letter-spacing:2px;color:var(--yellow);margin-bottom:4px">
-                💡 BANCO DE IDEIAS</div>
-              <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:16px">Registre
-                insights na hora</div>
-              <div style="display:flex;gap:6px;margin-bottom:12px">
-                <textarea id="prod-idea-input" placeholder="Ideia, referência, lyric..."
-                  style="flex:1;font-size:12px;min-height:60px;resize:vertical"></textarea>
-              </div>
-              <button class="btn btn-primary btn-sm" style="width:100%;margin-bottom:12px" onclick="prodAddIdea()">+
-                Registrar Ideia</button>
-              <div id="prod-idea-list"
-                style="display:flex;flex-direction:column;gap:6px;max-height:160px;overflow-y:auto"></div>
+            <div style="display:flex;gap:8px;justify-content:center;margin-top:10px">
+              <button class="btn btn-ghost btn-sm" onclick="pomoSetMode('focus',25)">Focus 25m</button>
+              <button class="btn btn-ghost btn-sm" onclick="pomoSetMode('short',5)">Break 5m</button>
+              <button class="btn btn-ghost btn-sm" onclick="pomoSetMode('long',15)">Break 15m</button>
             </div>
           </div>
-
-          <!-- Focus Mode Tips + Daily Goal -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-            <div class="card" style="padding:24px">
-              <div
-                style="font-family:var(--font-body);font-size:14px;font-weight:800;letter-spacing:2px;color:var(--green);margin-bottom:16px">
-                🎯 META DO DIA</div>
-              <textarea id="prod-daily-goal" placeholder="O que você quer finalizar hoje?"
-                style="width:100%;min-height:80px;font-size:13px;margin-bottom:10px"
-                oninput="_dbSaveDailyGoal()"></textarea>
-              <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-top:4px">Auto-salva
-                enquanto você digita</div>
+          <!-- Task Checklist -->
+          <div class="card" style="padding:24px">
+            <div
+              style="font-family:var(--font-body);font-size:14px;font-weight:800;letter-spacing:2px;color:var(--a2);margin-bottom:4px">
+              ✅ CHECKLIST DA SESSÃO</div>
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:16px">Tarefas
+              rápidas de hoje</div>
+            <div style="display:flex;gap:6px;margin-bottom:12px">
+              <input type="text" id="prod-task-input" placeholder="Nova tarefa..." style="flex:1;font-size:12px"
+                onkeydown="if(event.key==='Enter')prodAddTask()">
+              <button class="btn btn-primary btn-sm" onclick="prodAddTask()">+</button>
             </div>
-            <div class="card" style="padding:24px">
-              <div
-                style="font-family:var(--font-body);font-size:14px;font-weight:800;letter-spacing:2px;color:var(--a4);margin-bottom:16px">
-                🚀 DICAS DE PRODUTIVIDADE</div>
-              <div id="prod-tip-display"
-                style="font-family:'IBM Plex Mono', monospace;font-size:13px;color:var(--text);line-height:1.8;min-height:80px">
-              </div>
-              <button class="btn btn-ghost btn-sm" style="margin-top:12px" onclick="prodNextTip()">↻ Próxima
-                Dica</button>
+            <div id="prod-task-list"
+              style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto"></div>
+          </div>
+          <!-- Ideas Bank -->
+          <div class="card" style="padding:24px">
+            <div
+              style="font-family:var(--font-body);font-size:14px;font-weight:800;letter-spacing:2px;color:var(--yellow);margin-bottom:4px">
+              💡 BANCO DE IDEIAS</div>
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:16px">Registre
+              insights na hora</div>
+            <div style="display:flex;gap:6px;margin-bottom:12px">
+              <textarea id="prod-idea-input" placeholder="Ideia, referência, lyric..."
+                style="flex:1;font-size:12px;min-height:60px;resize:vertical"></textarea>
             </div>
+            <button class="btn btn-primary btn-sm" style="width:100%;margin-bottom:12px" onclick="prodAddIdea()">+
+              Registrar Ideia</button>
+            <div id="prod-idea-list"
+              style="display:flex;flex-direction:column;gap:6px;max-height:160px;overflow-y:auto"></div>
           </div>
         </div>
 
-
-        <!-- Match Celebration Overlay moved to global scope (before </body>) -->
-
-
-        <!-- SUPPORT PAGE (user tickets) -->
-        <div id="page-support" class="page">
-          <div class="section-header">
-            <h2 class="section-title">🎫 Suporte</h2>
-            <button class="btn btn-primary" onclick="openNewTicketModal()">+ Novo Ticket</button>
+        <!-- Focus Mode Tips + Daily Goal -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div class="card" style="padding:24px">
+            <div
+              style="font-family:var(--font-body);font-size:14px;font-weight:800;letter-spacing:2px;color:var(--green);margin-bottom:16px">
+              🎯 META DO DIA</div>
+            <textarea id="prod-daily-goal" placeholder="O que você quer finalizar hoje?"
+              style="width:100%;min-height:80px;font-size:13px;margin-bottom:10px"
+              oninput="_dbSaveDailyGoal()"></textarea>
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-top:4px">Auto-salva
+              enquanto você digita</div>
           </div>
+          <div class="card" style="padding:24px">
+            <div
+              style="font-family:var(--font-body);font-size:14px;font-weight:800;letter-spacing:2px;color:var(--a4);margin-bottom:16px">
+              🚀 DICAS DE PRODUTIVIDADE</div>
+            <div id="prod-tip-display"
+              style="font-family:'IBM Plex Mono', monospace;font-size:13px;color:var(--text);line-height:1.8;min-height:80px">
+            </div>
+            <button class="btn btn-ghost btn-sm" style="margin-top:12px" onclick="prodNextTip()">↻ Próxima
+              Dica</button>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Match Celebration Overlay moved to global scope (before </body>) -->
+
+
+      <!-- SUPPORT PAGE (user tickets) -->
+      <div id="page-support" class="page">
+        <div class="section-header">
+          <h2 class="section-title">🎫 Suporte</h2>
+          <button class="btn btn-primary" onclick="openNewTicketModal()">+ Novo Ticket</button>
+        </div>
+        <div
+          style="margin-bottom:28px;font-family:var(--font-mono);font-size:11px;color:var(--text2);line-height:1.8;border:1px solid var(--border);padding:14px 18px;background:var(--bg3)">
+          Abra um ticket para reportar problemas, tirar dúvidas ou enviar sugestões.<br>
+          <span style="color:var(--a3)">✦ Usuários Advanced têm suporte prioritário com resposta em até 24h.</span>
+        </div>
+        <div id="my-tickets-list">
+          <div class="empty-state">
+            <div class="empty-state-icon">🎫</div>
+            <div class="empty-state-title">Nenhum ticket ainda</div>
+            <div class="empty-state-text">Clique em "+ Novo Ticket" para abrir um chamado</div>
+          </div>
+        </div>
+      </div>
+      <!-- ADMIN TICKETS PAGE -->
+      <!-- P4-A/P6: Painel Master unificado — abas Dashboard / Tickets / Workspace -->
+      <!-- page-admin-tickets removido: migrado para aba interna                    -->
+      <div id="page-admin-master" class="page">
+        <div class="section-header">
+          <div style="display:flex;align-items:center;gap:12px">
+            <button onclick="toggleMasterPanel()"
+              style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-family:var(--font-mono);font-size:10px;color:var(--text2);cursor:pointer">←
+              VOLTAR</button>
+            <h2 class="section-title">🔐 Painel Master</h2>
+          </div>
+          <span
+            style="font-family:var(--font-mono);font-size:10px;color:var(--a1);border:1px solid var(--a1);padding:2px 8px;border-radius:4px">STAFF
+            ONLY</span>
+        </div>
+        <!-- nav de abas -->
+        <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:24px">
+          <button id="mp-tab-dashboard" class="mp-tab mp-active" onclick="mpSwitchTab('dashboard')">📊
+            DASHBOARD</button>
+          <button id="mp-tab-tickets" class="mp-tab" onclick="mpSwitchTab('tickets')">🎫 TICKETS</button>
+          <button id="mp-tab-workspace" class="mp-tab" onclick="mpSwitchTab('workspace')">💾 WORKSPACE</button>
+        </div>
+        <!-- ABA: Dashboard -->
+        <div id="mp-panel-dashboard" class="mp-panel mp-visible">
           <div
-            style="margin-bottom:28px;font-family:var(--font-mono);font-size:11px;color:var(--text2);line-height:1.8;border:1px solid var(--border);padding:14px 18px;background:var(--bg3)">
-            Abra um ticket para reportar problemas, tirar dúvidas ou enviar sugestões.<br>
-            <span style="color:var(--a3)">✦ Usuários Advanced têm suporte prioritário com resposta em até 24h.</span>
-          </div>
-          <div id="my-tickets-list">
-            <div class="empty-state">
-              <div class="empty-state-icon">🎫</div>
-              <div class="empty-state-title">Nenhum ticket ainda</div>
-              <div class="empty-state-text">Clique em "+ Novo Ticket" para abrir um chamado</div>
-            </div>
-          </div>
-        </div>
-        <!-- ADMIN TICKETS PAGE -->
-        <!-- P4-A/P6: Painel Master unificado — abas Dashboard / Tickets / Workspace -->
-        <!-- page-admin-tickets removido: migrado para aba interna                    -->
-        <div id="page-admin-master" class="page">
-          <div class="section-header">
-            <div style="display:flex;align-items:center;gap:12px">
-              <button onclick="toggleMasterPanel()"
-                style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-family:var(--font-mono);font-size:10px;color:var(--text2);cursor:pointer">←
-                VOLTAR</button>
-              <h2 class="section-title">🔐 Painel Master</h2>
-            </div>
-            <span
-              style="font-family:var(--font-mono);font-size:10px;color:var(--a1);border:1px solid var(--a1);padding:2px 8px;border-radius:4px">STAFF
-              ONLY</span>
-          </div>
-          <!-- nav de abas -->
-          <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:24px">
-            <button id="mp-tab-dashboard" class="mp-tab mp-active" onclick="mpSwitchTab('dashboard')">📊
-              DASHBOARD</button>
-            <button id="mp-tab-tickets" class="mp-tab" onclick="mpSwitchTab('tickets')">🎫 TICKETS</button>
-            <button id="mp-tab-workspace" class="mp-tab" onclick="mpSwitchTab('workspace')">💾 WORKSPACE</button>
-          </div>
-          <!-- ABA: Dashboard -->
-          <div id="mp-panel-dashboard" class="mp-panel mp-visible">
-            <div
-              style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:24px">
-              <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px">
-                <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:4px">TOTAL
-                  USUÁRIOS</div>
-                <div id="master-stat-users" style="font-size:28px;font-weight:700;color:var(--text)">—</div>
-              </div>
-              <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px">
-                <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:4px">TOTAL
-                  EQUIPES</div>
-                <div id="master-stat-teams" style="font-size:28px;font-weight:700;color:var(--text)">—</div>
-              </div>
-              <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px">
-                <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:4px">TICKETS
-                  ABERTOS</div>
-                <div id="master-stat-tickets" style="font-size:28px;font-weight:700;color:var(--a1)">—</div>
-              </div>
-            </div>
-            <div
-              style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px">
-              <div
-                style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--text);margin-bottom:12px">
-                GERENCIAR STAFF</div>
-              <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-                <input id="master-staff-uid" class="form-input" placeholder="UID do usuário"
-                  style="flex:1;min-width:160px;font-family:var(--font-mono);font-size:12px">
-                <select id="master-staff-role" class="form-input"
-                  style="width:130px;font-family:var(--font-mono);font-size:12px">
-                  <option value="staff">staff</option>
-                  <option value="support">support</option>
-                  <option value="moderator">moderator</option>
-                  <option value="">Remover</option>
-                </select>
-                <button class="btn btn-primary btn-sm" onclick="masterSetStaffRole()">Aplicar</button>
-              </div>
-              <div id="master-staff-list" style="font-family:var(--font-mono);font-size:11px;color:var(--text3)">
-                Carregando...</div>
+            style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:24px">
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px">
+              <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:4px">TOTAL
+                USUÁRIOS</div>
+              <div id="master-stat-users" style="font-size:28px;font-weight:700;color:var(--text)">—</div>
             </div>
             <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px">
-              <div
-                style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--text);margin-bottom:8px">
-                SESSÃO</div>
-              <div id="master-activity-log" style="font-family:var(--font-mono);font-size:11px;color:var(--text3)">—
-              </div>
+              <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:4px">TOTAL
+                EQUIPES</div>
+              <div id="master-stat-teams" style="font-size:28px;font-weight:700;color:var(--text)">—</div>
+            </div>
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px">
+              <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:4px">TICKETS
+                ABERTOS</div>
+              <div id="master-stat-tickets" style="font-size:28px;font-weight:700;color:var(--a1)">—</div>
             </div>
           </div>
-          <!-- ABA: Admin Tickets (migrado de page-admin-tickets) -->
-          <div id="mp-panel-tickets" class="mp-panel">
-            <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap">
-              <button class="btn btn-ghost btn-sm" id="mptf-all" onclick="mpFilterTickets('all',this)"
-                style="font-family:var(--font-mono);font-size:10px;border-color:var(--a1);color:var(--a1)">Todos</button>
-              <button class="btn btn-ghost btn-sm" id="mptf-open" onclick="mpFilterTickets('open',this)"
-                style="font-family:var(--font-mono);font-size:10px">Abertos</button>
-              <button class="btn btn-ghost btn-sm" id="mptf-closed" onclick="mpFilterTickets('closed',this)"
-                style="font-family:var(--font-mono);font-size:10px">Fechados</button>
-            </div>
-            <div id="mp-tickets-list">
-              <div
-                style="font-family:var(--font-mono);font-size:11px;color:var(--text3);padding:20px;text-align:center">
-                Abrindo painel de tickets...</div>
-            </div>
-          </div>
-          <!-- ABA: Workspace Data (migrado de modal-admin) -->
-          <div id="mp-panel-workspace" class="mp-panel">
+          <div
+            style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px">
             <div
-              style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:20px;max-width:480px">
-              <div
-                style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--text);margin-bottom:8px">
-                BACKUP DE WORKSPACE</div>
-              <div
-                style="font-family:var(--font-mono);font-size:11px;color:var(--text3);margin-bottom:16px;line-height:1.7">
-                Exporta/importa projetos e colaboradores de uma equipe.<br>
-                <strong style="color:var(--text2)">Requer equipe ativa.</strong> Entre em uma equipe antes de usar.
-              </div>
-              <div style="display:flex;gap:10px;flex-wrap:wrap">
-                <button class="btn btn-ghost btn-sm" onclick="masterExportWorkspace()" style="padding:8px 16px">⬇
-                  Exportar backup</button>
-                <label class="btn btn-ghost btn-sm" style="cursor:pointer;padding:8px 16px">⬆ Importar backup
-                  <input type="file" accept=".json" style="display:none" onchange="masterImportWorkspace(this)">
-                </label>
-              </div>
+              style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--text);margin-bottom:12px">
+              GERENCIAR STAFF</div>
+            <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+              <input id="master-staff-uid" class="form-input" placeholder="UID do usuário"
+                style="flex:1;min-width:160px;font-family:var(--font-mono);font-size:12px">
+              <select id="master-staff-role" class="form-input"
+                style="width:130px;font-family:var(--font-mono);font-size:12px">
+                <option value="staff">staff</option>
+                <option value="support">support</option>
+                <option value="moderator">moderator</option>
+                <option value="">Remover</option>
+              </select>
+              <button class="btn btn-primary btn-sm" onclick="masterSetStaffRole()">Aplicar</button>
+            </div>
+            <div id="master-staff-list" style="font-family:var(--font-mono);font-size:11px;color:var(--text3)">
+              Carregando...</div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px">
+            <div
+              style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--text);margin-bottom:8px">
+              SESSÃO</div>
+            <div id="master-activity-log" style="font-family:var(--font-mono);font-size:11px;color:var(--text3)">—
             </div>
           </div>
         </div>
-
-        <div id="page-team-settings" class="page">
-          <div class="section-header">
-            <h2 class="section-title">🛠 Configurações da Equipe</h2>
+        <!-- ABA: Admin Tickets (migrado de page-admin-tickets) -->
+        <div id="mp-panel-tickets" class="mp-panel">
+          <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" id="mptf-all" onclick="mpFilterTickets('all',this)"
+              style="font-family:var(--font-mono);font-size:10px;border-color:var(--a1);color:var(--a1)">Todos</button>
+            <button class="btn btn-ghost btn-sm" id="mptf-open" onclick="mpFilterTickets('open',this)"
+              style="font-family:var(--font-mono);font-size:10px">Abertos</button>
+            <button class="btn btn-ghost btn-sm" id="mptf-closed" onclick="mpFilterTickets('closed',this)"
+              style="font-family:var(--font-mono);font-size:10px">Fechados</button>
           </div>
-          <div id="team-settings-content">
-            <div class="empty-state">
-              <div class="empty-state-icon">🛠</div>
-              <div class="empty-state-title">Carregando...</div>
+          <div id="mp-tickets-list">
+            <div style="font-family:var(--font-mono);font-size:11px;color:var(--text3);padding:20px;text-align:center">
+              Abrindo painel de tickets...</div>
+          </div>
+        </div>
+        <!-- ABA: Workspace Data (migrado de modal-admin) -->
+        <div id="mp-panel-workspace" class="mp-panel">
+          <div
+            style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:20px;max-width:480px">
+            <div
+              style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--text);margin-bottom:8px">
+              BACKUP DE WORKSPACE</div>
+            <div
+              style="font-family:var(--font-mono);font-size:11px;color:var(--text3);margin-bottom:16px;line-height:1.7">
+              Exporta/importa projetos e colaboradores de uma equipe.<br>
+              <strong style="color:var(--text2)">Requer equipe ativa.</strong> Entre em uma equipe antes de usar.
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn btn-ghost btn-sm" onclick="masterExportWorkspace()" style="padding:8px 16px">⬇
+                Exportar backup</button>
+              <label class="btn btn-ghost btn-sm" style="cursor:pointer;padding:8px 16px">⬆ Importar backup
+                <input type="file" accept=".json" style="display:none" onchange="masterImportWorkspace(this)">
+              </label>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- MODAL PROJECT -->
-    </div><!-- end main-content -->
+      <div id="page-team-settings" class="page">
+        <div class="section-header">
+          <h2 class="section-title">🛠 Configurações da Equipe</h2>
+        </div>
+        <div id="team-settings-content">
+          <div class="empty-state">
+            <div class="empty-state-icon">🛠</div>
+            <div class="empty-state-title">Carregando...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL PROJECT -->
+  </div><!-- end main-content -->
   </div><!-- end layout -->
 
   <!-- ══ MODALS — fora do layout para z-index funcionar corretamente ══ -->

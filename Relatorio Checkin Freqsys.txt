@@ -1,0 +1,402 @@
+# 🎵 Relatório de Check-in Profundo — FREQsys
+
+> **Data:** 25/02/2026 · **Escopo:** Inventário completo, diagnóstico de bugs/fragilidades, avaliação dos MCPs (shadcn/ui + Context7), plano de melhorias em fases, top 3 patches.
+
+---
+
+## 1. Resumo Executivo
+
+O FREQsys é uma aplicação SPA robusta para gestão de produção musical, com **15+ telas/fluxos**, ~**16.000 linhas de JS** e ~**5.500 linhas de CSS**. O projeto possui uma identidade visual forte (4 temas, sidebar animada, landing page com canvas), mas **sofre de problemas estruturais**:
+
+1. **Zero acessibilidade** — nenhum `role`, `aria-*`, `tabindex` ou focus trap em nenhum modal/dialog
+2. **Duplicação de código** — `showLoading`/`hideLoading` definido 2× com IDs diferentes
+3. **Toast primitivo** — 3 linhas sem tipo visual, sem aria-live, sem possibilidade de ação
+4. **Forms sem validação HTML5** — 50+ `.value = ...` set/get diretos, nenhum `required`, `pattern`, ou `<form>` com `submit`
+5. **Nenhum sistema de componentes** — todo HTML é inline no `index.html` (5116 linhas)
+
+**shadcn/ui pode ajudar significativamente**, mas requer adoção parcial e incremental — não é viável migrar tudo de uma vez, pois shadcn/ui é projetado para React/Next.js e o FREQsys é vanilla JS puro. **A estratégia correta é extrair os PADRÕES de design do shadcn/ui como inspiração e implementar componentes vanilla equivalentes.**
+
+---
+
+## 2. Inventário do Projeto
+
+### 2.1 Arquitetura de Arquivos
+
+| Arquivo | Linhas | Responsabilidade |
+|---|---|---|
+| [index.html](file:///c:/Users/Mariana/Downloads/testar%20o%20Antigravity/index.html) | 5.116 | Todo o HTML (landing, auth, app, modais, overlays) |
+| [main.css](file:///c:/Users/Mariana/Downloads/testar%20o%20Antigravity/css/main.css) | 5.560 | Todos os estilos (4 temas, 15+ seções) |
+| [firebase-init.js](file:///c:/Users/Mariana/Downloads/testar%20o%20Antigravity/js/firebase-init.js) | 9.799 | Core: Auth, CRUD, Teams, Projects, Settings, Dashboard, Plans, Tickets, Notifications, PM, Mood Board |
+| [match-system.js](file:///c:/Users/Mariana/Downloads/testar%20o%20Antigravity/js/match-system.js) | 2.968 | Sistema de Match completo (artista ↔ equipe, swipe, inbox, chat) |
+| [profile-popup.js](file:///c:/Users/Mariana/Downloads/testar%20o%20Antigravity/js/profile-popup.js) | 2.050 | Popup de perfil, perfil completo, sistema de interesses |
+| [profile-edit.js](file:///c:/Users/Mariana/Downloads/testar%20o%20Antigravity/js/profile-edit.js) | 472 | Edição unificada de perfil (UPE) |
+| [spotlight.js](file:///c:/Users/Mariana/Downloads/testar%20o%20Antigravity/js/spotlight.js) | 565 | Spotlight/Swipe visual (hub e artista) |
+| [global-match-listener.js](file:///c:/Users/Mariana/Downloads/testar%20o%20Antigravity/js/global-match-listener.js) | 117 | Listener global de matches (singleton) |
+| [landing.js](file:///c:/Users/Mariana/Downloads/testar%20o%20Antigravity/js/landing.js) | 31 | Helpers da landing page |
+| [firestore.rules](file:///c:/Users/Mariana/Downloads/testar%20o%20Antigravity/firestore.rules) | ~180 | Regras de segurança Firestore |
+
+### 2.2 Telas e Fluxos Mapeados
+
+| # | Tela/Fluxo | ID Principal | Onde renderiza |
+|---|---|---|---|
+| 1 | Landing Page | `#auth-screen` | `index.html` + `landing.js` |
+| 2 | Auth (Login/Registro) | `#auth-panel` | `firebase-init.js` |
+| 3 | Teams Screen | `#teams-screen` | `firebase-init.js` |
+| 4 | Dashboard | `#page-dashboard` | `firebase-init.js` |
+| 5 | Projects (Grid/List) | `#page-projects` | `firebase-init.js` |
+| 6 | Project Detail | `#page-detail` | `firebase-init.js` |
+| 7 | Analytics | `#page-analytics` | `firebase-init.js` |
+| 8 | Collaborators | `#page-collaborators` | `firebase-init.js` |
+| 9 | Talents/Match | `#page-talents` | `match-system.js` |
+| 10 | Support/Tickets | `#page-support` | `firebase-init.js` |
+| 11 | Productivity | `#page-productivity` | `firebase-init.js` |
+| 12 | Notifications | Dynamic overlay | `firebase-init.js` |
+| 13 | Activities | Dynamic overlay | `firebase-init.js` |
+| 14 | Team Settings | `#page-team-settings` | `firebase-init.js` |
+| 15 | Master Panel (Drawer) | `#master-drawer` | `firebase-init.js` |
+| 16 | Settings Modal | `#modal-settings` | `firebase-init.js` |
+| 17 | Profile Popup | `#profile-popup` | `profile-popup.js` |
+| 18 | Full Profile | `#full-profile` | `profile-popup.js` |
+| 19 | Match Hub | `#modal-match-hub` | `match-system.js` + `spotlight.js` |
+| 20 | Private Messages | `#pm-widget` | `firebase-init.js` |
+| 21 | Mood Board | `#page-moodboard` | `firebase-init.js` |
+
+### 2.3 Padrões de UI Existentes
+
+| Padrão | Implementação atual | Qualidade |
+|---|---|---|
+| **Botões** | Classes `.btn`, `.btn-primary`, `.btn-sm` + inline styles | ⚠️ Inconsistente — muitos `style=` inline |
+| **Cards** | `.card`, `.project-card`, `.plan-card` | ✅ Padrão razoável |
+| **Modais** | `openModal(id)` / `closeModal(id)` — `display:block/none` | ❌ Sem ARIA, sem focus trap |
+| **Toasts** | `toast(msg, type)` — 3 linhas, createElement + timeout | ❌ Primitivo demais |
+| **Forms** | `.value = ...` direto, nenhum `<form>`, sem validação | ❌ Zero validação |
+| **Loading** | 2 implementações duplicadas (IDs diferentes) | ⚠️ Duplicação |
+| **Tabs** | Funções ad-hoc por tela (`fpSetTab`, `mdrSwitchTab`, etc.) | ⚠️ Duplicação de padrão |
+| **Empty States** | `.empty-state` + `.empty-state-icon` + `.empty-state-title` | ✅ CSS definido |
+| **Badges** | `.tbadge`, `.nav-plan-badge`, `.match-badge` | ⚠️ Várias classes separadas |
+| **Avatares** | `getAvatarHTML()` — fallback com inicial + cor | ✅ Implementação ok |
+
+---
+
+## 3. Diagnóstico de Problemas
+
+### P0 — Quebra o Uso
+
+| # | Problema | Onde | Detalhes |
+|---|---|---|---|
+| **P0-1** | **Duplicação de `showLoading`/`hideLoading`** | [firebase-init.js:898](file:///c:/Users/Mariana/Downloads/testar%20o%20Antigravity/js/firebase-init.js#L898) e [firebase-init.js:8747](file:///c:/Users/Mariana/Downloads/testar%20o%20Antigravity/js/firebase-init.js#L8747) | Duas implementações com IDs diferentes (`fb-loading` e `global-loader`). `window.showLoading` (L8747) sobrescreve a local (L898), mas `hideLoading` local remove `fb-loading` enquanto a global remove `global-loader`. Se a local for chamada primeiro e depois `window.hideLoading`, o overlay de loading **pode ficar preso na tela**. |
+
+### P1 — Bugs Sérios
+
+| # | Problema | Onde | Detalhes |
+|---|---|---|---|
+| **P1-1** | **Zero acessibilidade em modais** | Todo o [index.html](file:///c:/Users/Mariana/Downloads/testar%20o%20Antigravity/index.html) | Nenhum modal tem `role="dialog"`, `aria-modal="true"`, `aria-labelledby`, focus trap, ou restauração de foco ao fechar. Usuários de teclado/leitor de tela não conseguem usar. WAI-ARIA APG exige tudo isso. |
+| **P1-2** | **Toast sem `aria-live`** | [firebase-init.js:1729](file:///c:/Users/Mariana/Downloads/testar%20o%20Antigravity/js/firebase-init.js#L1729-L1733) | Container `#toasts` provavelmente sem `aria-live="polite"`. Leitores de tela ignoram. |
+| **P1-3** | **Auth retry com `setInterval` sem limite seguro** | [landing.js:17-24](file:///c:/Users/Mariana/Downloads/testar%20o%20Antigravity/js/landing.js#L17-L24) | Loop de retry (60 tentativas × 50ms = 3s) pode não resolver se firebase-init.js demorar mais que 3s. Se falhar, o formulário de auth simplesmente não abre. |
+| **P1-4** | **`DB.dataPath()` funciona sem team** | [firebase-init.js:1539-1544](file:///c:/Users/Mariana/Downloads/testar%20o%20Antigravity/js/firebase-init.js#L1539-L1544) | Quando `_currentTeamId` é `null`, retorna `['users', uid]` — path que **não corresponde** ao schema real (`users/{uid}` não tem subcoleção `projects`). Todas as operações CRUD falham silenciosamente. |
+
+### P2 — Inconsistência / UX Ruim
+
+| # | Problema | Onde | Detalhes |
+|---|---|---|---|
+| **P2-1** | **Forms sem validação** | Todo CRUD | 50+ uses de `.value = ...` para preencher forms. Nenhum `required`, `minlength`, `pattern`. Usuário pode salvar campos vazios/inválidos. |
+| **P2-2** | **Toast genérico demais** | [firebase-init.js:1729](file:///c:/Users/Mariana/Downloads/testar%20o%20Antigravity/js/firebase-init.js#L1729) | Toast é `createElement('div')` com classe `toast ${type}` e `setTimeout(3400ms)`. Sem íconi, sem animação de entrada/saída, sem botão de fechar, sem ação. |
+| **P2-3** | **Tabs reimplementadas N vezes** | `fpSetTab`, `mdrSwitchTab`, `matchSwitchView`, `adbSetTab`, `setMatchHubTab`, `switchInterestTab` | Cada tela reimplementa lógica de tabs do zero — sem padrão reutilizável. |
+| **P2-4** | **Estilos inline abundantes** | Todo `index.html` | Dezenas de elementos com `style="..."` hardcoded, tornando manutenção e temas inconsistentes. |
+| **P2-5** | **`document.execCommand('copy')` deprecated** | [firebase-init.js:2952](file:///c:/Users/Mariana/Downloads/testar%20o%20Antigravity/js/firebase-init.js#L2952) | API obsoleta. Deveria usar `navigator.clipboard.writeText()`. |
+
+### P3 — Débito Técnico
+
+| # | Problema | Onde | Detalhes |
+|---|---|---|---|
+| **P3-1** | **`firebase-init.js` monolítico** | 9.799 linhas | Um arquivo com todo o core. Dificulta debug, review e manutenção. |
+| **P3-2** | **HTML monolítico** | 5.116 linhas em `index.html` | Todo o markup em um arquivo. Sem templates ou componentização. |
+| **P3-3** | **CSS monolítico** | 5.560 linhas em `main.css` | Estilos acumulados sem organização modular. |
+| **P3-4** | **`window.*` excessivo** | Todo o JS | Funções expostas via `window.funcName = ...` para comunicação entre módulos — global scope as module system. |
+| **P3-5** | **`setDoc` para updates parciais** | [firebase-init.js:1613](file:///c:/Users/Mariana/Downloads/testar%20o%20Antigravity/js/firebase-init.js#L1613) | `updateProject()` usa `setDoc` with spread operator em vez de `updateDoc`. Risco de sobrescrever campos adicionados por outros writes concorrentes. |
+
+---
+
+## 4. Avaliação dos MCPs
+
+### 4.1 shadcn/ui — Estratégia Recomendada
+
+> [!IMPORTANT]
+> **shadcn/ui é projetado para React/Next.js com Tailwind CSS.** O FREQsys é **vanilla JS/HTML/CSS puro**. Não é possível simplesmente `npx shadcn add button` e usar. A migração completa exigiria reescrever o projeto inteiro em React — **não recomendado**.
+
+**Estratégia recomendada: *Design Token Extraction + Vanilla Implementation Inspired by shadcn/ui***
+
+Usar shadcn/ui como **referência de design** (tokens CSS, padrões de API, naming conventions) e implementar componentes vanilla que seguem a mesma filosofia. Isso dá ao FREQsys:
+- Consistência visual do shadcn sem a dependência de React
+- Padrões de acessibilidade do Radix UI (base do shadcn) como blueprint
+- Possibilidade de migração futura para React, já com tokens compatíveis
+
+#### Componentes que mais ajudariam (como referência de design)
+
+| Componente shadcn | Tela beneficiada | Problema que resolve | Risco | Impacto no CSS |
+|---|---|---|---|---|
+| **Dialog / AlertDialog** | Todas as telas com modal (Settings, Collab, Project, Letra, Notes) | P1-1: Acessibilidade zero em modais. Padrão WAI-ARIA com focus trap, ESC, aria-modal | Baixo — substituição gradual | Adiciona classes `.dialog-*`, overlay com `backdrop-filter` |
+| **Sonner / Toast** | Todas as telas (23+ chamadas de toast) | P2-2: Toast genérico. Sonner tem ícones, tipos, ações, dismiss, stack | Baixo — drop-in replacement | Substitui `.toast` CSS atual |
+| **Form / Input / Label / Field** | Project CRUD, Settings, Auth, Tickets, Profile Edit | P2-1: Zero validação. shadcn Form tem validação integrada, mensagens de erro, states | Médio — muitos forms | Adiciona `.form-*` classes |
+| **Tabs** | Dashboard/Match/Master/Profile | P2-3: Tabs reimplementadas 6×. Tab padrão com ARIA `role="tablist"` | Baixo — refatoração incremental | Adiciona `.tabs-*` classes |
+| **Select / Dropdown** | Filtros, status, categorias | Selects nativos sem estilização consistente | Baixo | Substitui `<select>` nativos |
+| **Badge** | Plans, Tickets, Match status | P2-x: Várias classes de badge separadas | Baixo | Unifica em `.badge-*` |
+| **Card** | Projects, Teams, Talents | Já tem padrão, mas inconsistente | Baixo | Refina `.card-*` existente |
+| **Sheet / Drawer** | Master Panel, Profile Full | P1-1: Sem acessibilidade. Sheet tem slide-in + focus trap | Médio | Refatora `#master-drawer` |
+| **Skeleton** | Dashboard, Projects loading | Sem skeleton/placeholder durante loading | Baixo | Adiciona `.skeleton-*` |
+| **Tooltip** | Botões de ação, badges | Sem tooltips. Informação só via hover com `:hover::after` | Baixo | Adiciona `.tooltip-*` |
+| **Button** | Todo o app | Inconsistência entre `.btn`, `.btn-primary`, inline styles | Baixo | Unifica `.btn-*` |
+| **Table** | Tickets, Collaborators, Analytics | Tabelas construídas via innerHTML sem `<table>` | Médio | Adiciona `.table-*` |
+| **Progress** | Projetos (barras de progresso) | Já existe mas pode melhorar com animação e acessibilidade | Baixo | Refina `.progress-*` |
+| **Empty** | Vários empty states | Já existe padrão razoável | Baixo | Melhora `.empty-state-*` |
+| **Command** | Busca global (spotlight search) | Não existe busca global rápida (apenas filtros por tela) | Alto — feature nova | Classes novas `.command-*` |
+
+### 4.2 Context7 — O que consultar e por quê
+
+| Consulta Context7 | Por quê | Resultado |
+|---|---|---|
+| **WAI-ARIA APG — Dialog Modal Pattern** | P1-1: Nenhum modal segue padrões de acessibilidade | ✅ Consultado. Padrões exigem: `role="dialog"`, `aria-modal="true"`, `aria-labelledby`, focus trap, ESC para fechar, focus return ao trigger. **Nenhum desses existe no FREQsys.** |
+| **WAI-ARIA APG — Alert / Toast** | P1-2: Toast sem `aria-live` | Container precisa `aria-live="polite"` ou `role="status"` para leitores de tela |
+| **WAI-ARIA APG — Tabs Pattern** | P2-3: Tabs sem ARIA | Precisa `role="tablist"`, `role="tab"`, `role="tabpanel"`, `aria-selected`, `aria-controls` |
+| **Form Validation Best Practices** | P2-1: Sem validação | HTML5 constraints (`required`, `pattern`, `minlength`) + `aria-invalid` + `aria-describedby` para mensagens de erro |
+| **Clipboard API** | P2-5: `execCommand('copy')` deprecated | `navigator.clipboard.writeText()` com fallback |
+
+---
+
+## 5. Plano de Melhorias (Incremental)
+
+### Fase 1 — Quick Wins (1–2 dias)
+
+| # | Tarefa | Arquivo(s) | Risco | Como testar |
+|---|---|---|---|---|
+| 1.1 | **Unificar `showLoading`/`hideLoading`** — remover duplicação (L898 vs L8747) | `firebase-init.js` | Baixo | Chamar `showLoading()` e `hideLoading()` no console. Verificar que overlay aparece e desaparece. |
+| 1.2 | **Adicionar `aria-live="polite"` ao container de toasts** | `index.html` (`#toasts`) | Nenhum | Acionar toast e verificar com screen reader (NVDA/VoiceOver). |
+| 1.3 | **Melhorar toast: ícones por tipo, animação de entrada/saída, botão de fechar** | `firebase-init.js` (L1729) + `main.css` | Baixo | Chamar `toast('teste', 'error')`, `toast('ok', 'success')`, `toast('info', 'info')`. |
+| 1.4 | **Substituir `document.execCommand('copy')` por `navigator.clipboard.writeText()`** | `firebase-init.js` (L2952) | Nenhum | Copiar texto em qualquer lugar que use copy (letra, código de convite). |
+| 1.5 | **Adicionar `required` e `minlength` nos inputs críticos de forms** | `index.html` (inputs de project, collab, ticket) | Baixo | Tentar salvar com campo obrigatório vazio → deve bloquear. |
+
+### Fase 2 — Robustez (3–7 dias)
+
+| # | Tarefa | Arquivo(s) | Risco | Como testar |
+|---|---|---|---|---|
+| 2.1 | **Implementar focus trap nos modais** | `firebase-init.js` (`openModal`/`closeModal`) | Médio | Abrir modal → Tab/Shift+Tab devem ciclar dentro do modal. ESC deve fechar. |
+| 2.2 | **Adicionar `role="dialog"`, `aria-modal="true"`, `aria-labelledby` em todos os modais** | `index.html` (todos `#modal-*`) | Baixo | Inspecionar com DevTools, verificar atributos. Testar com NVDA. |
+| 2.3 | **Corrigir `updateProject()` para usar `updateDoc` em vez de `setDoc`** | `firebase-init.js` (L1609) | Médio | Editar projeto → verificar que apenas campos alterados mudam no Firestore console. |
+| 2.4 | **Criar componente Tab reutilizável** — extrair lógica comum de todas as tabs | Novo `js/components/tabs.js` | Baixo | Verificar que Match Hub, Master Panel, Profile, Dashboard tabs funcionam igual. |
+| 2.5 | **Guardar `auth-screen` retry com timeout máximo e feedback visual** | `landing.js` | Baixo | Carregamento lento: auth panel deve mostrar spinner, nunca ficar travado. |
+| 2.6 | **Proteger `DB.dataPath()` contra chamada sem team** | `firebase-init.js` (L1539) | Médio | Deslogar, logar com novo user sem teams → operações CRUD não devem lançar erros ocultos. |
+
+### Fase 3 — UI System / Componentização (1–3 semanas)
+
+| # | Tarefa | Arquivo(s) | Risco | Como testar |
+|---|---|---|---|---|
+| 3.1 | **Criar design tokens CSS** (variáveis para spacing, radius, shadow, font sizes) | Novo `css/tokens.css` ou top de `main.css` | Baixo | Visual idêntico, mas usando tokens em vez de valores hardcoded. |
+| 3.2 | **Extrair componente Button padronizado** — unificar `.btn`, `.btn-primary`, inline styles | `main.css` + `index.html` | Médio | Todos os botões devem seguir visual consistente. |
+| 3.3 | **Implementar Toast/Sonner-like** — stack, tipos visuais, dismiss, progress bar | `firebase-init.js` + `main.css` | Médio | `toast('...', 'error')` deve mostrar ícone ❌, cor vermelha, dismiss X. |
+| 3.4 | **Implementar Dialog acessível** — componente modal reutilizável com focus trap, ARIA | Novo `js/components/dialog.js` | Alto | Abrir/fechar modais com Tab, ESC, click fora. Testar com screen reader. |
+| 3.5 | **Implementar Form com validação** — wrapper de form com validação, mensagens de erro | Novo `js/components/form.js` | Alto | Submeter forms com dados inválidos → mensagens de erro inline. |
+| 3.6 | **Skeleton loading** — adicionar placeholders visuais durante loading de dados | `main.css` + renders no JS | Baixo | Navegar para Dashboard/Projects → skeleton aparece antes dos dados. |
+| 3.7 | **Remover inline styles** — migrar `style="..."` para classes CSS | `index.html` + `main.css` | Alto (muitos elementos) | Visual idêntico após migração. |
+
+---
+
+## 6. Top 3 Patches Detalhados
+
+### Patch 1: Unificar `showLoading`/`hideLoading`
+
+**Diagnóstico:** Existem duas implementações — uma local (L898, ID `fb-loading`) e uma `window.*` (L8747, ID `global-loader`). A segunda sobrescreve a primeira em runtime, mas `hideLoading` local (L909) remove `fb-loading`, enquanto `window.hideLoading` (L8805) remove `global-loader`. Se a local `showLoading` for chamada por código que roda antes da definição global, o overlay fica preso.
+
+**Patch sugerido:**
+
+```diff
+ // Remover a implementação LOCAL (linhas 897-909 de firebase-init.js):
+-// ─── LOADING ──────────────────────────────────────────────────────────────────
+-function showLoading(msg = 'Conectando...') {
+-  let el = document.getElementById('fb-loading');
+-  if (!el) {
+-    el = document.createElement('div');
+-    el.id = 'fb-loading';
+-    el.style.cssText = '...';
+-    el.innerHTML = `...`;
+-    document.head.insertAdjacentHTML('beforeend', '<style>@keyframes spin{to{transform:rotate(360deg)}}</style>');
+-    document.body.appendChild(el);
+-  } else { document.getElementById('fb-loading-msg').textContent = msg; }
+-}
+-function hideLoading() { document.getElementById('fb-loading')?.remove(); }
++// LOADING — usar apenas window.showLoading/hideLoading (definido mais abaixo, L8747+)
++// Funções locais removidas para evitar duplicação de IDs (fb-loading vs global-loader).
+```
+
+**Adicionalmente**, mover a definição `window.showLoading` / `window.hideLoading` (L8747-8808) para logo após as imports, ANTES do primeiro uso.
+
+**Como testar:**
+1. Abrir o app → tela de loading deve aparecer com animação FREQsys
+2. Login → loading deve desaparecer após carregar teams
+3. Console: `showLoading('teste')` → overlay aparece → `hideLoading()` → desaparece
+4. Verificar que `document.getElementById('fb-loading')` retorna `null` (ID antigo não existe mais)
+
+**Rollback:** Restaurar linhas 897-909 do backup.
+
+---
+
+### Patch 2: Adicionar acessibilidade ao container de Toasts
+
+**Diagnóstico:** A função `toast()` (L1729) cria divs dentro de `#toasts`, mas este container provavelmente não tem `aria-live`. Segundo WAI-ARIA APG (consultado via Context7), notificações dinâmicas devem usar `aria-live="polite"` ou `role="status"` para que leitores de tela anunciem o conteúdo.
+
+**Patch sugerido — `index.html`:**
+
+Localizar o elemento `<div id="toasts">` e adicionar atributos:
+
+```diff
+-<div id="toasts"></div>
++<div id="toasts" role="status" aria-live="polite" aria-atomic="false"></div>
+```
+
+**Patch sugerido — `firebase-init.js` (L1729-1732):**
+
+```diff
+-function toast(msg, type = 'success') {
+-  const el = document.createElement('div'); el.className = `toast ${type}`; el.textContent = msg;
+-  document.getElementById('toasts').appendChild(el); setTimeout(() => el.remove(), 3400);
+-}
++function toast(msg, type = 'success') {
++  const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
++  const el = document.createElement('div');
++  el.className = `toast toast-${type}`;
++  el.setAttribute('role', 'alert');
++  el.innerHTML = `
++    <span class="toast-icon">${icons[type] || icons.success}</span>
++    <span class="toast-msg">${escHtml(msg)}</span>
++    <button class="toast-close" aria-label="Fechar" onclick="this.parentElement.remove()">✕</button>
++  `;
++  // Animação de entrada
++  el.style.animation = 'toastSlideIn 0.3s ease-out';
++  document.getElementById('toasts').appendChild(el);
++  // Auto-remove com animação de saída
++  setTimeout(() => {
++    el.style.animation = 'toastSlideOut 0.3s ease-in forwards';
++    setTimeout(() => el.remove(), 300);
++  }, 3400);
++}
+```
+
+**CSS adicional para `main.css`:**
+
+```css
+@keyframes toastSlideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes toastSlideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+.toast { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 8px; font-size: 13px; }
+.toast-close { background: none; border: none; color: inherit; cursor: pointer; font-size: 14px; opacity: 0.6; padding: 0 2px; }
+.toast-close:hover { opacity: 1; }
+```
+
+**Como testar:**
+1. Console: `toast('Projeto salvo!', 'success')` → ícone ✅, animação slide-in
+2. Console: `toast('Erro fatal!', 'error')` → ícone ❌, visual diferente
+3. Clicar no botão ✕ → toast fecha imediatamente
+4. Esperar 3.4s → toast sai com animação
+5. Abrir NVDA → toast deve ser anunciado automaticamente
+
+**Rollback:** Reverter `toast()` para a versão de 3 linhas, remover atributos do `#toasts`.
+
+---
+
+### Patch 3: Substituir `document.execCommand('copy')` por Clipboard API
+
+**Diagnóstico:** `document.execCommand('copy')` está deprecated em todos os browsers modernos. O Clipboard API (`navigator.clipboard.writeText()`) é o substituto recomendado, com suporte em 95%+ dos browsers.
+
+**Patch sugerido — `firebase-init.js` (L2952 e L2671):**
+
+```diff
+-// L2952 — letra copy
+-const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); toast('Texto copiado!');
++// L2952 — letra copy
++navigator.clipboard.writeText(text).then(() => toast('Texto copiado!')).catch(() => { /* fallback */ const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch(e) {} document.body.removeChild(ta); toast('Texto copiado!'); });
+
+-// L2671 — similar pattern
+-ta.value = text; document.body.appendChild(ta); ta.select();
++navigator.clipboard.writeText(text).then(() => toast('Copiado!')).catch(() => { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch(e) {} document.body.removeChild(ta); });
+```
+
+**Como testar:**
+1. Abrir qualquer modal de Letra → clicar "Copiar" → colar em outro lugar → texto correto
+2. Copiar código de convite → colar → texto correto
+3. Verificar console: sem warnings de `execCommand` deprecated
+
+**Rollback:** Reverter para `execCommand('copy')`.
+
+---
+
+## 7. Checklist de Testes (E2E Manual)
+
+### Auth
+- [ ] Login com email/senha → acessa Teams Screen
+- [ ] Registro → cria conta → redireciona para Teams
+- [ ] Logout → retorna para Landing Page → dados de perfil resetados
+- [ ] Login com novo user → sem teams → Teams Screen vazia com botão "Criar Equipe"
+
+### Teams
+- [ ] Criar equipe → aparece na lista
+- [ ] Entrar com código de convite → equipe aparece
+- [ ] Trocar de equipe → dados do dashboard mudam
+- [ ] URL com `?code=ABCD1234` → pre-preenche campo de código
+
+### Projects
+- [ ] Criar projeto → card aparece no grid
+- [ ] Editar projeto → campos atualizados após salvar
+- [ ] Mudar status de stage → progresso atualiza
+- [ ] Deletar projeto → card some do grid
+- [ ] Limite de projetos (free: 3) → toast + modal de planos ao tentar criar 4o
+
+### Match System
+- [ ] Modo Equipe → lista de talentos aparece → swipe funciona
+- [ ] Modo Artista → lista de equipes aparece → swipe funciona
+- [ ] Like mútuo → overlay de Match aparece com confetti
+- [ ] Chat do match → mensagens enviadas/recebidas
+
+### Modais
+- [ ] Abrir modal → conteúdo correto
+- [ ] ESC fecha → overlay some
+- [ ] Click fora fecha (se implementado)
+- [ ] **[PÓS-PATCH]** Tab/Shift-Tab ciclam dentro do modal (focus trap)
+- [ ] **[PÓS-PATCH]** Foco retorna ao botão que abriu o modal
+
+### Toasts
+- [ ] `toast('ok')` → aparece com ícone ✅ e desaparece em ~3s
+- [ ] `toast('erro', 'error')` → aparece com ícone ❌
+- [ ] Botão ✕ fecha o toast imediatamente
+- [ ] **[PÓS-PATCH]** Screen reader anuncia o toast
+
+### Loading
+- [ ] **[PÓS-PATCH]** `showLoading('teste')` → overlay FREQsys aparece
+- [ ] **[PÓS-PATCH]** `hideLoading()` → overlay desaparece
+- [ ] **[PÓS-PATCH]** Não há overlay fantasma preso na tela em nenhum fluxo
+
+### Profile
+- [ ] Abrir popup de perfil → dados corretos
+- [ ] Abrir perfil completo → dados corretos, tabs funcionam
+- [ ] Editar perfil (UPE) → salvar → dados refletem no popup e full profile
+- [ ] Upload de avatar/banner → preview aparece
+
+### Settings
+- [ ] Abrir modal Settings → dados corretos nos campos
+- [ ] Alterar nome/handle → salvar → reflete na sidebar e perfil
+- [ ] Trocar tema → aplicação imediata em toda a UI
+
+### Misc
+- [ ] Sidebar collapsed/expanded → estado persistido entre reloads
+- [ ] Relógio na sidebar atualiza a cada segundo
+- [ ] Notificações aparecem quando ações ocorrem
+
+---
+
+## 8. Observações Finais
+
+> [!WARNING]
+> **Não migrar para shadcn/ui diretamente.** O FREQsys é vanilla JS e migrar para React seria uma reescrita completa. Use shadcn/ui como **referência de design** para implementar componentes vanilla equivalentes.
+
+> [!NOTE]
+> **Context7 foi consultado** para validar padrões WAI-ARIA APG de dialog/modal. Os padrões exigem: `role="dialog"`, `aria-modal="true"`, `aria-labelledby`, focus trap, ESC close, e focus return — **nenhum existe atualmente no FREQsys.**
+
+> [!TIP]
+> **Abordagem incremental é segura:** Cada patch pode ser aplicado separadamente e revertido sem impacto nos demais. Comece pela Fase 1 (quick wins) e valide antes de avançar.

@@ -6,6 +6,17 @@
 //         pomodoro, analytics (YouTube), tickets, team-settings, admin.
 // ════════════════════════════════════════════════════════════════════════════
 
+// ── GLOBAL IMAGE FALLBACK ─────────────────────────────────────────────────
+// Silencia 404/CORS de imagens externas (wikia, CDNs mortas) com um placeholder
+// inline SVG. Evita retry loops e spam de erros no console.
+document.addEventListener('error', function (e) {
+  if (e.target.tagName === 'IMG' && !e.target.dataset.fallback) {
+    e.target.dataset.fallback = '1';
+    e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' rx='12' fill='%23181820'/%3E%3Ctext x='40' y='46' text-anchor='middle' font-size='28' fill='%23333'%3E🎵%3C/text%3E%3C/svg%3E";
+    e.target.alt = 'Imagem indisponível';
+  }
+}, true);
+
 // ── DEBOUNCE UTILITY ────────────────────────────────────────────────────────
 const _debounceTimers = {};
 function _db(key, fn, delay = 280) {
@@ -17,10 +28,178 @@ window._dbRenderFindTeams = () => _db('findTeams', renderFindTeams);
 window._dbRenderProjects = () => _db('projects', renderAllProjects);
 window._dbFilterTalents = () => _db('talents', filterTalents);
 window._dbRenderHubSearch = () => _db('hubSearch', renderHubSearch);
-window._dbAdbFilterTeams = () => _db('adbTeams', adbFilterTeams);
 window._dbSaveDailyGoal = () => _db('dailyGoal', saveDailyGoal, 800);
 window._dbMbPreviewImg = (v) => _db('mbImg', () => mbPreviewNodeImg(v), 400);
 window._dbPreviewYT = (a, b) => _db('yt_' + a, () => previewYT(a, b), 500);
+// ────────────────────────────────────────────────────────────────────────────
+
+// ── FORM VALIDATOR (P1-5) ───────────────────────────────────────────────────
+window.FormValidator = {
+  // Extrai valor com trim() integrado
+  val: function (id) {
+    const el = document.getElementById(id);
+    return el ? el.value.trim() : '';
+  },
+  // Valida obrigatoriedade
+  require: function (val, fieldName) {
+    if (!val) { if (typeof toast === 'function') toast(`Preencha o campo obrigatório: ${fieldName}`, 'error'); return false; }
+    return true;
+  },
+  // Valida e normaliza Handle (ex: @user -> user)
+  isHandle: function (val, autoFix = true) {
+    if (!val) return val;
+    let clean = val;
+    if (autoFix && clean.startsWith('@')) {
+      clean = clean.substring(1);
+      // Opcional log debug
+      if (window._DEBUG_FORMS) console.info(`[FormValidator] Handle normalizado: ${val} -> ${clean}`);
+    }
+    const regex = /^[a-zA-Z0-9_]{3,30}$/;
+    if (!regex.test(clean)) {
+      if (typeof toast === 'function') toast('Handle inválido. Use de 3 a 30 caracteres (apenas letras, números e underscores, sem espaços).', 'error');
+      return null;
+    }
+    return clean;
+  },
+  // Valida e normaliza URL (ex: meudominio.com -> https://meudominio.com)
+  isUrl: function (val, autoFix = true) {
+    if (!val) return ''; // Se apagaram o campo, salvar como string vazia padronizada
+    let clean = val.trim();
+
+    // Tratamento de protocolo data: URI (exclusivo p/ imagens convertidas base64 no app)
+    if (clean.toLowerCase().startsWith('data:')) {
+      // Whitelist estrita para formatos rasterizados, barrando vetores maliciosos (svg+xml) ou HTML.
+      const isSafeImage = /^data:image\/(jpeg|jpg|png|webp|gif);base64,/i.test(clean);
+      if (!isSafeImage) {
+        if (typeof toast === 'function') toast('Upload bloqueado: formato inválido ou inseguro.', 'error');
+        return null;
+      }
+      // Limitação simples de tamanho (2.8M chars = ~2MB base64 overhead ~33%)
+      if (clean.length > 2800000) {
+        if (typeof toast === 'function') toast('Upload bloqueado: arquivo excede o tamanho permitido.', 'error');
+        return null;
+      }
+      return clean; // Retorna com sucesso a imagem safe
+    }
+
+    if (clean.toLowerCase().startsWith('javascript:')) {
+      if (typeof toast === 'function') toast('URL insegura bloqueada.', 'error');
+      return null;
+    }
+
+    // Auto-correção para esquemas HTTP padrão em URLs convencionais
+    if (autoFix && !clean.match(/^https?:\/\//i)) {
+      clean = 'https://' + clean;
+      if (window._DEBUG_FORMS) console.info(`[FormValidator] URL normalizada: ${val} -> ${clean}`);
+    }
+    try {
+      new URL(clean);
+      return clean;
+    } catch (e) {
+      if (typeof toast === 'function') toast(`A URL inserida é inválida: ${val}`, 'error');
+      return null;
+    }
+  },
+  // Retorna validador de Email simples
+  isEmail: function (val) {
+    if (!val) return val;
+    const regex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+    if (!regex.test(val)) {
+      if (typeof toast === 'function') toast('O endereço de e-mail é inválido.', 'error');
+      return null;
+    }
+    return val;
+  },
+  // Valida e sanitiza nome (Equipe, Projeto, etc)
+  isName: function (val, min = 3, max = 40) {
+    if (!val) return '';
+    let clean = val.replace(/\s+/g, ' ').trim();
+    if (clean.length < min || clean.length > max) {
+      if (typeof toast === 'function') toast(`O nome deve ter entre ${min} e ${max} caracteres.`, 'error');
+      return null;
+    }
+    // Permite letras, números, espaços e hifens (suporte a acentos via unicode)
+    // Try/catch fallback caso o browser (ex: mobile antigo) não suporte \p{L}
+    let isValid = false;
+    try {
+      const regex = /^[\p{L}\p{N} \-]+$/u;
+      isValid = regex.test(clean);
+    } catch (e) {
+      // Fallback básico
+      const fallbackRegex = /^[a-zA-Z0-9À-ÿ \-]+$/;
+      isValid = fallbackRegex.test(clean);
+    }
+    if (!isValid) {
+      if (typeof toast === 'function') toast('O nome contém caracteres inválidos. Use apenas letras, números e hifens.', 'error');
+      return null;
+    }
+    return clean;
+  },
+  // Normaliza lista de tags separadas por vírgula (ex: gêneros)
+  isTags: function (val, maxTags = 10, maxLen = 20) {
+    if (!val) return [];
+    let tagsRaw = val.split(',')
+      .map(t => t.trim())
+      .filter(t => t.length > 0);
+
+    // Remove duplicatas case-insensitive mas preserva o case inserido da primeira aparição
+    const tags = [];
+    const seen = new Set();
+    for (const t of tagsRaw) {
+      const lower = t.toLowerCase();
+      if (!seen.has(lower)) {
+        seen.add(lower);
+        tags.push(t);
+      }
+    }
+
+    if (tags.length > maxTags) {
+      if (typeof toast === 'function') toast(`Você pode adicionar no máximo ${maxTags} itens.`, 'error');
+      return null;
+    }
+
+    for (const t of tags) {
+      if (t.length > maxLen) {
+        if (typeof toast === 'function') toast(`O item "${t}" excede o limite de ${maxLen} caracteres.`, 'error');
+        return null;
+      }
+    }
+    return tags;
+  },
+  // Valida títulos de projeto/track permitindo símbolos comuns e emojis (Bloqueia XSS apenas)
+  isTitle: function (val, min = 2, max = 60) {
+    if (!val) return '';
+    let clean = val.replace(/\s+/g, ' ').trim();
+    if (clean.length < min || clean.length > max) {
+      if (typeof toast === 'function') toast(`O título deve ter entre ${min} e ${max} caracteres.`, 'error');
+      return null;
+    }
+    // Remove tags HTML pesadas para evitar XSS, mas permite acentos, pontuações e emojis
+    if (/[<>]/.test(clean)) {
+      if (typeof toast === 'function') toast('O título não pode conter caracteres HTML (< ou >).', 'error');
+      return null;
+    }
+    return clean;
+  },
+  // Validação flexível e higienização de contato
+  isContact: function (val) {
+    if (!val) return '';
+    let clean = val.trim();
+    if (clean.length > 100) return clean.substring(0, 100);
+
+    if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(clean)) return clean.toLowerCase(); // É email
+    if (clean.startsWith('http')) {
+      const u = this.isUrl(clean);
+      if (u === null) return null;
+      return u;
+    }
+    if (/[<>]/.test(clean)) {
+      if (typeof toast === 'function') toast('O contato contém caracteres inválidos.', 'error');
+      return null; // bloq XSS hard se digitado livre
+    }
+    return clean;
+  }
+};
 // ────────────────────────────────────────────────────────────────────────────
 
 // ─── PLAN UTILITIES ───────────────────────────────────────────────────────────
@@ -28,15 +207,66 @@ window._dbPreviewYT = (a, b) => _db('yt_' + a, () => previewYT(a, b), 500);
 // Nunca assuma que o campo `plan` existe no documento — use sempre estas funções.
 // Qualquer novo código que precise verificar plano DEVE usar estas funções.
 
+let _planExpTimer = null;
+function _schedulePlanRefresh(uid, expDate) {
+  if (typeof currentUserData === 'undefined' || !currentUserData || uid !== currentUserData.uid) return;
+  if (_planExpTimer) clearTimeout(_planExpTimer);
+  const ms = expDate.getTime() - Date.now();
+  if (ms > 0 && ms < 86400000) {
+    _planExpTimer = setTimeout(() => {
+      if (typeof refreshPlanUI === 'function') refreshPlanUI();
+    }, ms + 500); // 500ms safety buffer
+  }
+}
+
+function getEffectivePlanForUser(userOrUid) {
+  let docData = userOrUid;
+  // If UID string provided, look up in global cache
+  if (typeof userOrUid === 'string') {
+    docData = (_users && _users.find(u => u.uid === userOrUid)) || null;
+  }
+
+  if (!docData || typeof docData !== 'object') {
+    return { plan: 'free', source: 'base' };
+  }
+
+  // Check Override
+  if (docData.planOverride) {
+    try {
+      const expDate = docData.planOverride.expiresAt?.toDate
+        ? docData.planOverride.expiresAt.toDate()
+        : new Date(docData.planOverride.expiresAt);
+
+      if (expDate > new Date()) {
+        const op = docData.planOverride.plan;
+        if (op === 'pro' || op === 'advanced' || op === 'free') {
+          _schedulePlanRefresh(docData.uid, expDate);
+          return { plan: op, source: 'override', expiresAt: expDate };
+        }
+      }
+    } catch (e) {
+      console.warn('[PlanEngine] Falha ao ler expiração do planOverride:', e);
+    }
+  }
+
+  // Check Base Plan
+  const raw = docData.plan;
+  if (raw === 'pro' || raw === 'advanced') {
+    return { plan: raw, source: 'base' };
+  }
+
+  return { plan: 'free', source: 'base' };
+}
+window.getEffectivePlanForUser = getEffectivePlanForUser;
+
 /**
- * Retorna o plano do usuário. Fallback seguro para "free" se ausente ou undefined.
+ * Retorna o plano do usuário apenas (string), agindo como wrapper amigável 
+ * retrocompatível para permissões, usando getEffectivePlanForUser como source of truth.
  * @param {object|null|undefined} userDoc - documento do usuário (Firestore data)
  * @returns {"free"|"pro"|"advanced"} plano normalizado
  */
 function resolveUserPlan(userDoc) {
-  const raw = userDoc?.plan;
-  if (raw === 'pro' || raw === 'advanced') return raw;
-  return 'free'; // fallback seguro — campo ausente OU valor inesperado
+  return getEffectivePlanForUser(userDoc).plan;
 }
 
 /**
@@ -713,50 +943,100 @@ window._sortByPriority = _sortByPriority;
 // ══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Normaliza o valor de plan para "free" | "pro" | "advanced".
- * Aceita objetos de talent_profiles (extrai .plan) ou string direta.
+ * Renderiza o chip unificado de plano ('inline' ou 'pill').
+ * Extrai o plano efetivo do objeto/string. 
+ * 'free' retorna string vazia para não poluir UI.
  */
+function renderPlanChip(planInfoOrString, style = 'inline') {
+  let p = 'free';
+  if (planInfoOrString && typeof planInfoOrString === 'object' && planInfoOrString.plan) {
+    p = planInfoOrString.plan;
+  } else if (typeof planInfoOrString === 'string') {
+    p = planInfoOrString.toLowerCase().trim();
+  }
+
+  if (p !== 'pro' && p !== 'advanced') return '';
+
+  if (style === 'pill') {
+    if (p === 'pro') {
+      return `<span class="plan-pill pro"><span class="pp-dot"></span>PRO CREATOR</span>`;
+    }
+    if (p === 'advanced') {
+      return `<span class="plan-pill advanced"><span class="pp-icon">⬡</span><span class="pp-text">ADVANCED MEMBER ✨</span></span>`;
+    }
+  } else {
+    // inline
+    if (p === 'pro') {
+      return `<span class="plan-chip pro"><span class="pc-dot"></span>PRO</span>`;
+    }
+    if (p === 'advanced') {
+      return `<span class="plan-chip advanced"><span class="pc-icon">⬡</span><span class="pc-text">ADVANCED ✨</span></span>`;
+    }
+  }
+
+  return '';
+}
+window.renderPlanChip = renderPlanChip;
+
+// Retrocompat wrappers mapping to unified logic
 function getPlanLabel(planOrDoc) {
-  const raw = (planOrDoc && typeof planOrDoc === 'object') ? planOrDoc.plan : planOrDoc;
-  const p = (typeof raw === 'string') ? raw.toLowerCase().trim() : '';
-  if (p === 'pro' || p === 'advanced') return p;
-  return 'free';
+  const p = typeof planOrDoc === 'object' ? getEffectivePlanForUser(planOrDoc).plan : (planOrDoc || 'free').toLowerCase();
+  return (p === 'pro' || p === 'advanced') ? p : 'free';
 }
-
-/**
- * Chip inline pequeno — para usar ao lado do nome.
- * Free → '' (sem poluir a UI)
- */
-function renderPlanInlineChip(planOrDoc) {
-  const p = getPlanLabel(planOrDoc);
-  if (p === 'pro') {
-    return `<span class="plan-chip pro"><span class="pc-dot"></span>PRO</span>`;
-  }
-  if (p === 'advanced') {
-    return `<span class="plan-chip advanced"><span class="pc-icon">⬡</span><span class="pc-text">ADVANCED ✨</span></span>`;
-  }
-  return ''; // free: sem chip
-}
-
-/**
- * Pill médio — para usar abaixo do nome em cards de perfil.
- * Free → ''
- */
-function renderPlanPill(planOrDoc) {
-  const p = getPlanLabel(planOrDoc);
-  if (p === 'pro') {
-    return `<span class="plan-pill pro"><span class="pp-dot"></span>PRO CREATOR</span>`;
-  }
-  if (p === 'advanced') {
-    return `<span class="plan-pill advanced"><span class="pp-icon">⬡</span><span class="pp-text">ADVANCED MEMBER ✨</span></span>`;
-  }
-  return ''; // free: sem pill
-}
-
-// Expõe globalmente para uso em templates inline
 window.getPlanLabel = getPlanLabel;
-window.renderPlanInlineChip = renderPlanInlineChip;
-window.renderPlanPill = renderPlanPill;
+window.renderPlanInlineChip = (p) => renderPlanChip(p, 'inline');
+window.renderPlanPill = (p) => renderPlanChip(p, 'pill');
+
+/**
+ * Atualiza todas as UIs de plano (Sidebar, Popup, Profile View) instantaneamente.
+ * Deve ser chamado quando o documento base do usuário muda via onSnapshot 
+ * ou via Override Panel actions (master).
+ */
+window.refreshPlanUI = function () {
+  if (!currentUserData || !currentUserData.uid) return;
+
+  // 1. Sidebar Role Badge
+  if (typeof applyPermissions === 'function' && window._ready) {
+    const headerRoleEl = document.getElementById('header-role');
+    if (headerRoleEl) {
+      const effectivePlanInfo = getEffectivePlanForUser(currentUserData);
+      const roleLabel = ({ admin: '\u2B50 Admin', editor: '\u270F\uFE0F Editor', viewer: '\uD83D\uDC41 Viewer' })[currentUserData?.role] || '';
+      const planChipHtml = renderPlanChip(effectivePlanInfo, 'inline');
+      headerRoleEl.innerHTML = (roleLabel ? `<span>${window.escHtml ? window.escHtml(roleLabel) : roleLabel}</span>` : '') + (planChipHtml ? ' ' + planChipHtml : '');
+    }
+  }
+
+  // 2. Profile Popup (if matches current user UID)
+  if (typeof window._ppCurrentData !== 'undefined' && window._ppCurrentData && window._ppCurrentData.uid === currentUserData.uid) {
+    const ppNameEl = document.getElementById('pp-name');
+    if (ppNameEl) {
+      const effectivePlanInfo = getEffectivePlanForUser(currentUserData);
+      const nameRaw = window._ppCurrentData.name || window._ppCurrentData.displayName || 'Sem nome';
+      const nameSafe = nameRaw.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const chipHtml = renderPlanChip(effectivePlanInfo, 'inline');
+      ppNameEl.innerHTML = nameSafe + (chipHtml ? ' ' + chipHtml : '');
+    }
+  }
+
+  // 3. Full Profile Popup (if matches current user UID)
+  const fpNameEl = document.getElementById('fp-name-new');
+  if (fpNameEl && typeof window._ppCurrentData !== 'undefined' && window._ppCurrentData && window._ppCurrentData.uid === currentUserData.uid) {
+    const effectivePlanInfo = getEffectivePlanForUser(currentUserData);
+
+    // Inline Chip Target
+    const nameRaw = window._ppCurrentData.name || window._ppCurrentData.displayName || 'Sem nome';
+    fpNameEl.textContent = nameRaw || '—';
+    fpNameEl.querySelectorAll('.plan-chip').forEach(el => el.remove());
+    const chipHtml = renderPlanChip(effectivePlanInfo, 'inline');
+    if (chipHtml) fpNameEl.insertAdjacentHTML('beforeend', ' ' + chipHtml);
+
+    // Pill Target
+    const fpPillEl = document.getElementById('fp-plan-pill-new');
+    if (fpPillEl) {
+      fpPillEl.innerHTML = renderPlanChip(effectivePlanInfo, 'pill');
+    }
+  }
+};
 // ──────────────────────────────────────────────────────────────────────────────
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -827,7 +1107,7 @@ window._syncTalentPlan = _syncTalentPlan;
 // Crie em: https://console.firebase.google.com
 // Ative: Authentication (Email/Senha + Google) e Firestore Database
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getFirestore, doc, getDoc, collection, getDocs, getCountFromServer, setDoc, deleteDoc, updateDoc, onSnapshot, writeBatch, query, orderBy, limit, addDoc, serverTimestamp, where, deleteField, Timestamp }
+import { getFirestore, doc, getDoc, collection, getDocs, getCountFromServer, setDoc, deleteDoc, updateDoc, onSnapshot, writeBatch, query, orderBy, limit, addDoc, serverTimestamp, where, deleteField, Timestamp, runTransaction }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 import {
   getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
@@ -894,89 +1174,208 @@ let _unsubProjects = null;
 let _unsubCollabs = null;
 let _unsubUsers = null;
 
-// ─── LOADING ──────────────────────────────────────────────────────────────────
-function showLoading(msg = 'Conectando...') {
-  let el = document.getElementById('fb-loading');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'fb-loading';
-    el.style.cssText = 'position:fixed;inset:0;background:rgba(5,4,15,0.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-family:Figtree,sans-serif;color:#7a70a8;font-size:13px;letter-spacing:3px;text-transform:uppercase';
-    el.innerHTML = `<div style="width:40px;height:40px;border:2px solid #1a0a12;border-top-color:#ff3cb4;border-radius:50%;animation:spin 0.8s linear infinite"></div><span id="fb-loading-msg">${msg}</span>`;
-    document.head.insertAdjacentHTML('beforeend', '<style>@keyframes spin{to{transform:rotate(360deg)}}</style>');
-    document.body.appendChild(el);
-  } else { document.getElementById('fb-loading-msg').textContent = msg; }
-}
-function hideLoading() { document.getElementById('fb-loading')?.remove(); }
+// ─── LOADING INDICATORS ────────────────────────────────────────────────────────
+window.showLoading = function (message = 'Carregando...') {
+  window.hideLoading();
+  const loader = document.createElement('div');
+  loader.id = 'global-loader';
+  loader.innerHTML = `
+    <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(8,8,14,0.92);
+                display:flex;align-items:center;justify-content:center;z-index:99999;backdrop-filter:blur(8px)">
+      <style>
+        @keyframes freqSplashReveal{0%{opacity:0;transform:translateY(16px) scale(0.9);letter-spacing:24px}100%{opacity:1;transform:translateY(0) scale(1);letter-spacing:4px}}
+        @keyframes freqSplashFade{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:translateY(0)}}
+        @keyframes freqLoadBar{0%{width:0%}40%{width:55%}80%{width:82%}100%{width:100%}}
+        @keyframes freqCircle{0%{opacity:0.35;transform:translate(-50%,-50%) scale(0.7)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.4)}}
+        @keyframes freqFwBar{0%,100%{transform:scaleY(1);opacity:1}50%{transform:scaleY(0.25);opacity:0.4}}
+        .freq-splash-logo{animation:freqSplashReveal 1s cubic-bezier(.16,1,.3,1) forwards;opacity:0}
+        .freq-splash-sub{animation:freqSplashFade 1s 0.5s ease-out forwards;opacity:0}
+        .freq-splash-bar-wrap{animation:freqSplashFade 0.8s 0.8s ease-out forwards;opacity:0}
+        .freq-splash-loadbar{animation:freqLoadBar 2.8s 1s ease-in-out forwards;width:0%}
+        .freq-circle-1{animation:freqCircle 3.5s 0.2s ease-out infinite}
+        .freq-circle-2{animation:freqCircle 3.5s 1s ease-out infinite}
+        .freq-circle-3{animation:freqCircle 3.5s 1.8s ease-out infinite}
+        .freq-fw-s1{animation:freqFwBar 1.2s 0s ease-in-out infinite}
+        .freq-fw-s2{animation:freqFwBar 1.2s 0.15s ease-in-out infinite}
+        .freq-fw-s3{animation:freqFwBar 1.2s 0.3s ease-in-out infinite}
+        .freq-fw-s4{animation:freqFwBar 1.2s 0.45s ease-in-out infinite}
+        .freq-fw-s5{animation:freqFwBar 1.2s 0.6s ease-in-out infinite}
+      </style>
+      <!-- circles -->
+      <div style="position:absolute;top:50%;left:50%;pointer-events:none">
+        <div class="freq-circle-1" style="position:absolute;width:220px;height:220px;border-radius:50%;border:1px solid rgba(255,60,180,0.1);transform:translate(-50%,-50%)"></div>
+        <div class="freq-circle-2" style="position:absolute;width:380px;height:380px;border-radius:50%;border:1px solid rgba(255,107,61,0.07);transform:translate(-50%,-50%)"></div>
+        <div class="freq-circle-3" style="position:absolute;width:540px;height:540px;border-radius:50%;border:1px solid rgba(255,200,60,0.05);transform:translate(-50%,-50%)"></div>
+      </div>
+      <div style="position:relative;text-align:center;z-index:1">
+        <!-- waveform icon -->
+        <div style="display:flex;align-items:center;justify-content:center;gap:4px;height:44px;margin-bottom:20px">
+          <div class="freq-fw-s1" style="width:5px;height:14px;border-radius:3px;background:linear-gradient(180deg,#ff3cb4,#ffc83c)"></div>
+          <div class="freq-fw-s2" style="width:5px;height:28px;border-radius:3px;background:linear-gradient(180deg,#ff3cb4,#ffc83c);opacity:.85"></div>
+          <div class="freq-fw-s3" style="width:5px;height:44px;border-radius:3px;background:linear-gradient(180deg,#ff3cb4,#ffc83c)"></div>
+          <div class="freq-fw-s4" style="width:5px;height:32px;border-radius:3px;background:linear-gradient(180deg,#ff3cb4,#ffc83c);opacity:.9"></div>
+          <div class="freq-fw-s5" style="width:5px;height:18px;border-radius:3px;background:linear-gradient(180deg,#ff3cb4,#ffc83c);opacity:.7"></div>
+        </div>
+        <!-- logo text -->
+        <div class="freq-splash-logo" style="font-family:'Bebas Neue',sans-serif;font-size:72px;letter-spacing:4px;background:linear-gradient(135deg,#ff3cb4 0%,#ff6b3d 50%,#ffc83c 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1">
+          FREQ<span style="font-family:'IBM Plex Mono',monospace;font-size:32px;font-weight:600;color:rgba(255,255,255,0.35);-webkit-text-fill-color:rgba(255,255,255,0.35);letter-spacing:2px;vertical-align:middle">sys</span>
+        </div>
+        <div class="freq-splash-sub" style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:5px;color:rgba(255,255,255,0.2);text-transform:uppercase;margin-top:8px">${message}</div>
+        <!-- loader bar -->
+        <div class="freq-splash-bar-wrap" style="display:flex;justify-content:center;margin-top:40px">
+          <div style="width:200px;height:2px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden">
+            <div class="freq-splash-loadbar" style="height:100%;background:linear-gradient(90deg,#ff3cb4,#ffc83c);border-radius:2px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(loader);
+  // console.info('[Loading] Overlay montado.', message); // desligado prod
+};
+
+window.hideLoading = function () {
+  const loader = document.getElementById('global-loader');
+  if (loader) {
+    loader.remove();
+    // console.info('[Loading] Overlay removido.'); // desligado prod
+  }
+};
+
+// Aliases globais para escopo dos modulos
+const showLoading = window.showLoading;
+const hideLoading = window.hideLoading;
 
 // ─── AUTH SCREENS ─────────────────────────────────────────────────────────────
 window.switchAuthTab = function (tab) {
-  document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
-  document.getElementById('form-register').style.display = tab === 'register' ? 'block' : 'none';
-  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
-  document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+  const formLogin = document.getElementById('form-login');
+  const formRegister = document.getElementById('form-register');
+  const tabLogin = document.getElementById('tab-login');
+  const tabRegister = document.getElementById('tab-register');
+
+  // P1-3: Guard — se algum elemento vital não existir, logar e abortar sem crash
+  if (!formLogin || !formRegister || !tabLogin || !tabRegister) {
+    console.error('[switchAuthTab] Elemento(s) do painel de auth não encontrado(s) no DOM.',
+      { formLogin: !!formLogin, formRegister: !!formRegister, tabLogin: !!tabLogin, tabRegister: !!tabRegister });
+    return;
+  }
+
+  formLogin.style.display = tab === 'login' ? 'block' : 'none';
+  formRegister.style.display = tab === 'register' ? 'block' : 'none';
+  tabLogin.classList.toggle('active', tab === 'login');
+  tabRegister.classList.toggle('active', tab === 'register');
   clearAuthMessages();
 };
 
-function showAuthError(msg) { const el = document.getElementById('auth-error'); el.textContent = msg; el.classList.add('show'); document.getElementById('auth-success').classList.remove('show'); }
-function showAuthSuccess(msg) { const el = document.getElementById('auth-success'); el.textContent = msg; el.classList.add('show'); document.getElementById('auth-error').classList.remove('show'); }
-function clearAuthMessages() { document.getElementById('auth-error').classList.remove('show'); document.getElementById('auth-success').classList.remove('show'); }
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  const suc = document.getElementById('auth-success');
+  if (el) { el.textContent = msg; el.classList.add('show'); }
+  if (suc) suc.classList.remove('show');
+}
+function showAuthSuccess(msg) {
+  const el = document.getElementById('auth-success');
+  const err = document.getElementById('auth-error');
+  if (el) { el.textContent = msg; el.classList.add('show'); }
+  if (err) err.classList.remove('show');
+}
+function clearAuthMessages() {
+  const err = document.getElementById('auth-error');
+  const suc = document.getElementById('auth-success');
+  if (err) err.classList.remove('show');
+  if (suc) suc.classList.remove('show');
+}
 
 const AUTH_ERRORS = {
-  'auth/user-not-found': 'Email não encontrado', 'auth/wrong-password': 'Senha incorreta',
-  'auth/email-already-in-use': 'Este email já está cadastrado', 'auth/weak-password': 'Senha muito fraca (mínimo 6 caracteres)',
-  'auth/invalid-email': 'Email inválido', 'auth/invalid-credential': 'Email ou senha incorretos',
-  'auth/popup-closed-by-user': 'Login cancelado', 'auth/too-many-requests': 'Muitas tentativas. Tente mais tarde.',
+  'auth/user-not-found': 'Conta não encontrada com este email.', 'auth/wrong-password': 'Senha incorreta.',
+  'auth/email-already-in-use': 'Este email já está cadastrado. Que tal tentar "Recuperar Senha"?', 'auth/weak-password': 'A senha informada é muito fraca (mínimo 6 caracteres).',
+  'auth/invalid-email': 'O formato do email está incorreto.', 'auth/invalid-credential': 'As credenciais são desconhecidas ou incorretas.',
+  'auth/invalid-login-credentials': 'Email não encontrado ou senha incorreta.',
+  'auth/popup-closed-by-user': 'O login com o Google foi fechado antes de concluir.',
+  'auth/too-many-requests': 'Muitas tentativas falhas. Conta temporariamente bloqueada, tente mais tarde.',
+  'auth/network-request-failed': 'Falha na conexão. Verifique sua internet ou VPN.',
+  'auth/operation-not-allowed': 'Este método de login não está ativado.',
 };
 
 window.doLogin = async function () {
-  const email = document.getElementById('login-email').value.trim();
+  const emailRaw = FormValidator.val('login-email');
+  const email = emailRaw ? FormValidator.isEmail(emailRaw) : '';
   const pass = document.getElementById('login-password').value;
-  if (!email || !pass) { showAuthError('Preencha email e senha'); return; }
+
+  // Impede campos ocos ou senhas q são só espaço
+  if (!emailRaw || !pass.trim()) { showAuthError('Preencha email e senha'); return; }
+  // Se digitou email mas o isEmail falhou (retornando null), pára a execução.
+  if (emailRaw && !email) return;
+
+  // Feedback pro usuário do e-mail normalizado limpo
+  document.getElementById('login-email').value = email;
+
   const btn = document.getElementById('login-btn');
-  if (btn.disabled) return; // evita clique duplo
+  if (btn.disabled) return; // evita duplo clique
   btn.disabled = true; btn.textContent = 'Entrando...';
-  try { await signInWithEmailAndPassword(auth, email, pass); }
-  catch (e) {
+
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+  } catch (e) {
     showAuthError(AUTH_ERRORS[e.code] || e.message);
-    btn.disabled = false; btn.textContent = 'Entrar';
   } finally {
-    // Garante reset se login não completou (ex: sem rede, token inválido)
-    if (!auth.currentUser) { btn.disabled = false; btn.textContent = 'Entrar'; }
+    // Agora é infallable: sempre destrava a UI no final, seja sucesso ou catch ou disconect.
+    btn.disabled = false; btn.textContent = 'Entrar';
   }
 };
 
 window.doRegister = async function () {
-  const name = document.getElementById('reg-name').value.trim();
-  const email = document.getElementById('reg-email').value.trim();
+  const nameRaw = FormValidator.val('reg-name');
+  // Usamos isTitle pq Nome Dinâmico pode ter pontuações, emoticons etc, mas barra payloads XSS.
+  const name = nameRaw ? FormValidator.isTitle(nameRaw, 2, 40) : '';
+  const emailRaw = FormValidator.val('reg-email');
+  const email = emailRaw ? FormValidator.isEmail(emailRaw) : '';
   const pass = document.getElementById('reg-password').value;
-  if (!name || !email || !pass) { showAuthError('Preencha todos os campos'); return; }
-  if (pass.length < 6) { showAuthError('Senha muito curta (mínimo 6 caracteres)'); return; }
-  const btn = document.getElementById('register-btn'); btn.disabled = true; btn.textContent = 'Criando...';
+
+  if (!nameRaw || !emailRaw || !pass.trim()) { showAuthError('Preencha todos os campos obrigatórios.'); return; }
+  if (nameRaw && !name) return;
+  if (emailRaw && !email) return;
+
+  if (pass.length < 6) { showAuthError('A senha é muito curta. O mínimo é 6 caracteres.'); return; }
+
+  // Exibe normalização
+  document.getElementById('reg-name').value = name;
+  document.getElementById('reg-email').value = email;
+
+  const btn = document.getElementById('register-btn');
+  if (btn.disabled) return;
+  btn.disabled = true; btn.textContent = 'Criando Conta...';
+
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, pass);
     await updateProfile(cred.user, { displayName: name });
-    // SaaS: usuário entra direto como admin do próprio workspace
     await setDoc(doc(db, 'users', cred.user.uid), { uid: cred.user.uid, name, email, role: 'member', plan: 'free', status: 'approved', createdAt: new Date().toISOString() });
-    // PATCH Plan Sync: inicializa talent_profiles.plan junto com users.plan
     _syncTalentPlan(cred.user.uid, 'free').catch(() => { });
-    // workspace já criado — onAuthStateChanged vai iniciar
-    btn.textContent = 'Criar Conta'; btn.disabled = false;
-  } catch (e) { showAuthError(AUTH_ERRORS[e.code] || e.message); btn.disabled = false; btn.textContent = 'Criar Conta'; }
+  } catch (e) {
+    showAuthError(AUTH_ERRORS[e.code] || e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Criar Conta';
+  }
 };
 
 window.doGoogleLogin = async function () {
+  const btn = document.getElementById('google-btn');
+  if (btn) btn.disabled = true;
   try {
     const cred = await signInWithPopup(auth, gProvider);
     const u = cred.user;
-    // Check if user doc exists already
     const existing = _users.find(x => x.uid === u.uid);
     if (!existing) {
-      // SaaS: primeiro login vira admin do próprio workspace
-      await setDoc(doc(db, 'users', u.uid), { uid: u.uid, name: u.displayName || u.email, email: u.email, role: 'member', plan: 'free', status: 'approved', createdAt: new Date().toISOString() });
-      // PATCH Plan Sync: inicializa talent_profiles.plan junto com users.plan
+      // isTitle garante q displayNames injetados por SSO q tenham lixo não causem quebra e fiquem no máx 40
+      const safeName = FormValidator.isTitle(u.displayName || u.email, 2, 40) || 'Novo Colaborador';
+      await setDoc(doc(db, 'users', u.uid), { uid: u.uid, name: safeName, email: u.email, role: 'member', plan: 'free', status: 'approved', createdAt: new Date().toISOString() });
       _syncTalentPlan(u.uid, 'free').catch(() => { });
     }
-  } catch (e) { showAuthError(AUTH_ERRORS[e.code] || e.message); }
+  } catch (e) {
+    showAuthError(AUTH_ERRORS[e.code] || e.message);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 };
 
 window.doLogout = async function () {
@@ -1082,6 +1481,10 @@ function startListeners() {
     }
     usersLoaded = true; tryInit();
     if (_ready) { applyPermissions(); }
+
+    // Auto-refresh Plan UI immediately on data change (especially for Overrides)
+    if (typeof refreshPlanUI === 'function') refreshPlanUI();
+
     // Atualiza nav staff/admin imediatamente, sem depender de _currentTeamId
     if (typeof refreshStaffNav === 'function') refreshStaffNav();
   }, () => { usersLoaded = true; tryInit(); });
@@ -1090,13 +1493,31 @@ function startListeners() {
     _projects = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     projLoaded = true; tryInit();
     if (_ready) refreshCurrentPage();
-  }, err => { hideLoading(); toast('Erro: ' + err.message, 'error'); });
+  }, err => {
+    console.error(`[startListeners] Erro em projects (teamId: ${_currentTeamId}):`, err.code, err.message);
+    _projects = []; // fallback: lista vazia, não trava
+    projLoaded = true; tryInit();
+    if (err.code === 'permission-denied' || (err.message && err.message.includes('permissions'))) {
+      toast('⚠️ Não é possível carregar projetos: suas permissões nesta equipe podem estar desatualizadas. Peça ao dono para reabrir a equipe.', 'error');
+    } else {
+      toast('Erro ao carregar projetos: ' + (err.message || 'erro desconhecido'), 'error');
+    }
+  });
 
   _unsubCollabs = onSnapshot(collection(db, ...dataPath, 'collaborators'), snap => {
     _collabs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     collabLoaded = true; tryInit();
     if (_ready) refreshCurrentPage();
-  }, err => { hideLoading(); toast('Erro: ' + err.message, 'error'); });
+  }, err => {
+    console.error(`[startListeners] Erro em collaborators (teamId: ${_currentTeamId}):`, err.code, err.message);
+    _collabs = []; // fallback: lista vazia, não trava
+    collabLoaded = true; tryInit();
+    if (err.code === 'permission-denied' || (err.message && err.message.includes('permissions'))) {
+      toast('⚠️ Não é possível carregar colaboradores: permissões desatualizadas. Peça ao dono para reabrir a equipe.', 'error');
+    } else {
+      toast('Erro ao carregar colaboradores: ' + (err.message || 'erro desconhecido'), 'error');
+    }
+  });
 }
 
 // ─── TEAMS SYSTEM ─────────────────────────────────────────────────────────────
@@ -1151,6 +1572,19 @@ async function loadMyTeams() {
         data.members.some(m => m.uid === uid);
       if (isMember) {
         teamsById[d.id] = { id: d.id, ...data };
+        // Auto-repair: se equipe antiga não tem memberUids, popula silenciosamente
+        // GUARD: Só o criador (createdBy) tem permissão garantida de update nas rules
+        if (!data.memberUids || !Array.isArray(data.memberUids)) {
+          if (data.createdBy === uid) {
+            const repairedUids = data.members.map(m => m.uid).filter(Boolean);
+            console.info(`[loadMyTeams] Repair: populando memberUids para equipe ${d.id} (${repairedUids.length} membros)`);
+            setDoc(doc(db, 'teams', d.id), { memberUids: repairedUids }, { merge: true }).catch(e =>
+              console.warn(`[loadMyTeams] Repair falhou para ${d.id}:`, e.message)
+            );
+          } else {
+            console.info(`[loadMyTeams] Equipe ${d.id} precisa de repair de memberUids, mas só o dono pode executar.`);
+          }
+        }
       }
     });
   } catch (e) {
@@ -1232,10 +1666,15 @@ async function renderTeamsList() {
   }
 }
 
-window.createTeam = async function () {
-  const name = document.getElementById('new-team-name').value.trim();
-  if (!name) { toast('Nome obrigatório!', 'error'); return; }
-  const desc = document.getElementById('new-team-desc').value.trim();
+window.createTeam = async function (injectedData) {
+  const nameRaw = FormValidator.val('new-team-name');
+  if (!nameRaw) { toast('Nome obrigatório!', 'error'); return; }
+
+  const name = FormValidator.isName(nameRaw, 3, 40);
+  if (name === null) return;
+
+  const descRaw = FormValidator.val('new-team-desc');
+  const desc = descRaw.substring(0, 500); // hard limit 500 chars
 
   // FASE 1 — Plan Engine: verifica limite de equipes antes de criar
   const _teamLimit = getLimit(currentUserData, 'maxTeams');
@@ -1252,22 +1691,41 @@ window.createTeam = async function () {
     return;
   }
   // P2-C: lê e normaliza o campo de gêneros musicais
-  const genresRaw = document.getElementById('new-team-genres')?.value.trim() || '';
-  const genres = genresRaw
-    ? genresRaw.split(',').map(g => g.trim()).filter(Boolean)
-    : [];
+  const genresRaw = FormValidator.val('new-team-genres');
+  const genres = FormValidator.isTags(genresRaw, 10, 20);
+  if (genres === null) return;
+
   const uid = currentUser.uid;
   const teamId = DB.uid();
   const inviteCode = Math.random().toString(36).slice(2, 10).toUpperCase();
-  const team = {
-    id: teamId, name, description: desc, genres, inviteCode,
-    createdAt: new Date().toISOString(), createdBy: uid,
-    memberUids: [uid], // v5.20.1 — array flat de UIDs para Firestore rules eficientes
-    members: [{ uid, name: currentUserData?.name || currentUser?.email, email: currentUser?.email, photoURL: currentUserData?.photoURL || '', role: 'owner', joinedAt: new Date().toISOString() }]
+
+  // 3. Payload Guard: Objeto explícito bloqueando campos extras + console log
+  if ((injectedData || arguments.length > 0) && window._DEBUG_FORMS) {
+    console.warn('[Payload Guard] Tentativa de injeção de parâmetros sujos via argument na função createTeam:', arguments);
+  }
+
+  const teamPayload = {
+    id: teamId,
+    name: name,
+    description: desc,
+    genres: genres,
+    inviteCode: inviteCode,
+    createdAt: new Date().toISOString(),
+    createdBy: uid,
+    memberUids: [uid], // v5.20.1
+    members: [{
+      uid: uid,
+      name: currentUserData?.name || currentUser?.email || 'Membro',
+      email: currentUser?.email || '',
+      photoURL: currentUserData?.photoURL || '',
+      role: 'owner',
+      joinedAt: new Date().toISOString()
+    }]
   };
-  await setDoc(doc(db, 'teams', teamId), team);
+
+  await setDoc(doc(db, 'teams', teamId), teamPayload);
   toast('🎉 Equipe criada!');
-  _myTeams.push(team);
+  _myTeams.push(teamPayload);
   enterTeam(teamId);
 };
 
@@ -1283,16 +1741,38 @@ window.joinTeamByCode = async function () {
 
 async function joinTeam(team) {
   const uid = currentUser.uid;
-  if (team.members?.some(m => m.uid === uid)) {
-    toast('Você já é membro!');
+  const teamRef = doc(db, 'teams', team.id);
+  try {
+    await runTransaction(db, async (transaction) => {
+      const snap = await transaction.get(teamRef);
+      if (!snap.exists()) throw new Error('Equipe não encontrada.');
+      const data = snap.data();
+      const currentMembers = data.members || [];
+      // Proteção contra duplicata — check atômico dentro da transação
+      if (currentMembers.some(m => m.uid === uid)) {
+        // Membro já existe — não lança erro, fluxo continua normalmente
+        return;
+      }
+      const newMember = {
+        uid,
+        name: currentUserData?.name || currentUser?.email,
+        email: currentUser?.email,
+        photoURL: currentUserData?.photoURL || '',
+        role: 'member',
+        joinedAt: new Date().toISOString()
+      };
+      const updatedMembers = [...currentMembers, newMember];
+      const updatedMemberUids = updatedMembers.map(m => m.uid);
+      transaction.update(teamRef, {
+        members: updatedMembers,
+        memberUids: updatedMemberUids
+      });
+    });
+    toast('✅ Você entrou na equipe!');
     enterTeam(team.id);
-    return;
+  } catch (e) {
+    toast('Erro ao entrar na equipe: ' + e.message, 'error');
   }
-  const members = [...(team.members || []), { uid, name: currentUserData?.name || currentUser?.email, email: currentUser?.email, photoURL: currentUserData?.photoURL || '', role: 'member', joinedAt: new Date().toISOString() }];
-  const memberUids = members.map(m => m.uid); // v5.20.1 — array flat de UIDs para Firestore rules
-  await setDoc(doc(db, 'teams', team.id), { ...team, members, memberUids });
-  toast('✅ Você entrou na equipe!');
-  enterTeam(team.id);
 }
 
 window.enterTeam = function (teamId) {
@@ -1331,6 +1811,24 @@ function showMainApp() {
   document.querySelector('.main-content').style.display = '';
   document.querySelector('.app').style.display = '';
 
+  // BUGFIX: Marca body como logado para CSS condicional
+  document.body.classList.add('logged-in');
+
+  // DEBUG TEMPORÁRIO: loga posições dos containers para diagnóstico
+  requestAnimationFrame(() => {
+    const mc = document.querySelector('.main-content');
+    const app = document.querySelector('.app');
+    const lay = document.querySelector('.layout');
+    console.log('[LAYOUT-DEBUG] showMainApp após rAF:', JSON.stringify({
+      mcRect: mc?.getBoundingClientRect(),
+      appRect: app?.getBoundingClientRect(),
+      layRect: lay?.getBoundingClientRect(),
+      mcScroll: { scrollTop: mc?.scrollTop, scrollHeight: mc?.scrollHeight },
+      layScroll: { scrollTop: lay?.scrollTop, scrollHeight: lay?.scrollHeight },
+      bodyScroll: { scrollTop: document.body.scrollTop, deScrollTop: document.documentElement.scrollTop }
+    }));
+  });
+
   // Atualiza nome da equipe na logo
   const team = _myTeams.find(t => t.id === _currentTeamId);
   if (team) {
@@ -1353,6 +1851,21 @@ function showMainApp() {
 
   // Revela/esconde botões baseado no papel do usuário na equipe
   refreshVisibility();
+
+  // BUGFIX: Reset agressivo de scroll ao entrar na equipe
+  const mc = document.querySelector('.main-content');
+  const lay = document.querySelector('.layout');
+  if (mc) mc.scrollTop = 0;
+  if (lay) lay.scrollTop = 0;
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+  window.scrollTo(0, 0);
+  requestAnimationFrame(() => {
+    if (mc) mc.scrollTop = 0;
+    if (lay) lay.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  });
 
   // Popula modal de convite com o código da equipe ativa
   const _activeTeam = _myTeams.find(t => t.id === _currentTeamId);
@@ -1538,9 +2051,11 @@ const DB = {
   uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); },
   dataPath() {
     if (!_currentTeamId) {
-      console.warn('[DB] dataPath() chamado sem _currentTeamId — appContext:', window.appContext);
+      console.warn('[DB] dataPath() bloqueado: Nenhuma equipe ativa no contexto.');
+      throw new Error('NO_ACTIVE_TEAM');
     }
-    return _currentTeamId ? ['teams', _currentTeamId] : ['users', currentUser?.uid];
+    // Retorna explicitamente e apenas namespace da equipe. Fallback users banido.
+    return ['teams', _currentTeamId];
   },
 };
 
@@ -1576,96 +2091,232 @@ const DEFAULT_STAGES = [
 function getProjects() { return _projects; }
 function getProject(id) { return _projects.find(p => p.id === id); }
 
+// Helper para tratar operações protegidas
+function handleDbError(err, action) {
+  if (err.message === 'NO_ACTIVE_TEAM') {
+    if (typeof toast === 'function') toast(`Você precisa entrar em uma equipe para ${action}.`, 'error');
+    console.warn(`[dataPath] BLOCK write (${action}): no active team`);
+    return true; // was handled
+  }
+  throw err; // rethrow unknown
+}
+
 async function createProject(data) {
-  const id = DB.uid();
-  const dp = DB.dataPath();
-  const p = {
-    id, title: data.title, theme: data.theme || '', description: data.description || '',
-    link: data.link || '', imageUrl: data.imageUrl || '', status: data.status || 'active',
-    targetDate: data.targetDate || null, collaborators: data.collaborators || [],
-    bpm: data.bpm || '', key: data.key || '', mood: data.mood || '',
-    starred: false, changelog: [{ msg: 'Projeto criado', ts: new Date().toISOString(), type: 'create' }],
-    stages: JSON.parse(JSON.stringify(DEFAULT_STAGES)), createdAt: new Date().toISOString(), progress: 0
-  };
-  await setDoc(doc(db, ...dp, 'projects', id), p);
+  try {
+    const dp = DB.dataPath();
+    // console.info(`[dataPath] teamId=${_currentTeamId}`); // desligado prod
+    const id = DB.uid();
+    const p = {
+      id, title: data.title, theme: data.theme || '', description: data.description || '',
+      link: data.link || '', imageUrl: data.imageUrl || '', status: data.status || 'active',
+      targetDate: data.targetDate || null, collaborators: data.collaborators || [],
+      bpm: data.bpm || '', key: data.key || '', mood: data.mood || '',
+      starred: false, changelog: [{ msg: 'Projeto criado', ts: new Date().toISOString(), type: 'create' }],
+      stages: JSON.parse(JSON.stringify(DEFAULT_STAGES)), createdAt: new Date().toISOString(), progress: 0
+    };
+    await setDoc(doc(db, ...dp, 'projects', id), p);
 
-  // Criar notificação e log de atividade
-  await createNotification(
-    'project',
-    'Novo projeto criado',
-    `${currentUserData?.name || currentUser?.email} criou "${data.title}"`,
-    { projectId: id }
-  );
-
-  await logActivity(
-    'project-created',
-    `criou "${data.title}"`,
-    { projectId: id }
-  );
-
-  return p;
+    // Criar notificação e log de atividade
+    await createNotification('project', 'Novo projeto criado', `${currentUserData?.name || currentUser?.email} criou "${data.title}"`, { projectId: id });
+    await logActivity('project-created', `criou "${data.title}"`, { projectId: id });
+    return p;
+  } catch (err) { if (handleDbError(err, 'criar projetos')) return null; }
 }
 
 async function updateProject(id, data) {
-  const p = getProject(id); if (!p) return null;
-  const dp = DB.dataPath();
-  const updated = { ...p, ...data };
-  await setDoc(doc(db, ...dp, 'projects', id), updated);
-  return updated;
+  try {
+    const dp = DB.dataPath();
+    const p = getProject(id); if (!p) return null;
+
+    // Sanitização rigorosa (Whitelist): Apenas campos primitivos do modal de edição são permitidos.
+    const allowedKeys = ['title', 'theme', 'description', 'link', 'imageUrl', 'status', 'targetDate', 'bpm', 'key', 'mood'];
+    const safeData = {};
+    const droppedKeys = [];
+
+    for (const [k, v] of Object.entries(data)) {
+      if (!allowedKeys.includes(k) || v === undefined) {
+        droppedKeys.push(k);
+      } else {
+        safeData[k] = v; // Firestore aceita null (se explícito) mas drop undefined. Arrays/Objetos banidos aqui.
+      }
+    }
+
+    if (droppedKeys.length > 0) {
+      console.warn(`[updateProject] Sanitization blocks: Ignoradas as keys [${droppedKeys.join(', ')}] enviadas no payload.`);
+    }
+
+    if (Object.keys(safeData).length > 0) {
+      await updateDoc(doc(db, ...dp, 'projects', id), safeData);
+    }
+
+    // Retorna combinando localmente (Otimista para UI imediata não piscar).
+    // O onSnapshot real garantirá update perfeito logo no próximo tic do servidor.
+    return { ...p, ...safeData };
+  } catch (err) { if (handleDbError(err, 'editar projetos')) return null; }
 }
 
 async function deleteProjectById(id) {
-  const dp = DB.dataPath();
-  await deleteDoc(doc(db, ...dp, 'projects', id));
+  try {
+    const dp = DB.dataPath();
+    await deleteDoc(doc(db, ...dp, 'projects', id));
+  } catch (err) { handleDbError(err, 'deletar projetos'); }
 }
 
 async function updateStageStatus(projectId, stageId, status) {
-  const p = getProject(projectId); if (!p) return;
-  const stages = JSON.parse(JSON.stringify(p.stages || []));
-  const s = stages.find(x => x.id === stageId); if (!s) return;
-  const oldStatus = s.status;
-  s.status = status; s.completedAt = status === 'done' ? new Date().toISOString() : null;
-  const countable = stages.filter(x => x.status !== 'skipped');
-  const progress = countable.length ? Math.round(countable.filter(x => x.status === 'done').length / countable.length * 100) : 0;
-  const newStatus = progress === 100 ? 'completed' : p.status;
-  const changelog = [...(p.changelog || [])];
-  const statusNames = { pending: 'Pendente', in_progress: 'Em Andamento', done: 'Concluído', skipped: 'Pulado' };
-  if (oldStatus !== status) {
-    const type = status === 'done' ? 'green' : status === 'in_progress' ? 'blue' : 'purple';
-    changelog.unshift({ msg: `${s.label}: ${statusNames[oldStatus] || oldStatus} → ${statusNames[status] || status}`, ts: new Date().toISOString(), type });
-    if (changelog.length > 40) changelog.length = 40;
+  try {
+    const dp = DB.dataPath();
+    const docRef = doc(db, ...dp, 'projects', projectId);
+
+    if (typeof showLoading === 'function') showLoading('Sincronizando status...');
+
+    await runTransaction(db, async (transaction) => {
+      const sfDoc = await transaction.get(docRef);
+      if (!sfDoc.exists()) {
+        throw new Error('Projeto não encontrado (foi excluído?).');
+      }
+
+      const pData = sfDoc.data();
+      const stages = pData.stages || [];
+      const stageIndex = stages.findIndex(x => x.id === stageId);
+
+      if (stageIndex === -1) {
+        throw new Error(`Estágio ${stageId} não encontrado no banco de dados.`);
+      }
+
+      const s = stages[stageIndex];
+      const oldStatus = s.status;
+
+      if (oldStatus === status) {
+        return; // Nada a fazer (evita log fantasma)
+      }
+
+      // 1. Atualizar o estágio localmente na array pura da nuvem
+      s.status = status;
+      s.completedAt = status === 'done' ? new Date().toISOString() : null;
+
+      // 2. Recalcular Progresso matematicamente
+      const countable = stages.filter(x => x.status !== 'skipped');
+      const progress = countable.length ? Math.round(countable.filter(x => x.status === 'done').length / countable.length * 100) : 0;
+      // 3. Status Derivado
+      const newStatus = progress === 100 ? 'completed' : (pData.status === 'completed' && progress < 100 ? 'active' : pData.status);
+
+      // 4. Log com Unshift mantendo tamanho < 40 e LWW para a Aba B em concorrência
+      const changelog = [...(pData.changelog || [])];
+      const statusNames = { pending: 'Pendente', in_progress: 'Em Andamento', done: 'Concluído', skipped: 'Pulado' };
+      const type = status === 'done' ? 'green' : status === 'in_progress' ? 'blue' : 'purple';
+
+      changelog.unshift({
+        msg: `${s.label}: ${statusNames[oldStatus] || oldStatus} → ${statusNames[status] || status}`,
+        ts: new Date().toISOString(),
+        type
+      });
+      if (changelog.length > 40) changelog.length = 40;
+
+      // 5. O Firebase cuida da mescla ou Re-run automático caso a Letra Giga esteja salvando ao mesmo tempo
+      transaction.update(docRef, {
+        stages: stages,
+        progress: progress,
+        status: newStatus,
+        changelog: changelog
+      });
+    });
+
+    if (typeof hideLoading === 'function') hideLoading();
+  } catch (err) {
+    if (typeof hideLoading === 'function') hideLoading();
+    // Tratamento nativo do dataPath ou Erros Específicos da Transação
+    if (err.message === 'NO_ACTIVE_TEAM' || !err.message.includes('não encontrado')) {
+      handleDbError(err, 'atualizar status');
+    } else {
+      console.warn(`[updateStageStatus] Transaction aborted: ${err.message}`);
+      if (typeof toast === 'function') toast(`Não foi possível salvar: ${err.message}`, 'error');
+    }
   }
-  await setDoc(doc(db, ...DB.dataPath(), 'projects', projectId), { ...p, stages, progress, status: newStatus, changelog });
 }
 
 async function updateStageAudio(projectId, stageId, audioUrl) {
-  const p = getProject(projectId); if (!p) return;
-  const stages = JSON.parse(JSON.stringify(p.stages || []));
-  const s = stages.find(x => x.id === stageId); if (s) s.audioUrl = audioUrl || '';
-  await setDoc(doc(db, ...DB.dataPath(), 'projects', projectId), { ...p, stages });
+  try {
+    const dp = DB.dataPath();
+    const p = getProject(projectId); if (!p) return;
+
+    const stageIndex = (p.stages || []).findIndex(x => x.id === stageId);
+    if (stageIndex === -1) {
+      console.warn(`[updateStageAudio] BLOCK: Estágio ${stageId} não achado na memória doc id=${projectId}.`);
+      if (typeof toast === 'function') toast('Erro interno: Estágio não localizado no projeto atual.', 'error');
+      return;
+    }
+
+    const updatePayload = {
+      [`stages.${stageIndex}.audioUrl`]: audioUrl || ''
+    };
+
+    await updateDoc(doc(db, ...dp, 'projects', projectId), updatePayload);
+  } catch (err) { handleDbError(err, 'editar o projeto'); }
 }
 
 async function updateStageLetra(projectId, stageId, letra) {
-  const p = getProject(projectId); if (!p) return;
-  const stages = JSON.parse(JSON.stringify(p.stages || []));
-  const s = stages.find(x => x.id === stageId); if (s) s.letra = letra || '';
-  const changelog = [...(p.changelog || [])];
-  changelog.unshift({ msg: `${s?.label || 'Fase'}: letra/texto atualizado`, ts: new Date().toISOString(), type: 'blue' });
-  await setDoc(doc(db, ...DB.dataPath(), 'projects', projectId), { ...p, stages, changelog });
+  try {
+    const dp = DB.dataPath();
+    const p = getProject(projectId); if (!p) return;
+
+    // 1) Guard Rail: Localiza index com destreza
+    const stageIndex = (p.stages || []).findIndex(x => x.id === stageId);
+    if (stageIndex === -1) {
+      console.warn(`[updateStageLetra] BLOCK: Estágio ${stageId} não achado na memória doc id=${projectId}.`);
+      if (typeof toast === 'function') toast('Erro interno: Estágio não localizado no projeto.', 'error');
+      return;
+    }
+
+    // 2) Criação do Log sem corromper a array local de outra Aba
+    const s = p.stages[stageIndex];
+    const changelog = [...(p.changelog || [])];
+    changelog.unshift({ msg: `${s?.label || 'Fase'}: letra/texto atualizado`, ts: new Date().toISOString(), type: 'blue' });
+    if (changelog.length > 40) changelog.length = 40;
+
+    // 3) Dot-Notation para Texto Longo (LWW na chave exata da array) + Array Sobrescrita para Logs Globais.
+    const updatePayload = {
+      [`stages.${stageIndex}.letra`]: letra || '',
+      changelog: changelog // Como Logs precisam ser "unshifted", enviamos o log fresco mesclado por cima. O texto da letra só atira na chave própria.
+    };
+
+    await updateDoc(doc(db, ...dp, 'projects', projectId), updatePayload);
+  } catch (err) { handleDbError(err, 'editar o projeto'); }
 }
 
 async function updateStageNote(projectId, stageId, notes) {
-  const p = getProject(projectId); if (!p) return;
-  const stages = JSON.parse(JSON.stringify(p.stages || []));
-  const s = stages.find(x => x.id === stageId); if (s) s.notes = notes;
-  await setDoc(doc(db, ...DB.dataPath(), 'projects', projectId), { ...p, stages });
+  try {
+    const dp = DB.dataPath();
+    const p = getProject(projectId); if (!p) return;
+
+    // 1) Encontra o índice real do estágio na Array do banco
+    const stageIndex = (p.stages || []).findIndex(x => x.id === stageId);
+    if (stageIndex === -1) {
+      console.warn(`[updateStageNote] Estágio ${stageId} não encontrado no projeto ${projectId}.`);
+      return;
+    }
+
+    // 2) Dot-notation estrito: Atualiza SÓ o campo "notes" do índice X, sem tocar no array inteiro
+    const updatePayload = {
+      [`stages.${stageIndex}.notes`]: notes
+    };
+
+    await updateDoc(doc(db, ...dp, 'projects', projectId), updatePayload);
+  } catch (err) { handleDbError(err, 'editar o projeto'); }
 }
 
 async function toggleStarProject(id) {
-  const p = getProject(id); if (!p) return false;
-  const starred = !p.starred;
-  await setDoc(doc(db, ...DB.dataPath(), 'projects', id), { ...p, starred });
-  return starred;
+  try {
+    const dp = DB.dataPath();
+    const p = getProject(id); if (!p) return false;
+    const starred = !p.starred;
+
+    // Transação Puramente Parcial de 1 campo (Firestore não apaga nada ao redor)
+    await updateDoc(doc(db, ...dp, 'projects', id), { starred });
+
+    // Atualização otimista apenas na interface local
+    p.starred = starred;
+    return starred;
+  } catch (err) { return handleDbError(err, 'favoritar projetos') ? false : false; }
 }
 
 // ─── COLLABORATORS CRUD ──────────────────────────────────────────────────────
@@ -1673,31 +2324,60 @@ function getCollabs() { return _collabs; }
 function getCollab(id) { return _collabs.find(c => c.id === id); }
 
 async function createCollab(data) {
-  const id = DB.uid();
-  const dp = DB.dataPath();
-  const c = { id, name: data.name, roles: data.roles || [], contact: data.contact || '', inactive: data.inactive || false };
-  await setDoc(doc(db, ...dp, 'collaborators', id), c);
-  return c;
+  try {
+    const dp = DB.dataPath();
+    const id = DB.uid();
+    const c = { id, name: data.name, roles: data.roles || [], contact: data.contact || '', inactive: data.inactive || false };
+    await setDoc(doc(db, ...dp, 'collaborators', id), c);
+    return c;
+  } catch (err) { if (handleDbError(err, 'adicionar colaboradores')) return null; }
 }
 
 async function updateCollabById(id, data) {
-  const c = getCollab(id); if (!c) return;
-  const dp = DB.dataPath();
-  await setDoc(doc(db, ...dp, 'collaborators', id), { ...c, ...data });
+  try {
+    const dp = DB.dataPath();
+    const c = getCollab(id); if (!c) return;
+
+    // Sanitização vigorosa (Whitelist restrict)
+    const allowedKeys = ['name', 'roles', 'contact', 'inactive'];
+    const safeData = {};
+    const droppedKeys = [];
+
+    for (const [k, v] of Object.entries(data)) {
+      if (!allowedKeys.includes(k) || v === undefined) {
+        droppedKeys.push(k);
+      } else {
+        safeData[k] = v; // roles (Array) repassa limpo, pois a UI do form domina o state.
+      }
+    }
+
+    if (droppedKeys.length > 0) {
+      console.warn(`[updateCollab] Sanitization blocks: Ignoradas as keys [${droppedKeys.join(', ')}].`);
+    }
+
+    if (Object.keys(safeData).length > 0) {
+      await updateDoc(doc(db, ...dp, 'collaborators', id), safeData);
+    }
+
+    // UI Otimista + Spread Local
+    return { ...c, ...safeData };
+  } catch (err) { handleDbError(err, 'editar colaboradores'); }
 }
 
 async function deleteCollabById(id) {
-  const dp = DB.dataPath();
-  await deleteDoc(doc(db, ...dp, 'collaborators', id));
-  // Remove from all projects
-  const batch = writeBatch(db);
-  _projects.forEach(p => {
-    if (p.collaborators?.some(ca => ca.collabId === id)) {
-      const updated = { ...p, collaborators: p.collaborators.filter(ca => ca.collabId !== id) };
-      batch.set(doc(db, ...dp, 'projects', p.id), updated);
-    }
-  });
-  await batch.commit();
+  try {
+    const dp = DB.dataPath();
+    await deleteDoc(doc(db, ...dp, 'collaborators', id));
+    // Remove from all projects
+    const batch = writeBatch(db);
+    _projects.forEach(p => {
+      if (p.collaborators?.some(ca => ca.collabId === id)) {
+        const updated = { ...p, collaborators: p.collaborators.filter(ca => ca.collabId !== id) };
+        batch.set(doc(db, ...dp, 'projects', p.id), updated);
+      }
+    });
+    await batch.commit();
+  } catch (err) { handleDbError(err, 'deletar colaboradores'); }
 }
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
@@ -1802,7 +2482,7 @@ function _mdrEscHandler(e) {
 // mdrSwitchTab(name) — troca aba interna do drawer
 window.mdrSwitchTab = function (name) {
   _masterActiveTab = name;
-  ['dashboard', 'tickets', 'workspace'].forEach(t => {
+  ['dashboard', 'tickets', 'overrides', 'workspace'].forEach(t => {
     const btn = document.getElementById('mdr-tab-' + t);
     const pan = document.getElementById('mdr-panel-' + t);
     if (btn) btn.classList.toggle('mdr-tab-active', t === name);
@@ -1810,6 +2490,7 @@ window.mdrSwitchTab = function (name) {
   });
   if (name === 'dashboard') _mdrLoadDashboard();
   if (name === 'tickets') _mdrLoadTickets();
+  if (name === 'overrides') masterLoadOverrides();
   // workspace: sem carregamento automático — botões disparam funções existentes
 };
 
@@ -2048,6 +2729,173 @@ window.masterImportWorkspace = function (input) {
   window.importToFirestore(input); // delega para a função existente
 };
 
+// ── PLAN OVERRIDES ────────────────────────────────────────────────────────────
+
+window.masterSetOverride = async function () {
+  const rawId = (document.getElementById('mdr-override-uid')?.value || '').trim();
+  const plan = document.getElementById('mdr-override-plan')?.value || 'pro';
+  const daysStr = document.getElementById('mdr-override-days')?.value || '1';
+  const note = (document.getElementById('mdr-override-note')?.value || '').trim();
+
+  if (!rawId) { toast('Informe UID ou @handle.', 'error'); return; }
+
+  try {
+    const { collection, getDocs, query, where, limit, doc, updateDoc, Timestamp } = await import("https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js");
+    let targetUid = rawId;
+
+    if (rawId.startsWith('@')) {
+      const hStr = rawId.substring(1).toLowerCase();
+      const q = query(collection(db, 'users'), where('handle', '==', hStr), limit(1));
+      const snap = await getDocs(q);
+      if (snap.empty) { throw new Error('Handle não encontrado.'); }
+      targetUid = snap.docs[0].id;
+    }
+
+    const start = new Date();
+    const end = new Date(start.getTime() + (parseInt(daysStr, 10) * 24 * 60 * 60 * 1000));
+
+    const po = {
+      plan,
+      startsAt: Timestamp.fromDate(start),
+      expiresAt: Timestamp.fromDate(end),
+      grantedBy: currentUser?.uid || 'admin',
+      note
+    };
+
+    console.log('[Override] Aplicando em:', targetUid);
+    console.log('[Override] Path:', `users/${targetUid}`);
+    console.log('[Override] Payload:', po);
+
+    await updateDoc(doc(db, 'users', targetUid), { planOverride: po });
+
+    // Sync em talent_profiles para a UI de buscas mostrar direto:
+    if (typeof _syncTalentPlan === 'function') {
+      await _syncTalentPlan(targetUid, plan);
+    }
+
+    // Dispara refresh local caso tenha aplicado em si mesmo (ou aberto popup)
+    if (typeof refreshPlanUI === 'function') setTimeout(refreshPlanUI, 50);
+
+    toast(`Override ${plan.toUpperCase()} ativado até ${end.toLocaleDateString('pt-BR')}!`, 'success');
+
+    const uidEl = document.getElementById('mdr-override-uid');
+    const noteEl = document.getElementById('mdr-override-note');
+    if (uidEl) uidEl.value = '';
+    if (noteEl) noteEl.value = '';
+
+    masterLoadOverrides();
+  } catch (err) {
+    toast('Erro: ' + err.message, 'error');
+  }
+};
+
+window.masterLoadOverrides = async function () {
+  const el = document.getElementById('mdr-overrides-list');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:10px;font-size:12px;color:var(--text3)">Buscando...</div>';
+
+  try {
+    const { collection, getDocs, query, orderBy } = await import("https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js");
+
+    // Na ausência de índice composto, users com planOverride devem ser uma fração mínima.
+    const snap = await getDocs(query(collection(db, 'users'), orderBy('planOverride.expiresAt', 'desc')));
+
+    if (snap.empty) {
+      el.innerHTML = '<div style="text-align:center;padding:10px;font-size:12px;color:var(--text3)">Nenhum override encontrado.</div>';
+      return;
+    }
+
+    const now = new Date();
+    el.innerHTML = snap.docs.map(d => {
+      const u = d.data();
+      if (!u.planOverride) return '';
+      // Firestore Timestamp → Date object
+      const expDate = u.planOverride.expiresAt?.toDate ? u.planOverride.expiresAt.toDate() : new Date(u.planOverride.expiresAt);
+      const isExpired = expDate < now;
+      const op = u.planOverride.plan;
+      const noteHtml = u.planOverride.note ? `<div style="font-size:10px;color:var(--text3);margin-top:2px">📝 ${window.escHtml(u.planOverride.note)}</div>` : '';
+
+      return `
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:8px;opacity:${isExpired ? '0.6' : '1'}">
+           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <div style="font-family:var(--font-body);font-size:13px;font-weight:600">
+                ${window.escHtml(u.name || d.id)}
+                <span style="font-size:10px;color:var(--text3);margin-left:4px">@${u.handle || '?'}</span>
+              </div>
+              <span class="tbadge ${isExpired ? 'tbadge-closed' : 'tbadge-open'}">${isExpired ? 'EXPIRADO' : 'ATIVO'}</span>
+           </div>
+           
+           <div style="font-family:var(--font-mono);font-size:11px;color:var(--text2);margin-bottom:8px">
+              <b>Plano:</b> ${(window.renderPlanInlineChip ? window.renderPlanInlineChip(op) : op.toUpperCase())}<br>
+              <b>Expira:</b> ${expDate.toLocaleString('pt-BR')}<br>
+              <b>Base:</b> ${u.plan || 'free'}
+           </div>
+           ${noteHtml}
+           <div style="display:flex;gap:6px;margin-top:10px">
+              ${!isExpired ? `<button class="btn btn-ghost btn-sm" onclick="masterSetOverrideValue('${u.handle ? '@' + u.handle : d.id}', '${op}', prompt('Estender por quantos dias?', '7') || '0', '${u.planOverride.note || ''}')" style="font-size:10px;padding:3px 8px">⏰ Estender</button>` : ''}
+              <button class="btn btn-ghost btn-sm" onclick="masterRemoveOverride('${d.id}', '${u.plan || 'free'}')" style="color:var(--red);border-color:var(--red);font-size:10px;padding:3px 8px">🗑 Remover</button>
+           </div>
+        </div>
+      `;
+    }).join('');
+
+    if (el.innerHTML.trim() === '') {
+      el.innerHTML = '<div style="text-align:center;padding:10px;font-size:12px;color:var(--text3)">Nenhum override ativo encontrado.</div>';
+    }
+  } catch (e) {
+    if (e.message.includes("requires an index")) {
+      el.innerHTML = `<div style="padding:10px;font-size:12px;color:var(--yellow)">⚠️ Requer índice Firestore: \n${e.message}</div>`;
+      console.error("Index necessário para overrides:", e.message);
+    } else {
+      el.innerHTML = `<div style="text-align:center;padding:10px;font-size:12px;color:var(--red)">Erro: ${e.message}</div>`;
+    }
+  }
+};
+
+window.masterRemoveOverride = async function (uid, basePlan) {
+  if (!confirm('Tem certeza que deseja remover o override e voltar o usuário ao plano base?')) return;
+  try {
+    const { doc, updateDoc, deleteField } = await import("https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js");
+    await updateDoc(doc(db, 'users', uid), { 'planOverride': deleteField() });
+
+    if (typeof _syncTalentPlan === 'function') {
+      await _syncTalentPlan(uid, basePlan);
+    }
+
+    // Dispara refresh local caso tenha removido de si mesmo
+    if (typeof refreshPlanUI === 'function') setTimeout(refreshPlanUI, 50);
+
+    toast('Override removido com sucesso!', 'success');
+    masterLoadOverrides();
+  } catch (e) {
+    toast('Erro: ' + e.message, 'error');
+  }
+};
+
+window.masterSetOverrideValue = function (idStr, plan, days, note) {
+  const d = parseInt(days, 10);
+  if (isNaN(d) || d <= 0) return; // User cancelado
+
+  const elUid = document.getElementById('mdr-override-uid');
+  const elPlan = document.getElementById('mdr-override-plan');
+  const elNote = document.getElementById('mdr-override-note');
+  const elDays = document.getElementById('mdr-override-days');
+
+  if (![1, 7, 30, 90, 365].includes(d)) {
+    const opt = document.createElement('option');
+    opt.value = d;
+    opt.text = d + ' Dias';
+    elDays.add(opt);
+  }
+
+  if (elUid) elUid.value = idStr;
+  if (elPlan) elPlan.value = plan;
+  if (elDays) elDays.value = d;
+  if (elNote) elNote.value = note || '';
+
+  document.getElementById('mdr-panel-overrides')?.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
 function showPage(name) {
   prevPage = currentPage; currentPage = name;
 
@@ -2090,6 +2938,24 @@ function showPage(name) {
 
   // Re-aplica visibilidade dos botões baseada em permissões
   refreshVisibility();
+
+  // BUGFIX: Reseta scroll de TODOS os containers para forçar conteúdo ao topo.
+  // O offset de ~100vh era causado por scroll residual herdado do landing page
+  // que persistia em containers intermediários (layout/body/html) mesmo com overflow:hidden.
+  const mc = document.querySelector('.main-content');
+  const lay = document.querySelector('.layout');
+  if (mc) mc.scrollTop = 0;
+  if (lay) lay.scrollTop = 0;
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+  window.scrollTo(0, 0);
+  // Garante reset após reflow (caso styles sejam aplic. async)
+  requestAnimationFrame(() => {
+    if (mc) mc.scrollTop = 0;
+    if (lay) lay.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  });
 }
 
 /**
@@ -2114,7 +2980,7 @@ function refreshVisibility() {
     el.style.display = (isInviteBtn ? _admin : _admin) ? '' : 'none';
   });
 
-  console.info('[Visibility] role:', currentUserData?.role, 'admin:', _admin, 'create:', _create);
+  // console.info('[Visibility]', currentUserData?.role, _admin, _create); // desligado prod
 }
 
 function showPageChecked(name, requiredPlan) {
@@ -3290,33 +4156,63 @@ function editProject(id) {
 }
 
 function saveProject() {
-  const title = document.getElementById('proj-title').value.trim(); if (!title) { toast('Título obrigatório!', 'error'); return; }
+  const titleRaw = FormValidator.val('proj-title');
+  const title = FormValidator.isTitle(titleRaw, 2, 60); // Permite até 60 em projetos, tolera pontuações
+  if (title === null) return;
+  if (!FormValidator.require(title, 'Título')) return;
 
-  // Validação de datas
+  // Validação de datas (Local Timezone safe)
   const targetDate = document.getElementById('proj-date').value;
-  if (targetDate && new Date(targetDate) < new Date().setHours(0, 0, 0, 0)) {
-    toast('❌ Data de conclusão não pode ser no passado!', 'error');
-    return;
+  if (targetDate) {
+    const [y, m, d] = targetDate.split('-');
+    const picked = new Date(y, m - 1, d);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (picked < today) {
+      toast('❌ Data de conclusão não pode ser no passado!', 'error');
+      return;
+    }
   }
 
-  const imageUrl = document.getElementById('proj-image').value.trim();
-  // Safety: Firestore max 1MB por campo
-  if (imageUrl && imageUrl.length * 0.75 > 900000) {
-    const isGif = imageUrl.startsWith('data:image/gif');
-    if (isGif) {
-      toast('⚠️ GIF muito grande para o banco de dados (>900KB). Use um GIF menor ou hospede-o externamente e cole o link.', 'error');
-    } else {
-      toast('⚠️ Imagem muito grande! Tente uma menor.', 'error');
-    }
-    return;
-  }
+  const imageUrlRaw = FormValidator.val('proj-image');
+  const imageUrl = imageUrlRaw ? FormValidator.isUrl(imageUrlRaw) : '';
+  if (imageUrlRaw && imageUrl === null) return; // Error handled by isUrl
+
+  const linkRaw = FormValidator.val('proj-link');
+  const link = linkRaw ? FormValidator.isUrl(linkRaw) : '';
+  if (linkRaw && link === null) return; // Error handled by isUrl
+
+  // Sanitização base das tags do modal (tema, mood, bpm, etc)
+  const descRaw = FormValidator.val('proj-desc');
+  const desc = descRaw.substring(0, 500); // 500 chars limit (descrição modal n deve ser enorme)
+
+  const themeRaw = FormValidator.val('proj-theme');
+  const theme = themeRaw.substring(0, 30); // Theme
+
+  const bpmRaw = FormValidator.val('proj-bpm');
+  const bpm = bpmRaw.substring(0, 10);
+
+  const keyRaw = FormValidator.val('proj-key');
+  const key = keyRaw.substring(0, 10);
+
+  const moodRaw = FormValidator.val('proj-mood');
+  const mood = moodRaw.substring(0, 30);
+
+  // Set the values back to the DOM elements just to be transparent and visible
+  const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+  setVal('proj-title', title);
+  setVal('proj-image', imageUrl);
+  setVal('proj-link', link);
+  setVal('proj-desc', desc);
+  setVal('proj-theme', theme);
+  setVal('proj-bpm', bpm);
+  setVal('proj-key', key);
+  setVal('proj-mood', mood);
+
   const data = {
-    title, theme: document.getElementById('proj-theme').value.trim(), description: document.getElementById('proj-desc').value.trim(),
-    link: document.getElementById('proj-link').value.trim(), imageUrl,
-    targetDate: document.getElementById('proj-date').value || null, status: document.getElementById('proj-status').value,
-    bpm: document.getElementById('proj-bpm').value.trim(),
-    key: document.getElementById('proj-key').value.trim(),
-    mood: document.getElementById('proj-mood').value.trim(),
+    title, theme, description: desc, link, imageUrl,
+    targetDate: targetDate || null, status: document.getElementById('proj-status').value,
+    bpm, key, mood,
     moodColor: document.getElementById('proj-mood-color').value || '#ff3cb4',
     collaborators: getCollabAssignments()
   };
@@ -3641,10 +4537,24 @@ function editCollab(id) {
 }
 
 function saveCollab() {
-  const name = document.getElementById('collab-name').value.trim(); if (!name) { toast('Nome obrigatório!', 'error'); return; }
+  const nameRaw = FormValidator.val('collab-name');
+  const name = FormValidator.isName(nameRaw, 2, 40);
+  if (name === null) return;
+  if (!FormValidator.require(name, 'Nome')) return;
+
+  const contactRaw = FormValidator.val('collab-contact');
+  const contact = contactRaw ? FormValidator.isContact(contactRaw) : '';
+  if (contactRaw && contact === null) return;
+
+  const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+  setVal('collab-name', name);
+  setVal('collab-contact', contact);
+
   const roles = [...document.querySelectorAll('#collab-roles-grid input:checked')].map(i => i.value);
   const inactive = document.getElementById('collab-inactive').checked;
-  const data = { name, roles, contact: document.getElementById('collab-contact').value.trim(), inactive };
+
+  // Array hardcoded explicit blockando payloads sujos
+  const data = { name, roles, contact, inactive };
   const editId = document.getElementById('collab-editing-id').value;
 
   // FASE 1 — Plan Engine: verifica limite de colaboradores antes de criar (não ao editar)
@@ -4945,19 +5855,11 @@ function applyPermissions() {
   // Sync username to talent profile name if available
   const usernameEl = document.getElementById('header-username');
   if (usernameEl && window._myTalentProfile?.name) usernameEl.textContent = window._myTalentProfile.name;
-  // PATCH 5.3B — #header-role: role label + plan chip via sistema novo (renderPlanInlineChip)
-  // Não usa mais plan-pro-val / plan-advanced-val / textContent — chip já traz estilo próprio
+  // PATCH 5.3B — #header-role: role label + plan chip via sistema novo (renderPlanChip)
+  // Utilizamos a função centralizada refreshPlanUI() para unificar as tags da sidebar.
   const plan = resolveUserPlan(ud);
-  const headerRoleEl = document.getElementById('header-role');
-  if (headerRoleEl) {
-    const roleLabel = ({ admin: '\u2B50 Admin', editor: '\u270F\uFE0F Editor', viewer: '\uD83D\uDC41 Viewer' })[ud?.role] || '';
-    const planChip = (typeof renderPlanInlineChip === 'function' && plan !== 'free')
-      ? renderPlanInlineChip(plan)
-      : '';
-    // Combinação segura: role label (texto puro, escapado) + chip (HTML do sistema novo)
-    headerRoleEl.innerHTML = (roleLabel ? `<span>${escHtml(roleLabel)}</span>` : '') + planChip;
-    // Mantém apenas classes estruturais — remove legadas plan-*-val
-    headerRoleEl.className = 'ump-plan sidebar-user-role';
+  if (typeof refreshPlanUI === 'function') {
+    refreshPlanUI();
   }
   // sidebar-plan-value (elemento legado removido do HTML) — operação segura caso ainda exista
   const legacyPlanEl = document.getElementById('sidebar-plan-value');
@@ -5132,8 +6034,19 @@ window.importToFirestore = async function (input) {
       }
     }
 
+    let dp;
+    try {
+      dp = DB.dataPath(); // ['teams', teamId] — path do workspace atual
+    } catch (err) {
+      if (err.message === 'NO_ACTIVE_TEAM') {
+        if (typeof toast === 'function') toast('Você precisa estar em uma equipe para importar projetos.', 'error');
+        input.value = '';
+        return;
+      }
+      throw err;
+    }
+
     showLoading(`Importando ${projects.length} projetos...`);
-    const dp = DB.dataPath(); // ['teams', teamId] — path do workspace atual
 
     // Importa colaboradores primeiro (remapeia IDs para evitar colisões)
     const collabIdMap = {};
@@ -6255,14 +7168,26 @@ window.nsDeleteAccount = async function () {
 
 // Save all (new comprehensive save)
 window.nsSaveAll = async function () {
-  const name = document.getElementById('settings-name')?.value.trim();
-  const photoURL = document.getElementById('settings-avatar-url')?.value.trim() || '';
-  const bio = document.getElementById('settings-bio')?.value.trim() || '';
+  const name = FormValidator.val('settings-name');
+  if (!FormValidator.require(name, 'Nome')) return;
+
+  const photoRaw = FormValidator.val('settings-avatar-url');
+  const photoURL = photoRaw ? FormValidator.isUrl(photoRaw) : '';
+  if (photoRaw && photoURL === null) return; // fail na url
+
+  const bannerRaw = FormValidator.val('settings-banner-url');
+  const bannerURL = bannerRaw ? FormValidator.isUrl(bannerRaw) : '';
+  if (bannerRaw && bannerURL === null) return; // fail na url
+
+  let bio = FormValidator.val('settings-bio');
+  if (bio.length > 500) {
+    toast('Sua bio está muito longa! Limite de 500 caracteres.', 'error');
+    return;
+  }
+
   const newPass = document.getElementById('settings-new-pass')?.value || '';
   const confirmPass = document.getElementById('settings-confirm-pass')?.value || '';
-  const bannerURL = document.getElementById('settings-banner-url')?.value.trim() || '';
 
-  if (!name) { toast('Nome não pode ser vazio!', 'error'); return; }
   if (newPass && newPass.length < 6) { toast('Senha muito curta!', 'error'); return; }
   if (newPass && newPass !== confirmPass) { toast('Senhas não conferem!', 'error'); return; }
   if (photoURL && photoURL.length * 0.75 > 900000) { toast('Imagem muito grande!', 'error'); return; }
@@ -6312,14 +7237,28 @@ window.nsSaveAll = async function () {
         skills[s.id] = sel?.value || 'Intermediário';  // salva como string direta
       }
     });
-    const social = {
-      youtube: document.getElementById('ns-social-yt')?.value.trim() || '',
-      spotify: document.getElementById('ns-social-spotify')?.value.trim() || '',
-      instagram: document.getElementById('ns-social-ig')?.value.trim() || '',
-      tiktok: document.getElementById('ns-social-tt')?.value.trim() || '',
-      discord: document.getElementById('ns-social-dc')?.value.trim() || '',
-      website: document.getElementById('ns-social-web')?.value.trim() || '',
+    const socialRaw = {
+      youtube: FormValidator.val('ns-social-yt'),
+      spotify: FormValidator.val('ns-social-spotify'),
+      instagram: FormValidator.val('ns-social-ig'),
+      tiktok: FormValidator.val('ns-social-tt'),
+      website: FormValidator.val('ns-social-web'),
     };
+    const social = {
+      youtube: socialRaw.youtube ? FormValidator.isUrl(socialRaw.youtube) : '',
+      spotify: socialRaw.spotify ? FormValidator.isUrl(socialRaw.spotify) : '',
+      instagram: socialRaw.instagram ? FormValidator.isUrl(socialRaw.instagram) : '',
+      tiktok: socialRaw.tiktok ? FormValidator.isUrl(socialRaw.tiktok) : '',
+      discord: FormValidator.val('ns-social-dc'),
+      website: socialRaw.website ? FormValidator.isUrl(socialRaw.website) : '',
+    };
+    if (
+      (socialRaw.youtube && social.youtube === null) ||
+      (socialRaw.spotify && social.spotify === null) ||
+      (socialRaw.instagram && social.instagram === null) ||
+      (socialRaw.tiktok && social.tiktok === null) ||
+      (socialRaw.website && social.website === null)
+    ) return; // isUrl já disparou toast de erro
     // Resolve handle before try block so it's accessible in post-save sync
     const _savedHandle = window._p3dHandle !== undefined ? window._p3dHandle : handle;
     try {
@@ -6346,6 +7285,19 @@ window.nsSaveAll = async function () {
         : window._ppCurrentData;
       if (typeof openProfilePopup === 'function') openProfilePopup(freshData, window._ppCurrentContext || 'match');
     }
+
+    // P1-5: Refletir valores normalizados devolta nos inputs
+    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+    setVal('settings-avatar-url', photoURL);
+    setVal('settings-banner-url', bannerURL);
+    setVal('settings-bio', bio);
+    setVal('ns-social-yt', social.youtube);
+    setVal('ns-social-spotify', social.spotify);
+    setVal('ns-social-ig', social.instagram);
+    setVal('ns-social-tt', social.tiktok);
+    setVal('ns-social-web', social.website);
+    if (handleInputEl) handleInputEl.value = _savedHandle;
+
     // Sync to teams
     for (const team of (_myTeams || [])) {
       const isMember = (team.members || []).some(m => m.uid === uid);
@@ -7009,6 +7961,12 @@ window.userCloseTicket = async function (ticketId) {
 
 window.switchTeam = function () {
   _ready = false;
+
+  // Limpa o contexto e os IDs da equipe globalmente
+  _currentTeamId = null;
+  window._currentTeamId = null;
+  window.appContext = 'global';
+
   stopListeners();
   localStorage.removeItem('last_team_id');
   { const _s = document.getElementById('sidebar'); if (_s) _s.style.display = 'none'; }
@@ -7067,6 +8025,7 @@ let _ytTokenExpiry = 0;
 let _ytChartViews = null;
 let _ytChartSubs = null;
 let _currentPeriod = 30;
+let _ytApiBlocked = false; // BUGFIX: Flag anti-spam quando a API retorna 403
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function canAccessPro() {
@@ -7413,6 +8372,13 @@ window.loadAnalytics = async function () {
   } catch (e) { updateConnectUI(false); }
 
   // Carrega dados públicos do canal (avatar, banner, stats básicos)
+  // BUGFIX: Se a API já retornou 403, não tenta de novo — mostra aviso e para.
+  if (_ytApiBlocked) {
+    document.getElementById('yt-api-key-warning')?.classList.remove('hidden');
+    const nameEl = document.getElementById('display-channel-name');
+    if (nameEl) nameEl.textContent = 'Integração YouTube indisponível (sem credenciais)';
+    return;
+  }
   try {
     const ch = await fetchYTChannel(handle);
     renderChannelHeader(ch);
@@ -7421,12 +8387,13 @@ window.loadAnalytics = async function () {
     if (ytHasToken()) loadYTAnalyticsData(_currentPeriod);
   } catch (e) {
     if (e.message.includes('403')) {
+      _ytApiBlocked = true; // para de tentar até próximo reload
       document.getElementById('yt-api-key-warning')?.classList.remove('hidden');
     } else {
       toast('⚠️ ' + e.message, 'error');
     }
     const nameEl = document.getElementById('display-channel-name');
-    if (nameEl) nameEl.textContent = '@' + handle;
+    if (nameEl) nameEl.textContent = _ytApiBlocked ? 'Integração indisponível (sem credenciais)' : '@' + handle;
   }
 };
 
@@ -7838,6 +8805,10 @@ function renderTalentsList() {
         background:${lv.color}18;border:1px solid ${lv.color}40;color:${lv.color}">${role.icon} ${role.label}</span>`;
     }).join('');
 
+    const effPlanInfo = typeof getEffectivePlanForUser === 'function' ? getEffectivePlanForUser(t) : { plan: t.plan || 'free' };
+    const inlineChip = typeof renderPlanChip === 'function' ? renderPlanChip(effPlanInfo, 'inline') : '';
+    const pillChip = typeof renderPlanChip === 'function' ? renderPlanChip(effPlanInfo, 'pill') : '';
+
     return `
     <div class="card" onclick="viewTalent('${t.id}')"
       style="padding:20px;cursor:pointer;transition:all 0.2s;border:1px solid var(--border)"
@@ -7846,10 +8817,10 @@ function renderTalentsList() {
       <div style="display:flex;align-items:center;gap:13px;margin-bottom:14px">
         ${avatarHtml}
         <div style="flex:1;min-width:0">
-          <div style="font-family:var(--font-body);font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px">${t.name || 'Sem nome'}${renderPlanInlineChip(t.plan)}</div>
+          <div style="font-family:var(--font-body);font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px">${t.name || 'Sem nome'}${inlineChip}</div>
           <div style="font-size:11px;color:var(--text3)">${age !== null ? `${age} anos` : ''}</div>
           <div style="font-size:11px;margin-top:2px;color:${avColor[t.availability || 'open']}">${avLabel[t.availability || 'open']}${t.price ? ` · ${t.price}` : ''}</div>
-          ${renderPlanPill(t.plan) ? `<div style="margin-top:5px">${renderPlanPill(t.plan)}</div>` : ''}
+          ${pillChip ? `<div style="margin-top:5px">${pillChip}</div>` : ''}
         </div>
       </div>
       ${t.bio ? `<div style="font-size:11px;color:var(--text2);line-height:1.5;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${t.bio}</div>` : ''}
@@ -7899,14 +8870,18 @@ function buildSwipeCard(t, active) {
     return `<span style="font-size:10px;font-family:var(--font-mono);letter-spacing:0.5px;padding:4px 9px;border-radius:5px;background:${lv.color}18;border:1px solid ${lv.color}40;color:${lv.color}">${role.icon} ${role.label}</span>`;
   }).join('');
 
+  const effPlanInfo = typeof getEffectivePlanForUser === 'function' ? getEffectivePlanForUser(t) : { plan: t.plan || 'free' };
+  const inlineChip = typeof renderPlanChip === 'function' ? renderPlanChip(effPlanInfo, 'inline') : '';
+  const pillChip = typeof renderPlanChip === 'function' ? renderPlanChip(effPlanInfo, 'pill') : '';
+
   card.innerHTML = `
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
       ${avatarHtml}
       <div>
-        <div style="font-family:var(--font-body);font-weight:800;font-size:19px;display:flex;align-items:center;gap:7px">${t.name || 'Sem nome'}${renderPlanInlineChip(t.plan)}</div>
+        <div style="font-family:var(--font-body);font-weight:800;font-size:19px;display:flex;align-items:center;gap:7px">${t.name || 'Sem nome'}${inlineChip}</div>
         <div class="u-fs12-muted">${age !== null ? `${age} anos` : ''}</div>
         <div style="font-size:12px;color:${avColor[t.availability || 'open'] || 'var(--text3)'}">${avLabel[t.availability || 'open'] || ''}</div>
-        ${renderPlanPill(t.plan) ? `<div style="margin-top:6px">${renderPlanPill(t.plan)}</div>` : ''}
+        ${pillChip ? `<div style="margin-top:6px">${pillChip}</div>` : ''}
       </div>
     </div>
     ${t.bio ? `<div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:14px">${t.bio}</div>` : ''}
@@ -7980,14 +8955,18 @@ window.viewTalent = function (id) {
     return vid ? `<div style="border-radius:8px;overflow:hidden;margin-bottom:10px"><iframe width="100%" height="180" src="https://www.youtube.com/embed/${vid}" frameborder="0" allowfullscreen></iframe></div>` : '';
   }).join('');
 
+  const effPlanInfo = typeof getEffectivePlanForUser === 'function' ? getEffectivePlanForUser(t) : { plan: t.plan || 'free' };
+  const inlineChip = typeof renderPlanChip === 'function' ? renderPlanChip(effPlanInfo, 'inline') : '';
+  const pillChip = typeof renderPlanChip === 'function' ? renderPlanChip(effPlanInfo, 'pill') : '';
+
   content.innerHTML = `
     <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
       ${avatarHtml}
       <div>
-        <div style="font-family:var(--font-body);font-weight:800;font-size:21px;display:flex;align-items:center;gap:8px">${t.name || 'Sem nome'}${renderPlanInlineChip(t.plan)}</div>
+        <div style="font-family:var(--font-body);font-weight:800;font-size:21px;display:flex;align-items:center;gap:8px">${t.name || 'Sem nome'}${inlineChip}</div>
         <div class="u-fs12-muted">${age !== null ? `${age} anos` : ''}</div>
         <div style="font-size:12px;color:${avColor[t.availability || 'open']};margin-top:2px">${avLabel[t.availability || 'open'] || ''}${t.price ? ` · 💰 ${t.price}` : ''}</div>
-        ${renderPlanPill(t.plan) ? `<div style="margin-top:7px">${renderPlanPill(t.plan)}</div>` : ''}
+        ${pillChip ? `<div style="margin-top:7px">${pillChip}</div>` : ''}
       </div>
     </div>
     ${t.bio ? `<div style="margin-bottom:18px"><div style="font-family:var(--font-mono);font-size:9px;letter-spacing:2px;color:var(--text3);margin-bottom:8px">SOBRE</div><div style="font-size:13px;color:var(--text2);line-height:1.7">${t.bio}</div></div>` : ''}
@@ -8103,7 +9082,7 @@ window.saveTalentProfile = async function () {
       const ep = typeof currentUserData.effectivePriority === 'number'
         ? currentUserData.effectivePriority : 1;
       updateDoc(doc(db, 'talent_profiles', currentUser.uid), {
-        plan: currentUserData.plan || 'free',
+        plan: typeof window.resolveUserPlan === 'function' ? window.resolveUserPlan(currentUserData) : (currentUserData.plan || 'free'),
         effectivePriority: ep
       }).catch(() => { });
     }
@@ -8743,69 +9722,7 @@ window.hideAuthPanel = function () {
 // NOVAS FUNCIONALIDADES - FREQsys MELHORADO
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// ─── LOADING INDICATORS ────────────────────────────────────────────────────────
-window.showLoading = function (message = 'Carregando...') {
-  hideLoading();
-  const loader = document.createElement('div');
-  loader.id = 'global-loader';
-  loader.innerHTML = `
-    <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(8,8,14,0.92);
-                display:flex;align-items:center;justify-content:center;z-index:99999;backdrop-filter:blur(8px)">
-      <style>
-        @keyframes freqSplashReveal{0%{opacity:0;transform:translateY(16px) scale(0.9);letter-spacing:24px}100%{opacity:1;transform:translateY(0) scale(1);letter-spacing:4px}}
-        @keyframes freqSplashFade{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:translateY(0)}}
-        @keyframes freqLoadBar{0%{width:0%}40%{width:55%}80%{width:82%}100%{width:100%}}
-        @keyframes freqCircle{0%{opacity:0.35;transform:translate(-50%,-50%) scale(0.7)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.4)}}
-        @keyframes freqFwBar{0%,100%{transform:scaleY(1);opacity:1}50%{transform:scaleY(0.25);opacity:0.4}}
-        .freq-splash-logo{animation:freqSplashReveal 1s cubic-bezier(.16,1,.3,1) forwards;opacity:0}
-        .freq-splash-sub{animation:freqSplashFade 1s 0.5s ease-out forwards;opacity:0}
-        .freq-splash-bar-wrap{animation:freqSplashFade 0.8s 0.8s ease-out forwards;opacity:0}
-        .freq-splash-loadbar{animation:freqLoadBar 2.8s 1s ease-in-out forwards;width:0%}
-        .freq-circle-1{animation:freqCircle 3.5s 0.2s ease-out infinite}
-        .freq-circle-2{animation:freqCircle 3.5s 1s ease-out infinite}
-        .freq-circle-3{animation:freqCircle 3.5s 1.8s ease-out infinite}
-        .freq-fw-s1{animation:freqFwBar 1.2s 0s ease-in-out infinite}
-        .freq-fw-s2{animation:freqFwBar 1.2s 0.15s ease-in-out infinite}
-        .freq-fw-s3{animation:freqFwBar 1.2s 0.3s ease-in-out infinite}
-        .freq-fw-s4{animation:freqFwBar 1.2s 0.45s ease-in-out infinite}
-        .freq-fw-s5{animation:freqFwBar 1.2s 0.6s ease-in-out infinite}
-      </style>
-      <!-- circles -->
-      <div style="position:absolute;top:50%;left:50%;pointer-events:none">
-        <div class="freq-circle-1" style="position:absolute;width:220px;height:220px;border-radius:50%;border:1px solid rgba(255,60,180,0.1);transform:translate(-50%,-50%)"></div>
-        <div class="freq-circle-2" style="position:absolute;width:380px;height:380px;border-radius:50%;border:1px solid rgba(255,107,61,0.07);transform:translate(-50%,-50%)"></div>
-        <div class="freq-circle-3" style="position:absolute;width:540px;height:540px;border-radius:50%;border:1px solid rgba(255,200,60,0.05);transform:translate(-50%,-50%)"></div>
-      </div>
-      <div style="position:relative;text-align:center;z-index:1">
-        <!-- waveform icon -->
-        <div style="display:flex;align-items:center;justify-content:center;gap:4px;height:44px;margin-bottom:20px">
-          <div class="freq-fw-s1" style="width:5px;height:14px;border-radius:3px;background:linear-gradient(180deg,#ff3cb4,#ffc83c)"></div>
-          <div class="freq-fw-s2" style="width:5px;height:28px;border-radius:3px;background:linear-gradient(180deg,#ff3cb4,#ffc83c);opacity:.85"></div>
-          <div class="freq-fw-s3" style="width:5px;height:44px;border-radius:3px;background:linear-gradient(180deg,#ff3cb4,#ffc83c)"></div>
-          <div class="freq-fw-s4" style="width:5px;height:32px;border-radius:3px;background:linear-gradient(180deg,#ff3cb4,#ffc83c);opacity:.9"></div>
-          <div class="freq-fw-s5" style="width:5px;height:18px;border-radius:3px;background:linear-gradient(180deg,#ff3cb4,#ffc83c);opacity:.7"></div>
-        </div>
-        <!-- logo text -->
-        <div class="freq-splash-logo" style="font-family:'Bebas Neue',sans-serif;font-size:72px;letter-spacing:4px;background:linear-gradient(135deg,#ff3cb4 0%,#ff6b3d 50%,#ffc83c 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1">
-          FREQ<span style="font-family:'IBM Plex Mono',monospace;font-size:32px;font-weight:600;color:rgba(255,255,255,0.35);-webkit-text-fill-color:rgba(255,255,255,0.35);letter-spacing:2px;vertical-align:middle">sys</span>
-        </div>
-        <div class="freq-splash-sub" style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:5px;color:rgba(255,255,255,0.2);text-transform:uppercase;margin-top:8px">${message}</div>
-        <!-- loader bar -->
-        <div class="freq-splash-bar-wrap" style="display:flex;justify-content:center;margin-top:40px">
-          <div style="width:200px;height:2px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden">
-            <div class="freq-splash-loadbar" style="height:100%;background:linear-gradient(90deg,#ff3cb4,#ffc83c);border-radius:2px"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(loader);
-};
-
-window.hideLoading = function () {
-  const loader = document.getElementById('global-loader');
-  if (loader) loader.remove();
-};
+// A implementação do loading global foi unificada e movida para o topo (Linha 897)
 
 // ── currentUser exposed via getter for Match System v2 ──────────────────────
 Object.defineProperty(window, '_matchGetUser', {
@@ -9759,6 +10676,10 @@ window.renderHubSearch = function () {
 
     const alreadyLiked = _hubTeamLikes[t.uid || t.id];
 
+    const effPlanInfo = typeof getEffectivePlanForUser === 'function' ? getEffectivePlanForUser(t) : { plan: t.plan || 'free' };
+    const inlineChip = typeof renderPlanChip === 'function' ? renderPlanChip(effPlanInfo, 'inline') : '';
+    const pillChip = typeof renderPlanChip === 'function' ? renderPlanChip(effPlanInfo, 'pill') : '';
+
     const tIdx = _hubFiltered.indexOf(t);
     return `
     <div class="card" style="padding:16px;transition:all 0.2s;border:1px solid var(--border);cursor:pointer"
@@ -9768,9 +10689,9 @@ window.renderHubSearch = function () {
       <div style="display:flex;gap:12px;margin-bottom:10px;align-items:center">
         ${avatarHtml}
         <div style="flex:1;min-width:0">
-          <div style="font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px">${t.name || '?'}${renderPlanInlineChip(t.plan)}</div>
+          <div style="font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px">${t.name || '?'}${inlineChip}</div>
           <div style="font-size:11px;margin-top:2px;color:${avColor[t.availability || 'open']}">${avLabel[t.availability || 'open'] || ''}</div>
-          ${renderPlanPill(t.plan) ? `<div style="margin-top:5px">${renderPlanPill(t.plan)}</div>` : ''}
+          ${pillChip ? `<div style="margin-top:5px">${pillChip}</div>` : ''}
         </div>
       </div>
       ${t.bio ? `<div style="font-size:11px;color:var(--text2);line-height:1.5;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${t.bio}</div>` : ''}

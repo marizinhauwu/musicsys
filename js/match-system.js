@@ -3,16 +3,16 @@
 // ══════════════════════════════════════════════════════════════════════════════
 
 const MATCH_ROLES = [
-  { id:'r_vocal',  label:'Vocais',         icon:'🎤' },
-  { id:'r_beat',   label:'Beat',           icon:'🥁' },
-  { id:'r_mix',    label:'Mix & Master',   icon:'🎚️' },
-  { id:'r_letra',  label:'Letra',          icon:'✍️' },
-  { id:'r_edit',   label:'Edição de Vídeo',icon:'🎬' },
-  { id:'r_ilus',   label:'Ilustração',     icon:'🖼️' },
-  { id:'r_thumb',  label:'Thumbnail',      icon:'🎨' },
-  { id:'r_ideal',  label:'Idealização',    icon:'💡' },
-  { id:'r_roteiro',label:'Roteiro',        icon:'📝' },
-  { id:'r_direcao',label:'Direção',        icon:'🎬' },
+  { id: 'r_vocal', label: 'Vocais', icon: '🎤' },
+  { id: 'r_beat', label: 'Beat', icon: '🥁' },
+  { id: 'r_mix', label: 'Mix & Master', icon: '🎚️' },
+  { id: 'r_letra', label: 'Letra', icon: '✍️' },
+  { id: 'r_edit', label: 'Edição de Vídeo', icon: '🎬' },
+  { id: 'r_ilus', label: 'Ilustração', icon: '🖼️' },
+  { id: 'r_thumb', label: 'Thumbnail', icon: '🎨' },
+  { id: 'r_ideal', label: 'Idealização', icon: '💡' },
+  { id: 'r_roteiro', label: 'Roteiro', icon: '📝' },
+  { id: 'r_direcao', label: 'Direção', icon: '🎬' },
 ];
 
 const MATCH_BANNER_GRADS = [
@@ -26,24 +26,24 @@ const MATCH_BANNER_GRADS = [
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let _matchAllTalents = [];
-let _matchFiltered   = [];
-let _matchMode       = 'grid';   // 'grid' | 'swipe'
-let _matchSwipeIdx   = 0;
-let _matchLikes      = {};  // { uid: true }
-let _matchConfirmed  = {};  // { uid: true }
-let _matchView       = 'team';
+let _matchFiltered = [];
+let _matchMode = 'grid';   // 'grid' | 'swipe'
+let _matchSwipeIdx = 0;
+let _matchLikes = {};  // { uid: true }
+let _matchConfirmed = {};  // { uid: true }
+let _matchView = 'team';
 let _matchRoleFilter = '';
-let _matchInboxTab   = 'received';
-let _matchIsArtistMode   = false;  // true when user has no team (browsing teams)
-let _matchAllTeams       = [];     // all teams with vacancies (artist mode)
-let _matchTeamsFiltered  = [];     // filtered subset
+let _matchInboxTab = 'received';
+let _matchIsArtistMode = false;  // true when user has no team (browsing teams)
+let _matchAllTeams = [];     // all teams with vacancies (artist mode)
+let _matchTeamsFiltered = [];     // filtered subset
 let _matchArtistSentInterests = {}; // { teamId: 'pending'|'accepted' }
 
 // ── Load page ─────────────────────────────────────────────────────────────────
-window._loadTalentsPageV5 = window.loadTalentsPage = async function() {
-  const noteam    = document.getElementById('match-noteam');
+window._loadTalentsPageV5 = window.loadTalentsPage = async function () {
+  const noteam = document.getElementById('match-noteam');
   const noprofile = document.getElementById('match-noprofile');
-  const main      = document.getElementById('match-main');
+  const main = document.getElementById('match-main');
 
   noteam?.classList.add('hidden');
   noprofile?.classList.add('hidden');
@@ -69,7 +69,7 @@ window._loadTalentsPageV5 = window.loadTalentsPage = async function() {
         } else {
           window._myTalentProfile = null;
         }
-      } catch(e) { window._myTalentProfile = null; }
+      } catch (e) { window._myTalentProfile = null; }
     }
 
     if (!window._currentTeamId || forceArtist) {
@@ -120,14 +120,14 @@ window._loadTalentsPageV5 = window.loadTalentsPage = async function() {
         Object.keys(rawLikes).forEach(k => {
           if (validUids.has(k)) _matchLikes[k] = rawLikes[k];
         });
-      } catch(e) { _matchLikes = {}; }
+      } catch (e) { _matchLikes = {}; }
 
       try {
         const matchQ = window.query(window.collection(window.db, 'matches'), window.where('teamId', '==', window._currentTeamId), window.limit(50));
         const matchSnap = await window.getDocs(matchQ);
         _matchConfirmed = {};
         matchSnap.docs.forEach(d => { _matchConfirmed[d.data().userUid] = { id: d.id, ...d.data() }; });
-      } catch(e) { _matchConfirmed = {}; }
+      } catch (e) { _matchConfirmed = {}; }
 
       window.hideLoading();
       main?.classList.remove('hidden');
@@ -139,10 +139,10 @@ window._loadTalentsPageV5 = window.loadTalentsPage = async function() {
       // Atualiza badge de matches na Tab 2
       const matchCount = Object.keys(_matchConfirmed).length;
       const matchBadge = document.getElementById('match-matches-badge');
-      if (matchBadge) { if (matchCount) { matchBadge.style.display=''; matchBadge.textContent=matchCount; } else matchBadge.style.display='none'; }
+      if (matchBadge) { if (matchCount) { matchBadge.style.display = ''; matchBadge.textContent = matchCount; } else matchBadge.style.display = 'none'; }
     }
 
-  } catch(e) {
+  } catch (e) {
     window.hideLoading();
     window.toast('Erro ao carregar: ' + e.message, 'error');
   }
@@ -150,9 +150,9 @@ window._loadTalentsPageV5 = window.loadTalentsPage = async function() {
 
 // ── Artist mode: configure UI labels ─────────────────────────────────────────
 function _matchConfigureArtistModeUI() {
-  const btnTeam   = document.getElementById('match-vbtn-team');
+  const btnTeam = document.getElementById('match-vbtn-team');
   const btnArtist = document.getElementById('match-vbtn-artist');
-  if (btnTeam)   btnTeam.innerHTML   = '🔍 ENCONTRAR EQUIPES';
+  if (btnTeam) btnTeam.innerHTML = '🔍 ENCONTRAR EQUIPES';
   if (btnArtist) btnArtist.innerHTML = '📬 INTERESSES';
 
   // Topbar title
@@ -181,9 +181,9 @@ function _matchConfigureArtistModeUI() {
 }
 
 function _matchConfigureTeamModeUI() {
-  const btnTeam   = document.getElementById('match-vbtn-team');
+  const btnTeam = document.getElementById('match-vbtn-team');
   const btnArtist = document.getElementById('match-vbtn-artist');
-  if (btnTeam)   btnTeam.innerHTML   = '👥 ENCONTRAR ARTISTAS';
+  if (btnTeam) btnTeam.innerHTML = '👥 ENCONTRAR ARTISTAS';
   if (btnArtist) btnArtist.innerHTML = '📬 INTERESSES RECEBIDOS';
 
   // Topbar title - quando equipe usa o sistema, o título muda
@@ -241,14 +241,14 @@ async function _matchLoadArtistMode() {
     _matchAllTeams = teamsSnap.docs
       .map(d => {
         const base = { id: d.id, ...d.data() };
-        const tp   = tpMap[d.id] || {};
+        const tp = tpMap[d.id] || {};
         return {
           ...base,
-          photo:   tp.photo   || tp.logo    || base.photo   || '',
-          banner:  tp.banner  || base.banner || '',
+          photo: tp.photo || tp.logo || base.photo || '',
+          banner: tp.banner || base.banner || '',
           tagline: tp.tagline || tp.description || base.tagline || '',
-          bio:     tp.bio     || base.bio    || '',
-          name:    tp.name    || base.name   || 'Equipe',
+          bio: tp.bio || base.bio || '',
+          name: tp.name || base.name || 'Equipe',
           vacancies: base.vacancies || tp.vacancies || {},
           isPublic: base.isPublic !== false,
         };
@@ -269,7 +269,7 @@ async function _matchLoadArtistMode() {
           .map(d => ({ id: d.id, ...d.data() }))
           .filter(d => d.type === 'artist_to_team')
           .forEach(d => { _matchArtistSentInterests[d.toTeamId] = d.status || 'pending'; });
-      } catch(e) { _matchArtistSentInterests = {}; }
+      } catch (e) { _matchArtistSentInterests = {}; }
     }
 
     _matchTeamsFiltered = [..._matchAllTeams];
@@ -277,7 +277,7 @@ async function _matchLoadArtistMode() {
     if (lbl) lbl.textContent = _matchTeamsFiltered.length + ' equipe' + (_matchTeamsFiltered.length !== 1 ? 's' : '');
 
     _matchSwipeIdx = 0;
-  } catch(e) {
+  } catch (e) {
     window.toast('Erro ao carregar equipes: ' + e.message, 'error');
   }
 }
@@ -304,19 +304,19 @@ async function _matchUpdateArtistReceivedBadge() {
     if (tsb) { tsb.textContent = unread > 0 ? unread : ''; tsb.classList.toggle('show', unread > 0); }
     const sb = document.getElementById('interest-sidebar-badge');
     if (sb) { sb.textContent = unread > 0 ? unread : ''; sb.classList.toggle('show', unread > 0); }
-  } catch(e) { /* ignora */ }
+  } catch (e) { /* ignora */ }
 }
 
 // ── Artist mode: filter teams ─────────────────────────────────────────────────
 function matchFilterTeams() {
-  const q    = (document.getElementById('match-search')?.value || '').toLowerCase();
+  const q = (document.getElementById('match-search')?.value || '').toLowerCase();
   const role = _matchRoleFilter;
 
   _matchTeamsFiltered = _matchAllTeams.filter(t => {
     // Only filter by role when a specific role chip is selected
     if (role && !(t.vacancies && Number(t.vacancies[role]) > 0)) return false;
     if (q) {
-      const text = ((t.name||'') + ' ' + (t.tagline||'') + ' ' + (t.bio||'') + ' ' + (t.location||'')).toLowerCase();
+      const text = ((t.name || '') + ' ' + (t.tagline || '') + ' ' + (t.bio || '') + ' ' + (t.location || '')).toLowerCase();
       if (!text.includes(q)) return false;
     }
     return true;
@@ -329,7 +329,7 @@ function matchFilterTeams() {
 
 // ── Artist mode: render team grid ─────────────────────────────────────────────
 function matchRenderTeamGrid() {
-  const grid  = document.getElementById('match-grid');
+  const grid = document.getElementById('match-grid');
   const empty = document.getElementById('match-grid-empty');
   if (!grid) return;
 
@@ -341,12 +341,12 @@ function matchRenderTeamGrid() {
   }
   empty?.classList.add('hidden');
 
-  const RLOC = {r_vocal:'🎤 Vocal',r_beat:'🥁 Beat',r_mix:'🎛️ Mix',r_letra:'✍️ Letra',r_edit:'🎬 Edição',r_ilus:'🖼️ Visual',r_thumb:'🎨 Thumb',r_ideal:'💡 Ideal',r_social:'📲 Social',r_photo:'📸 Foto'};
+  const RLOC = { r_vocal: '🎤 Vocal', r_beat: '🥁 Beat', r_mix: '🎛️ Mix', r_letra: '✍️ Letra', r_edit: '🎬 Edição', r_ilus: '🖼️ Visual', r_thumb: '🎨 Thumb', r_ideal: '💡 Ideal', r_social: '📲 Social', r_photo: '📸 Foto' };
   const mySkills = Object.keys(window._myTalentProfile?.skills || {});
 
   grid.innerHTML = _matchTeamsFiltered.map((t, idx) => {
-    const grad   = t.banner?.startsWith('http') ? `url('${t.banner}') center/cover` : MATCH_BANNER_GRADS[idx % MATCH_BANNER_GRADS.length];
-    const avHtml = t.photo ? `<img src="${t.photo}" alt="">` : (t.name||'?')[0].toUpperCase();
+    const grad = t.banner?.startsWith('http') ? `url('${t.banner}') center/cover` : MATCH_BANNER_GRADS[idx % MATCH_BANNER_GRADS.length];
+    const avHtml = t.photo ? `<img src="${t.photo}" alt="">` : (t.name || '?')[0].toUpperCase();
     const status = _matchArtistSentInterests[t.id];
 
     let btnHtml;
@@ -355,20 +355,20 @@ function matchRenderTeamGrid() {
     } else if (status) {
       btnHtml = `<button class="match-btn-interest sent" disabled>✅ INTERESSE ENVIADO</button>`;
     } else {
-      btnHtml = `<button class="match-btn-interest send" id="mabtn-${t.id}" onclick="matchArtistSendInterest('${t.id}','${window.escHtml(t.name||'')}','${window.escHtml(t.photo||'')}');event.stopPropagation()">💛 DEMONSTRAR INTERESSE</button>`;
+      btnHtml = `<button class="match-btn-interest send" id="mabtn-${t.id}" onclick="matchArtistSendInterest('${t.id}','${window.escHtml(t.name || '')}','${window.escHtml(t.photo || '')}');event.stopPropagation()">💛 DEMONSTRAR INTERESSE</button>`;
     }
 
     const vacTags = Object.entries(t.vacancies || {})
       .filter(([, v]) => Number(v) > 0).slice(0, 4)
-      .map(([rid]) => `<span class="match-tcard-tag${mySkills.includes(rid)?' hi':''}">${RLOC[rid]||rid}</span>`)
+      .map(([rid]) => `<span class="match-tcard-tag${mySkills.includes(rid) ? ' hi' : ''}">${RLOC[rid] || rid}</span>`)
       .join('');
 
     return `<div class="match-tcard" onclick="matchArtistViewTeam('${t.id}')">
       <div class="match-tcard-banner" style="background:${grad}"></div>
       <div class="match-tcard-av">${avHtml}</div>
       <div class="match-tcard-body">
-        <div class="match-tcard-name">${window.escHtml(t.name||'Sem nome')}</div>
-        <div class="match-tcard-handle">${window.escHtml(t.tagline||t.location||'')}</div>
+        <div class="match-tcard-name">${window.escHtml(t.name || 'Sem nome')}</div>
+        <div class="match-tcard-handle">${window.escHtml(t.tagline || t.location || '')}</div>
         <div class="match-tcard-tags">${vacTags}</div>
         ${btnHtml}
       </div>
@@ -379,8 +379,8 @@ function matchRenderTeamGrid() {
 // ── Artist mode: render team swipe ────────────────────────────────────────────
 function matchRenderTeamSwipe() {
   const container = document.getElementById('match-swipe-container');
-  const btns      = document.getElementById('match-swipe-btns');
-  const empty     = document.getElementById('match-swipe-empty');
+  const btns = document.getElementById('match-swipe-btns');
+  const empty = document.getElementById('match-swipe-empty');
   if (!container) return;
 
   container.querySelectorAll('.match-swipe-card').forEach(c => c.remove());
@@ -411,16 +411,16 @@ function _matchBuildTeamSwipeCard(t, active) {
     card.style.zIndex = '2';
   }
 
-  const RLOC = {r_vocal:'🎤 Vocal',r_beat:'🥁 Beat',r_mix:'🎛️ Mix',r_letra:'✍️ Letra',r_edit:'🎬 Edição',r_ilus:'🖼️ Visual',r_thumb:'🎨 Thumb',r_ideal:'💡 Ideal',r_social:'📲 Social',r_photo:'📸 Foto'};
+  const RLOC = { r_vocal: '🎤 Vocal', r_beat: '🥁 Beat', r_mix: '🎛️ Mix', r_letra: '✍️ Letra', r_edit: '🎬 Edição', r_ilus: '🖼️ Visual', r_thumb: '🎨 Thumb', r_ideal: '💡 Ideal', r_social: '📲 Social', r_photo: '📸 Foto' };
   const mySkills = Object.keys(window._myTalentProfile?.skills || {});
   const grad = t.banner?.startsWith('http') ? `url('${t.banner}') center/cover` : MATCH_BANNER_GRADS[_matchSwipeIdx % MATCH_BANNER_GRADS.length];
-  const avHtml = t.photo ? `<img src="${t.photo}">` : `<span>${(t.name||'?')[0].toUpperCase()}</span>`;
+  const avHtml = t.photo ? `<img src="${t.photo}">` : `<span>${(t.name || '?')[0].toUpperCase()}</span>`;
 
   const vacHtml = Object.entries(t.vacancies || {})
     .filter(([, v]) => Number(v) > 0)
     .map(([rid]) => {
       const match = mySkills.includes(rid);
-      return `<div class="match-swipe-skill" style="${match?'border-color:rgba(255,60,142,.4);color:var(--a1)':''}">${RLOC[rid]||rid}${match?' ✨':''}</div>`;
+      return `<div class="match-swipe-skill" style="${match ? 'border-color:rgba(255,60,142,.4);color:var(--a1)' : ''}">${RLOC[rid] || rid}${match ? ' ✨' : ''}</div>`;
     }).join('');
 
   const locationHtml = t.location
@@ -434,12 +434,12 @@ function _matchBuildTeamSwipeCard(t, active) {
       <div class="match-swipe-av">${avHtml}</div>
     </div>
     <div class="match-swipe-body">
-      <div class="match-swipe-name">${window.escHtml(t.name||'Sem nome')}</div>
-      <div class="match-swipe-handle">${window.escHtml(t.tagline||'')}</div>
+      <div class="match-swipe-name">${window.escHtml(t.name || 'Sem nome')}</div>
+      <div class="match-swipe-handle">${window.escHtml(t.tagline || '')}</div>
       ${locationHtml}
-      <div class="match-swipe-bio">${window.escHtml((t.bio||'').substring(0, 160))}</div>
+      <div class="match-swipe-bio">${window.escHtml((t.bio || '').substring(0, 160))}</div>
       <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3);margin-bottom:8px;letter-spacing:1px">VAGAS ABERTAS</div>
-      <div class="match-swipe-skills">${vacHtml||'<div style="color:var(--text3);font-size:11px">Sem vagas listadas</div>'}</div>
+      <div class="match-swipe-skills">${vacHtml || '<div style="color:var(--text3);font-size:11px">Sem vagas listadas</div>'}</div>
     </div>`;
   return card;
 }
@@ -458,11 +458,11 @@ function matchArtistSwipeAction(action) {
       // Bug 4 Fix: atualiza cache local imediatamente para o painel refletir o estado correto,
       // sem depender do Firestore write completar antes do re-render
       _matchArtistSentInterests[t.id] = _matchArtistSentInterests[t.id] || 'pending';
-      _matchArtistSendInterestSilent(t.id, t.name||'', t.photo||'')
+      _matchArtistSendInterestSilent(t.id, t.name || '', t.photo || '')
         .then(() => matchRenderSentPanel());
       window.toast(action === 'superlike'
-        ? '⭐ Super interesse enviado para ' + (t.name||'equipe') + '!'
-        : '💛 Interesse enviado para ' + (t.name||'equipe') + '!');
+        ? '⭐ Super interesse enviado para ' + (t.name || 'equipe') + '!'
+        : '💛 Interesse enviado para ' + (t.name || 'equipe') + '!');
       matchRenderSentPanel(); // render imediato com estado local (feedback visual instantâneo)
     }
   } else {
@@ -477,7 +477,7 @@ function matchArtistSwipeAction(action) {
 }
 
 // ── Artist send interest to team ─────────────────────────────────────────────
-window.matchArtistSendInterest = async function(teamId, teamName, teamPhoto) {
+window.matchArtistSendInterest = async function (teamId, teamName, teamPhoto) {
   if (!teamId) return;
   // Melhoria: estado de loading imediato no botão antes do Firestore write
   const btn = document.getElementById('mabtn-' + teamId);
@@ -500,25 +500,25 @@ async function _matchArtistSendInterestSilent(teamId, teamName, teamPhoto) {
     // ── CORREÇÃO: campos duais (Match System + Interest Panel) ──
     const intData = {
       // Campos do Match System
-      type:          'artist_to_team',
-      fromUserUid:   window._matchGetUser.uid,
-      fromUserName:  p?.name  || '',
+      type: 'artist_to_team',
+      fromUserUid: window._matchGetUser.uid,
+      fromUserName: p?.name || '',
       fromUserPhoto: p?.photo || '',
-      toTeamId:      teamId,
-      toTeamName:    teamName,
-      toTeamPhoto:   teamPhoto,
+      toTeamId: teamId,
+      toTeamName: teamName,
+      toTeamPhoto: teamPhoto,
       // Campos do Interest Panel (para intLoadAll encontrar)
-      fromType:  'user',
-      fromId:    window._matchGetUser.uid,
-      fromName:  p?.name  || '',
+      fromType: 'user',
+      fromId: window._matchGetUser.uid,
+      fromName: p?.name || '',
       fromPhoto: p?.photo || '',
-      toType:    'team',
-      toId:      teamId,
-      toName:    teamName,
-      toPhoto:   teamPhoto,
+      toType: 'team',
+      toId: teamId,
+      toName: teamName,
+      toPhoto: teamPhoto,
       // Campos comuns
       createdAt: new Date().toISOString(),
-      status:    'pending',
+      status: 'pending',
     };
     const intRef = await window.addDoc(window.collection(window.db, 'interests'), intData);
 
@@ -532,7 +532,7 @@ async function _matchArtistSendInterestSilent(teamId, teamName, teamPhoto) {
       );
       const revSnap1 = await window.getDocs(revQ1);
       if (!revSnap1.empty) rev = { id: revSnap1.docs[0].id, ...revSnap1.docs[0].data() };
-    } catch(e) {}
+    } catch (e) { }
 
     // Fallback: padrão Match System
     if (!rev) {
@@ -546,33 +546,33 @@ async function _matchArtistSendInterestSilent(teamId, teamName, teamPhoto) {
         const found = revSnap2.docs
           .map(d => ({ id: d.id, ...d.data() }))
           .find(d => (d.fromTeamId === teamId || d.fromId === teamId) &&
-                     (d.type === 'team_to_artist' || d.fromType === 'team') &&
-                     d.status === 'pending');
+            (d.type === 'team_to_artist' || d.fromType === 'team') &&
+            d.status === 'pending');
         if (found) rev = found;
-      } catch(e) {}
+      } catch (e) { }
     }
 
     if (rev) {
       const _createdMatchId = await _matchCreateMatch(
-        window._matchGetUser.uid, p?.name||'', p?.photo||'',
+        window._matchGetUser.uid, p?.name || '', p?.photo || '',
         rev.id, intRef.id,
-        { teamId: rev.fromTeamId || rev.fromId, teamName: rev.fromTeamName||rev.fromName||teamName, teamPhoto: rev.fromTeamPhoto||rev.fromPhoto||teamPhoto, teamOwnerId: rev.senderUid||'' }
+        { teamId: rev.fromTeamId || rev.fromId, teamName: rev.fromTeamName || rev.fromName || teamName, teamPhoto: rev.fromTeamPhoto || rev.fromPhoto || teamPhoto, teamOwnerId: rev.senderUid || '' }
       );
       _matchArtistSentInterests[teamId] = 'matched';
-      matchShowCelebration(teamName, teamPhoto, p?.name||'', p?.photo||'', _createdMatchId);
+      matchShowCelebration(teamName, teamPhoto, p?.name || '', p?.photo || '', _createdMatchId);
       matchRenderTeamGrid();
       matchRenderMatches();
     }
-  } catch(e) {
+  } catch (e) {
     console.warn('[matchArtistSendInterest]', e.message);
   }
 }
 
 // ── Artist mode: sent interests panel (right panel in view-team) ──────────────
 async function _matchRenderArtistSentPanel() {
-  const sentList      = document.getElementById('match-sent-list');
+  const sentList = document.getElementById('match-sent-list');
   const confirmedList = document.getElementById('match-confirmed-team');
-  const badge         = document.getElementById('match-sent-badge');
+  const badge = document.getElementById('match-sent-badge');
   if (!sentList) return;
 
   const pendingTeamIds = Object.keys(_matchArtistSentInterests).filter(id => _matchArtistSentInterests[id] === 'pending');
@@ -591,12 +591,12 @@ async function _matchRenderArtistSentPanel() {
       const name = t?.name || tid.substring(0, 8) + '...';
       const avHtml = t?.photo
         ? `<img src="${t.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:10px">`
-        : `<span style="font-weight:800;font-size:14px">${(name[0]||'?').toUpperCase()}</span>`;
+        : `<span style="font-weight:800;font-size:14px">${(name[0] || '?').toUpperCase()}</span>`;
       return `<div class="match-sent-item" id="msent-${tid}" onclick="matchArtistViewTeam('${tid}')" style="cursor:pointer">
         <div class="match-sent-av" style="border-radius:10px;background:linear-gradient(135deg,var(--a1),var(--a2))">${avHtml}</div>
         <div style="flex:1;min-width:0">
           <div style="font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${window.escHtml(name)}</div>
-          <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">${window.escHtml(t?.tagline||'EQUIPE')}</div>
+          <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">${window.escHtml(t?.tagline || 'EQUIPE')}</div>
         </div>
         <button class="match-btn-decline" onclick="event.stopPropagation();matchCancelArtistInterest('${tid}','${window.escHtml(name)}')" style="font-size:9px;padding:5px 10px">✕ CANCELAR</button>
       </div>`;
@@ -609,7 +609,7 @@ async function _matchRenderArtistSentPanel() {
     if (confirmedList) confirmedList.innerHTML = matchedTeamIds.map(tid => {
       const t = _matchAllTeams.find(x => x.id === tid);
       const name = t?.name || tid.substring(0, 8);
-      const avHtml = t?.photo ? `<img src="${t.photo}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:10px">` : (name[0]||'?').toUpperCase();
+      const avHtml = t?.photo ? `<img src="${t.photo}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:10px">` : (name[0] || '?').toUpperCase();
       return `<div class="match-card-item">
         <div class="match-card-pair">
           <div class="match-card-av" style="border-radius:10px">${avHtml}</div>
@@ -644,27 +644,27 @@ async function _matchRenderArtistSentPanel() {
 }
 
 // ── Artist mode: open team preview from grid card ─────────────────────────────
-window.matchArtistViewTeam = function(teamId) {
+window.matchArtistViewTeam = function (teamId) {
   const t = _matchAllTeams.find(x => x.id === teamId);
   if (!t) return;
   matchSwitchView('artist');
-  matchShowTeamPreview(teamId, t.name||'', t.photo||'');
+  matchShowTeamPreview(teamId, t.name || '', t.photo || '');
 };
 
 // ── My profile button ─────────────────────────────────────────────────────────
 function _matchUpdateMyProfileBtn(p) {
   const btn = document.getElementById('match-myprofile-btn');
-  const av  = document.getElementById('match-myavatar');
-  const nm  = document.getElementById('match-myname');
+  const av = document.getElementById('match-myavatar');
+  const nm = document.getElementById('match-myname');
   if (btn) btn.style.display = 'block';
   if (av) {
     if (p.photo) { av.innerHTML = `<img src="${p.photo}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`; }
-    else { av.textContent = (p.name||'?')[0].toUpperCase(); }
+    else { av.textContent = (p.name || '?')[0].toUpperCase(); }
   }
   if (nm) nm.textContent = (p.name || 'Meu Perfil').toUpperCase().substring(0, 14);
 }
 
-window.matchOpenMyProfile = async function() {
+window.matchOpenMyProfile = async function () {
   // Open profile edit using existing UPE system if available
   if (typeof window.openUnifiedProfileEdit === 'function') {
     window.openUnifiedProfileEdit();
@@ -675,7 +675,7 @@ window.matchOpenMyProfile = async function() {
 };
 
 // ── View switching ─────────────────────────────────────────────────────────────
-window.matchSwitchView = function(view) {
+window.matchSwitchView = function (view) {
   _matchView = view;
   document.querySelectorAll('.match-vbtn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.match-view').forEach(v => { v.classList.add('hidden'); v.classList.remove('match-view-active'); });
@@ -698,12 +698,12 @@ window.matchSwitchView = function(view) {
 };
 
 // ── Mode (grid/swipe) ─────────────────────────────────────────────────────────
-window.matchSetMode = function(mode) {
+window.matchSetMode = function (mode) {
   _matchMode = mode;
   document.getElementById('match-mode-grid')?.classList.toggle('match-mode-active', mode === 'grid');
   document.getElementById('match-mode-swipe')?.classList.toggle('match-mode-active', mode === 'swipe');
-  document.getElementById('match-grid-view').style.display   = mode === 'grid'  ? '' : 'none';
-  document.getElementById('match-swipe-view').style.display  = mode === 'swipe' ? '' : 'none';
+  document.getElementById('match-grid-view').style.display = mode === 'grid' ? '' : 'none';
+  document.getElementById('match-swipe-view').style.display = mode === 'swipe' ? '' : 'none';
   if (mode === 'swipe') {
     _matchSwipeIdx = 0;
     if (_matchIsArtistMode) matchRenderTeamSwipe();  // artista vê equipes em swipe
@@ -715,17 +715,17 @@ window.matchSetMode = function(mode) {
 };
 
 // ── Filtering ─────────────────────────────────────────────────────────────────
-window.matchFilter = function() {
+window.matchFilter = function () {
   if (_matchIsArtistMode) { matchFilterTeams(); return; }
-  const q     = (document.getElementById('match-search')?.value || '').toLowerCase();
+  const q = (document.getElementById('match-search')?.value || '').toLowerCase();
   const avail = document.getElementById('match-avail')?.value || '';
-  const role  = _matchRoleFilter;
+  const role = _matchRoleFilter;
 
   _matchFiltered = _matchAllTalents.filter(t => {
     if (avail && t.availability !== avail) return false;
     if (role && !(t.skills && t.skills[role])) return false;
     if (q) {
-      const text = ((t.name||'') + ' ' + (t.bio||'')).toLowerCase();
+      const text = ((t.name || '') + ' ' + (t.bio || '')).toLowerCase();
       if (!text.includes(q)) return false;
     }
     return true;
@@ -737,7 +737,7 @@ window.matchFilter = function() {
   matchRenderMode();
 };
 
-window.matchChip = function(el, role) {
+window.matchChip = function (el, role) {
   document.querySelectorAll('.match-chip').forEach(c => c.classList.remove('match-chip-active'));
   el.classList.add('match-chip-active');
   _matchRoleFilter = role;
@@ -756,7 +756,7 @@ function matchRenderMode() {
 
 // ── Grid ──────────────────────────────────────────────────────────────────────
 function matchRenderGrid() {
-  const grid  = document.getElementById('match-grid');
+  const grid = document.getElementById('match-grid');
   const empty = document.getElementById('match-grid-empty');
   if (!grid) return;
 
@@ -769,11 +769,11 @@ function matchRenderGrid() {
 
   // Get team vacancies for highlighting
   const team = (window._myTeams || []).find(t => t.id === window._currentTeamId);
-  const vacancies = Object.keys(team?.vacancies || {}).filter(k => (team?.vacancies[k]||0) > 0);
+  const vacancies = Object.keys(team?.vacancies || {}).filter(k => (team?.vacancies[k] || 0) > 0);
 
   grid.innerHTML = _matchFiltered.map((t, idx) => {
-    const grad    = t.banner?.startsWith('http') ? `url('${t.banner}') center/cover` : MATCH_BANNER_GRADS[idx % MATCH_BANNER_GRADS.length];
-    const avHtml  = t.photo ? `<img src="${t.photo}" alt="">` : (t.name||'?')[0].toUpperCase();
+    const grad = t.banner?.startsWith('http') ? `url('${t.banner}') center/cover` : MATCH_BANNER_GRADS[idx % MATCH_BANNER_GRADS.length];
+    const avHtml = t.photo ? `<img src="${t.photo}" alt="">` : (t.name || '?')[0].toUpperCase();
     const isLiked = _matchLikes[t.uid || t.id];
     const isMatch = _matchConfirmed[t.uid || t.id];
 
@@ -783,23 +783,27 @@ function matchRenderGrid() {
     } else if (isLiked) {
       btnHtml = `<button class="match-btn-interest sent" disabled>✅ INTERESSE ENVIADO</button>`;
     } else {
-      btnHtml = `<button class="match-btn-interest send" id="mabtn-${t.uid||t.id}" onclick="matchSendInterest('${t.uid||t.id}','${window.escHtml(t.name||'')}','${window.escHtml(t.photo||'')}');event.stopPropagation()">💛 DEMONSTRAR INTERESSE</button>`;
+      btnHtml = `<button class="match-btn-interest send" id="mabtn-${t.uid || t.id}" onclick="matchSendInterest('${t.uid || t.id}','${window.escHtml(t.name || '')}','${window.escHtml(t.photo || '')}');event.stopPropagation()">💛 DEMONSTRAR INTERESSE</button>`;
     }
 
     const tags = Object.keys(t.skills || {}).slice(0, 4).map(rid => {
       const role = MATCH_ROLES.find(r => r.id === rid);
       if (!role) return '';
       const hi = vacancies.includes(rid);
-      return `<span class="match-tcard-tag${hi?' hi':''}">${role.icon} ${role.label}</span>`;
+      return `<span class="match-tcard-tag${hi ? ' hi' : ''}">${role.icon} ${role.label}</span>`;
     }).join('');
+
+    const cardPlanInfo = typeof getEffectivePlanForUser === 'function' ? getEffectivePlanForUser(t) : { plan: t.plan || 'free' };
+    const cardChipHtml = typeof renderPlanChip === 'function' ? renderPlanChip(cardPlanInfo, 'inline') : '';
+    const cardPillHtml = typeof renderPlanChip === 'function' ? renderPlanChip(cardPlanInfo, 'pill') : '';
 
     return `<div class="match-tcard" onclick="matchViewTalent('${t.id}')">
       <div class="match-tcard-banner" style="background:${grad}"></div>
       <div class="match-tcard-av">${avHtml}</div>
       <div class="match-tcard-body">
-        <div class="match-tcard-name" style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">${window.escHtml(t.name||'Sem nome')}${renderPlanInlineChip(t.plan)}</div>
-        ${renderPlanPill(t.plan) ? `<div style="margin:3px 0 4px">${renderPlanPill(t.plan)}</div>` : ''}
-        <div class="match-tcard-handle">${window.escHtml(t.handle||'')}</div>
+        <div class="match-tcard-name" style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">${window.escHtml(t.name || 'Sem nome')}${cardChipHtml}</div>
+        ${cardPillHtml ? `<div style="margin:3px 0 4px">${cardPillHtml}</div>` : ''}
+        <div class="match-tcard-handle">${window.escHtml(t.handle || '')}</div>
         <div class="match-tcard-tags">${tags}</div>
         ${btnHtml}
       </div>
@@ -810,8 +814,8 @@ function matchRenderGrid() {
 // ── Swipe ─────────────────────────────────────────────────────────────────────
 function matchRenderSwipe() {
   const container = document.getElementById('match-swipe-container');
-  const btns      = document.getElementById('match-swipe-btns');
-  const empty     = document.getElementById('match-swipe-empty');
+  const btns = document.getElementById('match-swipe-btns');
+  const empty = document.getElementById('match-swipe-empty');
   if (!container) return;
 
   container.querySelectorAll('.match-swipe-card').forEach(c => c.remove());
@@ -842,13 +846,16 @@ function _matchBuildSwipeCard(t, active) {
   else card.style.zIndex = '2';
 
   const grad = t.banner?.startsWith('http') ? `url('${t.banner}') center/cover` : MATCH_BANNER_GRADS[_matchSwipeIdx % MATCH_BANNER_GRADS.length];
-  const avHtml = t.photo ? `<img src="${t.photo}">` : `<span>${(t.name||'?')[0].toUpperCase()}</span>`;
-  const avLabel = { open:'✅ Disponível para colaborar', busy:'🔶 Ocupado no momento', hidden:'🔒 Indisponível' };
-  const avColor = { open:'rgba(60,255,200,.1)', busy:'rgba(255,200,60,.1)' };
-  const skillsHtml = Object.keys(t.skills || {}).slice(0,5).map(rid => {
+  const avHtml = t.photo ? `<img src="${t.photo}">` : `<span>${(t.name || '?')[0].toUpperCase()}</span>`;
+  const avLabel = { open: '✅ Disponível para colaborar', busy: '🔶 Ocupado no momento', hidden: '🔒 Indisponível' };
+  const avColor = { open: 'rgba(60,255,200,.1)', busy: 'rgba(255,200,60,.1)' };
+  const skillsHtml = Object.keys(t.skills || {}).slice(0, 5).map(rid => {
     const role = MATCH_ROLES.find(r => r.id === rid);
     return role ? `<div class="match-swipe-skill">${role.icon} ${role.label}</div>` : '';
   }).join('');
+
+  const cardPlanInfo = typeof getEffectivePlanForUser === 'function' ? getEffectivePlanForUser(t) : { plan: t.plan || 'free' };
+  const cardChipHtml = typeof renderPlanChip === 'function' ? renderPlanChip(cardPlanInfo, 'inline') : '';
 
   card.innerHTML = `
     <span class="match-swipe-overlay like" id="mswipe-like-lbl">CURTIR</span>
@@ -857,20 +864,20 @@ function _matchBuildSwipeCard(t, active) {
       <div class="match-swipe-av">${avHtml}</div>
     </div>
     <div class="match-swipe-body">
-      <div class="match-swipe-name" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">${window.escHtml(t.name||'Sem nome')}${renderPlanInlineChip(t.plan)}</div>
-      <div class="match-swipe-handle">${window.escHtml(t.handle||'')}</div>
-      <div class="match-swipe-avail" style="background:${avColor[t.availability||'open']||'rgba(60,255,200,.1)'}">
+      <div class="match-swipe-name" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">${window.escHtml(t.name || 'Sem nome')}${cardChipHtml}</div>
+      <div class="match-swipe-handle">${window.escHtml(t.handle || '')}</div>
+      <div class="match-swipe-avail" style="background:${avColor[t.availability || 'open'] || 'rgba(60,255,200,.1)'}">
         <span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block"></span>
-        ${avLabel[t.availability||'open'] || 'Disponível'}
+        ${avLabel[t.availability || 'open'] || 'Disponível'}
       </div>
-      <div class="match-swipe-bio">${window.escHtml((t.bio||'').substring(0, 160))}</div>
+      <div class="match-swipe-bio">${window.escHtml((t.bio || '').substring(0, 160))}</div>
       <div class="match-swipe-skills">${skillsHtml}</div>
     </div>`;
   return card;
 }
 
 let _matchSwipeState = 'idle';
-window.matchSwipeAction = function(action) {
+window.matchSwipeAction = function (action) {
   if (_matchIsArtistMode) { matchArtistSwipeAction(action); return; }
   if (_matchSwipeState !== 'idle') return;
   const card = document.querySelector('.match-swipe-card.front');
@@ -882,7 +889,7 @@ window.matchSwipeAction = function(action) {
     const t = _matchFiltered[_matchSwipeIdx];
     if (t) {
       matchSendInterestSilent(t.uid || t.id, t.name || '', t.photo || '');
-      window.toast(action === 'superlike' ? '⭐ Super interesse enviado para ' + (t.name||'talento') + '!' : '💛 Interesse enviado para ' + (t.name||'talento') + '!');
+      window.toast(action === 'superlike' ? '⭐ Super interesse enviado para ' + (t.name || 'talento') + '!' : '💛 Interesse enviado para ' + (t.name || 'talento') + '!');
     }
   } else {
     card.classList.add('going-left');
@@ -896,7 +903,7 @@ window.matchSwipeAction = function(action) {
 };
 
 // ── Send Interest (from card button) ─────────────────────────────────────────
-window.matchSendInterest = async function(uid, name, photo) {
+window.matchSendInterest = async function (uid, name, photo) {
   if (!uid) return;
   // Melhoria: estado de loading imediato antes do Firestore write
   const btn = document.getElementById('mabtn-' + uid);
@@ -915,33 +922,33 @@ async function matchSendInterestSilent(uid, name, photo) {
   _matchLikes[uid] = true;
 
   try {
-    const team = (window._myTeams||[]).find(t => t.id === window._currentTeamId);
-    const teamName  = team?.name || 'Equipe';
+    const team = (window._myTeams || []).find(t => t.id === window._currentTeamId);
+    const teamName = team?.name || 'Equipe';
     const teamPhoto = team?.photo || '';
 
     // ── CORREÇÃO: campos duais (Match System + Interest Panel) ──
     const intData = {
       // Campos do Match System
-      type:          'team_to_artist',
-      fromTeamId:    window._currentTeamId,
-      fromTeamName:  teamName,
+      type: 'team_to_artist',
+      fromTeamId: window._currentTeamId,
+      fromTeamName: teamName,
       fromTeamPhoto: teamPhoto,
-      toUserUid:     uid,
-      toUserName:    name,
-      toUserPhoto:   photo,
-      senderUid:     window._matchGetUser.uid,
+      toUserUid: uid,
+      toUserName: name,
+      toUserPhoto: photo,
+      senderUid: window._matchGetUser.uid,
       // Campos do Interest Panel (para intLoadAll encontrar)
-      fromType:  'team',
-      fromId:    window._currentTeamId,
-      fromName:  teamName,
+      fromType: 'team',
+      fromId: window._currentTeamId,
+      fromName: teamName,
       fromPhoto: teamPhoto,
-      toType:    'user',
-      toId:      uid,
-      toName:    name,
-      toPhoto:   photo,
+      toType: 'user',
+      toId: uid,
+      toName: name,
+      toPhoto: photo,
       // Campos comuns
       createdAt: new Date().toISOString(),
-      status:    'pending',
+      status: 'pending',
     };
     const intRef = await window.addDoc(window.collection(window.db, 'interests'), intData);
 
@@ -952,17 +959,17 @@ async function matchSendInterestSilent(uid, name, photo) {
         { fromTeamId: window._currentTeamId, fromTeamName: teamName, fromTeamPhoto: teamPhoto, createdAt: new Date().toISOString(), read: false },
         { merge: false }
       );
-    } catch(e) {}
+    } catch (e) { }
 
     // Salva no team_likes
     try {
       const likeUpdateObj = {};
       likeUpdateObj['likes.' + uid] = true;
       await window.updateDoc(window.doc(window.db, 'team_likes', window._currentTeamId), likeUpdateObj);
-    } catch(e) {
+    } catch (e) {
       try {
         await window.setDoc(window.doc(window.db, 'team_likes', window._currentTeamId), { likes: { ..._matchLikes } }, { merge: true });
-      } catch(e2) {}
+      } catch (e2) { }
     }
 
     // Busca reversa robusta: padrão canônico + Match System
@@ -975,7 +982,7 @@ async function matchSendInterestSilent(uid, name, photo) {
       );
       const revSnap1 = await window.getDocs(reverseQ1);
       if (!revSnap1.empty) rev = { id: revSnap1.docs[0].id, ...revSnap1.docs[0].data() };
-    } catch(e) {}
+    } catch (e) { }
 
     // Fallback: padrão Match System (fromUserUid / toTeamId)
     if (!rev) {
@@ -989,10 +996,10 @@ async function matchSendInterestSilent(uid, name, photo) {
         const found = reverseSnap2.docs
           .map(d => ({ id: d.id, ...d.data() }))
           .find(d => (d.fromUserUid === uid || d.fromId === uid) &&
-                     (d.type === 'artist_to_team' || d.fromType === 'user') &&
-                     d.status === 'pending');
+            (d.type === 'artist_to_team' || d.fromType === 'user') &&
+            d.status === 'pending');
         if (found) rev = found;
-      } catch(e) {}
+      } catch (e) { }
     }
 
     if (rev) {
@@ -1003,17 +1010,17 @@ async function matchSendInterestSilent(uid, name, photo) {
         gridBtn.className = 'match-btn-interest matched';
         gridBtn.textContent = '💛 MATCH! VER';
         gridBtn.disabled = false;
-        gridBtn.onclick = function(e) { matchSwitchView('matches'); e.stopPropagation(); };
+        gridBtn.onclick = function (e) { matchSwitchView('matches'); e.stopPropagation(); };
       }
       matchRenderMatches();
     }
-  } catch(e) {
+  } catch (e) {
     console.warn('[matchSendInterest]', e.message);
   }
 }
 
 // ── Cancel interest: artista cancela interesse em equipe ──────────────────────
-window.matchCancelArtistInterest = async function(teamId, teamName) {
+window.matchCancelArtistInterest = async function (teamId, teamName) {
   const item = document.getElementById('msent-' + teamId);
   if (item) { item.style.opacity = '0.4'; item.style.pointerEvents = 'none'; }
   try {
@@ -1029,7 +1036,7 @@ window.matchCancelArtistInterest = async function(teamId, teamName) {
       d.data().type === 'artist_to_team' && d.data().toTeamId === teamId
     );
     await Promise.all(docsToDelete.map(d => window.deleteDoc(d.ref)));
-  } catch(e) { /* ignora erro Firestore, remove do cache local mesmo assim */ }
+  } catch (e) { /* ignora erro Firestore, remove do cache local mesmo assim */ }
 
   // Remove do cache local
   delete _matchArtistSentInterests[teamId];
@@ -1041,7 +1048,7 @@ window.matchCancelArtistInterest = async function(teamId, teamName) {
 };
 
 // ── Cancel interest: equipe cancela interesse em artista ──────────────────────
-window.matchCancelTeamInterest = async function(talentUid, talentName) {
+window.matchCancelTeamInterest = async function (talentUid, talentName) {
   const item = document.getElementById('mtsent-' + talentUid);
   if (item) { item.style.opacity = '0.4'; item.style.pointerEvents = 'none'; }
   try {
@@ -1056,7 +1063,7 @@ window.matchCancelTeamInterest = async function(talentUid, talentName) {
       d.data().type === 'team_to_artist' && d.data().fromTeamId === window._currentTeamId
     );
     await Promise.all(docsToDelete.map(d => window.deleteDoc(d.ref)));
-  } catch(e) { /* ignora erro Firestore */ }
+  } catch (e) { /* ignora erro Firestore */ }
 
   // Remove do cache local e persiste no team_likes
   // Usa updateDoc com campo específico para evitar race condition entre membros da equipe
@@ -1068,7 +1075,7 @@ window.matchCancelTeamInterest = async function(talentUid, talentName) {
       window.doc(window.db, 'team_likes', window._currentTeamId),
       updateObj
     );
-  } catch(e) {
+  } catch (e) {
     // Fallback: reescreve o objeto caso o doc não exista ainda
     try {
       await window.setDoc(
@@ -1076,7 +1083,7 @@ window.matchCancelTeamInterest = async function(talentUid, talentName) {
         { likes: { ..._matchLikes } },
         { merge: true }
       );
-    } catch(e2) { /* ignora */ }
+    } catch (e2) { /* ignora */ }
   }
 
   // Restaura botão no grid
@@ -1087,15 +1094,15 @@ window.matchCancelTeamInterest = async function(talentUid, talentName) {
 };
 
 // ── Render Sent Panel (team view, right panel) ────────────────────────────────
-window.matchRenderSentPanel = async function() {
+window.matchRenderSentPanel = async function () {
   if (_matchIsArtistMode) { await _matchRenderArtistSentPanel(); return; }
-  const sentList      = document.getElementById('match-sent-list');
+  const sentList = document.getElementById('match-sent-list');
   const confirmedList = document.getElementById('match-confirmed-team');
-  const badge         = document.getElementById('match-sent-badge');
+  const badge = document.getElementById('match-sent-badge');
   if (!sentList) return;
 
-  const pendingUids  = Object.keys(_matchLikes).filter(uid => !_matchConfirmed[uid]);
-  const matchedUids  = Object.keys(_matchConfirmed);
+  const pendingUids = Object.keys(_matchLikes).filter(uid => !_matchConfirmed[uid]);
+  const matchedUids = Object.keys(_matchConfirmed);
 
   // Badge
   if (badge) {
@@ -1108,11 +1115,11 @@ window.matchRenderSentPanel = async function() {
     sentList.innerHTML = `<div class="match-empty-state" style="padding:24px"><div style="font-size:28px;margin-bottom:8px">💛</div><div>NENHUM INTERESSE ENVIADO</div></div>`;
   } else {
     sentList.innerHTML = pendingUids.map(uid => {
-      const t = _matchAllTalents.find(x => (x.uid||x.id) === uid);
-      const name = t?.name || uid.substring(0,8)+'...';
+      const t = _matchAllTalents.find(x => (x.uid || x.id) === uid);
+      const name = t?.name || uid.substring(0, 8) + '...';
       const avHtml = t?.photo
         ? `<img src="${t.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
-        : `<span style="font-weight:800;font-size:14px">${(name[0]||'?').toUpperCase()}</span>`;
+        : `<span style="font-weight:800;font-size:14px">${(name[0] || '?').toUpperCase()}</span>`;
       return `<div class="match-sent-item" id="mtsent-${uid}">
         <div class="match-sent-av" style="background:linear-gradient(135deg,var(--a1),var(--a2))">${avHtml}</div>
         <div style="flex:1;min-width:0">
@@ -1130,9 +1137,9 @@ window.matchRenderSentPanel = async function() {
   } else {
     confirmedList.innerHTML = matchedUids.map(uid => {
       const m = _matchConfirmed[uid];
-      const name = m?.userName || m?.talentName || uid.substring(0,8);
+      const name = m?.userName || m?.talentName || uid.substring(0, 8);
       const photo = m?.userPhoto || '';
-      const avHtml = photo ? `<img src="${photo}" alt="" style="width:100%;height:100%;object-fit:cover">` : (name[0]||'?').toUpperCase();
+      const avHtml = photo ? `<img src="${photo}" alt="" style="width:100%;height:100%;object-fit:cover">` : (name[0] || '?').toUpperCase();
       return `<div class="match-card-item">
         <div class="match-card-pair">
           <div class="match-card-av">${avHtml}</div>
@@ -1144,9 +1151,9 @@ window.matchRenderSentPanel = async function() {
           <span class="match-badge">MATCH</span>
         </div>
         <div class="match-card-actions">
-          <button class="match-btn-chat" onclick="matchSwitchView('matches');setTimeout(()=>matchOpenChatInPanel('${m?.id||uid}','team'),200)">💬 ABRIR CHAT</button>
-          ${(() => { const _teamForInvite = (window._myTeams||[]).find(t=>t.id===window._currentTeamId); const _isOwner = _teamForInvite?.members?.find?.(mb=>mb.uid===window._matchGetUser?.uid)?.role === 'owner'; if (!_isOwner) return ''; return !m?.inviteSent ? `<button class="match-btn-invite" onclick="matchSendInvite('${m?.id||uid}')">📨 CONVIDAR</button>` : `<span style="font-family:var(--font-mono);font-size:9px;color:var(--green)">✅ CONVITE ENVIADO</span>`; })()}
-          <button class="match-btn-decline" style="font-size:9px;padding:5px 10px" onclick="matchCancelMatch('${m?.id||uid}','${window._currentTeamId||''}','${uid}','${window.escHtml(name)}')">✕ CANCELAR</button>
+          <button class="match-btn-chat" onclick="matchSwitchView('matches');setTimeout(()=>matchOpenChatInPanel('${m?.id || uid}','team'),200)">💬 ABRIR CHAT</button>
+          ${(() => { const _teamForInvite = (window._myTeams || []).find(t => t.id === window._currentTeamId); const _isOwner = _teamForInvite?.members?.find?.(mb => mb.uid === window._matchGetUser?.uid)?.role === 'owner'; if (!_isOwner) return ''; return !m?.inviteSent ? `<button class="match-btn-invite" onclick="matchSendInvite('${m?.id || uid}')">📨 CONVIDAR</button>` : `<span style="font-family:var(--font-mono);font-size:9px;color:var(--green)">✅ CONVITE ENVIADO</span>`; })()}
+          <button class="match-btn-decline" style="font-size:9px;padding:5px 10px" onclick="matchCancelMatch('${m?.id || uid}','${window._currentTeamId || ''}','${uid}','${window.escHtml(name)}')">✕ CANCELAR</button>
         </div>
       </div>`;
     }).join('');
@@ -1154,11 +1161,11 @@ window.matchRenderSentPanel = async function() {
 };
 
 // ── Inbox / Interesses Recebidos ──────────────────────────────────────────────
-window.matchRenderInbox = async function() {
+window.matchRenderInbox = async function () {
   if (!_matchIsArtistMode) {
     // MODO EQUIPE: respeita a aba selecionada
-    if (_matchInboxTab === 'sent')    { await matchRenderTeamSentInterests(); return; }
-    if (_matchInboxTab === 'matches') { await matchRenderTeamMatchesInbox();  return; }
+    if (_matchInboxTab === 'sent') { await matchRenderTeamSentInterests(); return; }
+    if (_matchInboxTab === 'matches') { await matchRenderTeamMatchesInbox(); return; }
     // default: 'received'
     await matchRenderTeamReceivedInterests();
     return;
@@ -1208,25 +1215,28 @@ async function matchRenderTeamReceivedInterests() {
     }
 
     body.innerHTML = items.map(item => {
-      const name    = item.fromUserName || 'Artista';
-      const photo   = item.fromUserPhoto || '';
-      const uid     = item.fromUserUid  || '';
+      const name = item.fromUserName || 'Artista';
+      const photo = item.fromUserPhoto || '';
+      const uid = item.fromUserUid || '';
       const initial = (name[0] || '?').toUpperCase();
-      const avHtml  = photo
+      const avHtml = photo
         ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
         : `<span style="font-weight:800;font-size:15px">${initial}</span>`;
 
       // Verifica se o artista está nos talentos carregados para mostrar skills
       const talent = _matchAllTalents.find(x => (x.uid || x.id) === uid);
-      const skillTags = talent ? Object.keys(talent.skills || {}).slice(0,3).map(k => {
+      const skillTags = talent ? Object.keys(talent.skills || {}).slice(0, 3).map(k => {
         const role = (typeof MATCH_ROLES !== 'undefined' ? MATCH_ROLES : []).find(r => r.id === k);
         return `<span style="font-family:var(--font-mono);font-size:8px;padding:2px 6px;background:var(--bg3);border:1px solid var(--border);border-radius:5px;color:var(--text2)">${role ? role.icon + ' ' + role.label : k}</span>`;
       }).join('') : '';
 
+      const reportPlanInfo = typeof getEffectivePlanForUser === 'function' ? getEffectivePlanForUser(talent || uid) : { plan: talent?.plan || 'free' };
+      const reportChipHtml = typeof renderPlanChip === 'function' ? renderPlanChip(reportPlanInfo, 'inline') : '';
+
       return `<div class="match-sent-item" style="padding:12px 0;cursor:pointer" onclick="matchViewTalent('${uid}')">
         <div class="match-sent-av" style="background:linear-gradient(135deg,var(--a1),var(--a2));flex-shrink:0">${avHtml}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-weight:700;font-size:13px;margin-bottom:3px;display:flex;align-items:center;gap:5px;flex-wrap:wrap">${window.escHtml(name)}${renderPlanInlineChip(talent?.plan)}</div>
+          <div style="font-weight:700;font-size:13px;margin-bottom:3px;display:flex;align-items:center;gap:5px;flex-wrap:wrap">${window.escHtml(name)}${reportChipHtml}</div>
           <div style="display:flex;gap:4px;flex-wrap:wrap">${skillTags}</div>
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
@@ -1241,7 +1251,7 @@ async function matchRenderTeamReceivedInterests() {
         </div>
       </div>`;
     }).join('');
-  } catch(e) {
+  } catch (e) {
     body.innerHTML = `<div class="match-empty-state"><div>Erro: ${window.escHtml(e.message)}</div></div>`;
   }
 }
@@ -1281,23 +1291,26 @@ async function matchRenderTeamSentInterests() {
     }
 
     body.innerHTML = items.map(item => {
-      const name    = item.toUserName  || 'Artista';
-      const photo   = item.toUserPhoto || '';
-      const uid     = item.toUserUid   || '';
-      const avHtml  = photo
+      const name = item.toUserName || 'Artista';
+      const photo = item.toUserPhoto || '';
+      const uid = item.toUserUid || '';
+      const avHtml = photo
         ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
-        : `<span style="font-weight:800;font-size:15px">${(name[0]||'?').toUpperCase()}</span>`;
+        : `<span style="font-weight:800;font-size:15px">${(name[0] || '?').toUpperCase()}</span>`;
 
       const talent = _matchAllTalents.find(x => (x.uid || x.id) === uid);
-      const skillTags = talent ? Object.keys(talent.skills || {}).slice(0,3).map(k => {
+      const skillTags = talent ? Object.keys(talent.skills || {}).slice(0, 3).map(k => {
         const role = (typeof MATCH_ROLES !== 'undefined' ? MATCH_ROLES : []).find(r => r.id === k);
         return `<span style="font-family:var(--font-mono);font-size:8px;padding:2px 6px;background:var(--bg3);border:1px solid var(--border);border-radius:5px;color:var(--text2)">${role ? role.icon + ' ' + role.label : k}</span>`;
       }).join('') : '';
 
+      const sentPlanInfo = typeof getEffectivePlanForUser === 'function' ? getEffectivePlanForUser(talent || uid) : { plan: talent?.plan || 'free' };
+      const sentChipHtml = typeof renderPlanChip === 'function' ? renderPlanChip(sentPlanInfo, 'inline') : '';
+
       return `<div class="match-sent-item" style="padding:12px 0;cursor:pointer" onclick="matchViewTalent('${uid}')">
         <div class="match-sent-av" style="background:linear-gradient(135deg,var(--a1),var(--a2));flex-shrink:0">${avHtml}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-weight:700;font-size:13px;margin-bottom:3px;display:flex;align-items:center;gap:5px;flex-wrap:wrap">${window.escHtml(name)}${renderPlanInlineChip(talent?.plan)}</div>
+          <div style="font-weight:700;font-size:13px;margin-bottom:3px;display:flex;align-items:center;gap:5px;flex-wrap:wrap">${window.escHtml(name)}${sentChipHtml}</div>
           <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px">${skillTags}</div>
           <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">AGUARDANDO RESPOSTA</div>
         </div>
@@ -1307,7 +1320,7 @@ async function matchRenderTeamSentInterests() {
         </button>
       </div>`;
     }).join('');
-  } catch(e) {
+  } catch (e) {
     body.innerHTML = `<div class="match-empty-state"><div>Erro: ${window.escHtml(e.message)}</div></div>`;
   }
 }
@@ -1344,15 +1357,15 @@ async function matchRenderTeamMatchesInbox() {
       return;
     }
 
-    const team = (window._myTeams||[]).find(t => t.id === window._currentTeamId);
+    const team = (window._myTeams || []).find(t => t.id === window._currentTeamId);
     const isOwner = team?.members?.find?.(mb => mb.uid === window._matchGetUser?.uid)?.role === 'owner';
 
     body.innerHTML = items.map(m => {
-      const name  = m.userName  || 'Artista';
+      const name = m.userName || 'Artista';
       const photo = m.userPhoto || '';
       const avHtml = photo
         ? `<img src="${photo}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
-        : `<span style="font-weight:800;font-size:18px">${(name[0]||'?').toUpperCase()}</span>`;
+        : `<span style="font-weight:800;font-size:18px">${(name[0] || '?').toUpperCase()}</span>`;
 
       return `<div class="match-card-item">
         <div class="match-card-pair">
@@ -1368,24 +1381,24 @@ async function matchRenderTeamMatchesInbox() {
           <button class="match-btn-chat" onclick="matchSwitchView('matches');setTimeout(()=>matchOpenChatInPanel('${m.id}','team'),200)">💬 ABRIR CHAT</button>
           ${isOwner && !m.inviteSent ? `<button class="match-btn-invite" onclick="matchSendInvite('${m.id}')">📨 CONVIDAR</button>` : ''}
           ${m.inviteSent ? `<span style="font-family:var(--font-mono);font-size:9px;color:var(--green)">✅ CONVITE ENVIADO</span>` : ''}
-          <button class="match-btn-decline" style="font-size:9px;padding:5px 10px" onclick="matchCancelMatch('${m.id}','${m.teamId||''}','${m.userUid||''}','${window.escHtml(name)}')">✕ CANCELAR</button>
+          <button class="match-btn-decline" style="font-size:9px;padding:5px 10px" onclick="matchCancelMatch('${m.id}','${m.teamId || ''}','${m.userUid || ''}','${window.escHtml(name)}')">✕ CANCELAR</button>
         </div>
       </div>`;
     }).join('');
-  } catch(e) {
+  } catch (e) {
     body.innerHTML = `<div class="match-empty-state"><div>Erro: ${window.escHtml(e.message)}</div></div>`;
   }
 }
 
 // ── Equipe aceita interesse de artista → cria match ───────────────────────────
-window.matchTeamAcceptArtistInterest = async function(interestId, artistUid, artistName, artistPhoto) {
+window.matchTeamAcceptArtistInterest = async function (interestId, artistUid, artistName, artistPhoto) {
   if (!window._currentTeamId || !window._matchGetUser) return;
   const team = (window._myTeams || []).find(t => t.id === window._currentTeamId);
-  const teamName  = team?.name  || 'Equipe';
+  const teamName = team?.name || 'Equipe';
   const teamPhoto = team?.photo || '';
   try {
     // 1. Marca o interesse do artista como accepted imediatamente
-    try { await window.updateDoc(window.doc(window.db, 'interests', interestId), { status: 'accepted' }); } catch(e) {}
+    try { await window.updateDoc(window.doc(window.db, 'interests', interestId), { status: 'accepted' }); } catch (e) { }
 
     // 2. Busca o interesse reverso (team_to_artist) se existir
     let reverseId = null;
@@ -1398,7 +1411,7 @@ window.matchTeamAcceptArtistInterest = async function(interestId, artistUid, art
       const revSnap = await window.getDocs(revQ);
       const rev = revSnap.docs.find(d => d.data().toUserUid === artistUid && d.data().type === 'team_to_artist');
       if (rev) reverseId = rev.id;
-    } catch(e) {}
+    } catch (e) { }
 
     // 3. Cria o match (_matchCreateMatch atualiza ambos os interesses para matched)
     const _createdMatchId3 = await _matchCreateMatch(artistUid, artistName, artistPhoto, reverseId || interestId, interestId);
@@ -1413,23 +1426,23 @@ window.matchTeamAcceptArtistInterest = async function(interestId, artistUid, art
       const _cnt = Object.keys(_matchConfirmed).length;
       if (_cnt > 0) { _matchBadge.style.display = ''; _matchBadge.textContent = _cnt; }
     }
-  } catch(e) {
+  } catch (e) {
     window.toast('Erro ao aceitar interesse: ' + e.message, 'error');
   }
 };
 
 // ── Equipe recusa interesse de artista ────────────────────────────────────────
-window.matchTeamDeclineArtistInterest = async function(interestId) {
+window.matchTeamDeclineArtistInterest = async function (interestId) {
   try {
     await window.updateDoc(window.doc(window.db, 'interests', interestId), { status: 'declined' });
     window.toast('Interesse recusado.');
     matchRenderInbox();
-  } catch(e) {
+  } catch (e) {
     window.toast('Erro ao recusar: ' + e.message, 'error');
   }
 };
 
-window.matchInboxTab = function(tab, btn) {
+window.matchInboxTab = function (tab, btn) {
   _matchInboxTab = tab;
   document.querySelectorAll('.match-inbox-tab').forEach(t => t.classList.remove('match-itab-active'));
   btn?.classList.add('match-itab-active');
@@ -1469,7 +1482,7 @@ async function matchRenderReceived() {
     if (unreadItems.length) {
       setTimeout(async () => {
         for (const item of unreadItems) {
-          try { await window.updateDoc(window.doc(window.db, 'interests', item.id), { read: true }); } catch(e) {}
+          try { await window.updateDoc(window.doc(window.db, 'interests', item.id), { read: true }); } catch (e) { }
         }
       }, 1500);
     }
@@ -1477,25 +1490,25 @@ async function matchRenderReceived() {
     body.innerHTML = items.map((item, idx) => {
       const isNew = !item.read && idx < 10; // NOVO = nao lido (campo read:true do Firestore)
       const avStyle = `background:linear-gradient(135deg,var(--a1),var(--a2))`;
-      const initials = (item.fromTeamName||'?')[0].toUpperCase();
+      const initials = (item.fromTeamName || '?')[0].toUpperCase();
       const avHtml = item.fromTeamPhoto
         ? `<img src="${item.fromTeamPhoto}" style="width:100%;height:100%;object-fit:cover;border-radius:10px">`
         : initials;
-      return `<div class="match-interest-item ${isNew?'new':''}" id="minterest-${item.id}">
+      return `<div class="match-interest-item ${isNew ? 'new' : ''}" id="minterest-${item.id}">
         <div class="match-interest-av" style="${avStyle};border-radius:10px">${avHtml}</div>
         <div class="match-interest-info">
-          <div class="match-interest-name">${window.escHtml(item.fromTeamName||'Equipe')}</div>
-          <div class="match-interest-meta">${isNew?'NOVO • ':''} INTERESSE RECEBIDO</div>
+          <div class="match-interest-name">${window.escHtml(item.fromTeamName || 'Equipe')}</div>
+          <div class="match-interest-meta">${isNew ? 'NOVO • ' : ''} INTERESSE RECEBIDO</div>
           <div class="match-interest-actions">
-            <button class="match-btn-accept" onclick="matchAcceptInterest('${item.id}','${window.escHtml(item.fromTeamName||'')}','${item.fromTeamPhoto||''}','${item.fromTeamId||''}','${item.senderUid||''}')">✅ ACEITAR</button>
+            <button class="match-btn-accept" onclick="matchAcceptInterest('${item.id}','${window.escHtml(item.fromTeamName || '')}','${item.fromTeamPhoto || ''}','${item.fromTeamId || ''}','${item.senderUid || ''}')">✅ ACEITAR</button>
             <button class="match-btn-decline" onclick="matchDeclineInterest('${item.id}')">✕ RECUSAR</button>
-            <button class="match-btn-view" onclick="matchShowTeamPreview('${item.fromTeamId||''}','${window.escHtml(item.fromTeamName||'')}','${item.fromTeamPhoto||''}')">👥 VER EQUIPE</button>
+            <button class="match-btn-view" onclick="matchShowTeamPreview('${item.fromTeamId || ''}','${window.escHtml(item.fromTeamName || '')}','${item.fromTeamPhoto || ''}')">👥 VER EQUIPE</button>
           </div>
         </div>
       </div>`;
     }).join('');
 
-  } catch(e) {
+  } catch (e) {
     body.innerHTML = `<div class="match-empty-state"><div>Erro: ${e.message}</div></div>`;
   }
 }
@@ -1529,11 +1542,11 @@ async function matchRenderArtistSent() {
       return;
     }
     body.innerHTML = items.map(item => {
-      const teamId    = item.toTeamId    || '';
-      const teamName  = item.toTeamName  || 'Equipe';
+      const teamId = item.toTeamId || '';
+      const teamName = item.toTeamName || 'Equipe';
       const teamPhoto = item.toTeamPhoto || '';
-      const initials  = (teamName[0] || '?').toUpperCase();
-      const avHtml    = teamPhoto
+      const initials = (teamName[0] || '?').toUpperCase();
+      const avHtml = teamPhoto
         ? `<img src="${teamPhoto}" style="width:100%;height:100%;object-fit:cover;border-radius:10px">`
         : initials;
       const isMatch = item.status === 'matched';
@@ -1543,16 +1556,16 @@ async function matchRenderArtistSent() {
           <div style="font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${window.escHtml(teamName)}</div>
           <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">${isMatch ? '💛 MATCH CONFIRMADO' : 'INTERESSE ENVIADO'}</div>
         </div>
-        <span class="match-sent-status ${isMatch?'matched':'pending'}">${isMatch ? '💛 MATCH' : 'PENDENTE'}</span>
+        <span class="match-sent-status ${isMatch ? 'matched' : 'pending'}">${isMatch ? '💛 MATCH' : 'PENDENTE'}</span>
       </div>`;
     }).join('');
-  } catch(e) {
+  } catch (e) {
     body.innerHTML = `<div class="match-empty-state"><div>Erro: ${e.message}</div></div>`;
   }
 }
 
 async function matchRenderArtistMatches() {
-  const body  = document.getElementById('match-inbox-body');
+  const body = document.getElementById('match-inbox-body');
   const badge = document.getElementById('match-matches-badge');
   if (!body || !window._matchGetUser) return;
   body.innerHTML = `<div class="match-empty-state"><div style="font-size:28px;margin-bottom:8px">⏳</div><div>CARREGANDO...</div></div>`;
@@ -1584,7 +1597,7 @@ async function matchRenderArtistMatches() {
           if (!items.find(x => x.id === d.id))
             items.push({ id: d.id, ...d.data(), _perspective: 'team' });
         });
-      } catch(e) { /* best-effort: equipe sem memberUids ou sem permissão */ }
+      } catch (e) { /* best-effort: equipe sem memberUids ou sem permissão */ }
     }
 
     // Deduplica por teamId — mantém só o mais recente (maior createdAt)
@@ -1626,7 +1639,7 @@ async function matchRenderArtistMatches() {
             const t2 = await window.getDoc(window.doc(window.db, 'teams', tid));
             if (t2.exists()) items.forEach(m => { if (m.teamId === tid) m.teamName = m.teamName || t2.data().name || ''; });
           }
-        } catch(e) { /* best-effort por team */ }
+        } catch (e) { /* best-effort por team */ }
       }));
     }
 
@@ -1634,11 +1647,11 @@ async function matchRenderArtistMatches() {
       // v5.20.3 — detecta perspectiva para mostrar a "outra parte" corretamente:
       // artista → mostra equipe (teamName/teamPhoto); equipe → mostra artista (userName/userPhoto)
       const isTeamPerspective = m._perspective === 'team' && m.userUid !== window._matchGetUser?.uid;
-      const name    = isTeamPerspective ? (m.userName  || 'Artista') : (m.teamName  || 'Equipe');
-      const photo   = isTeamPerspective ? (m.userPhoto || '')        : (m.teamPhoto || '');
+      const name = isTeamPerspective ? (m.userName || 'Artista') : (m.teamName || 'Equipe');
+      const photo = isTeamPerspective ? (m.userPhoto || '') : (m.teamPhoto || '');
       const subLabel = isTeamPerspective ? 'MATCH — PERSPECTIVA EQUIPE' : 'MATCH CONFIRMADO';
       const initial = (name[0] || '?').toUpperCase();
-      const avHtml  = photo
+      const avHtml = photo
         ? `<img src="${photo}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:10px">`
         : `<span style="font-weight:800;font-size:18px">${initial}</span>`;
 
@@ -1653,19 +1666,19 @@ async function matchRenderArtistMatches() {
           <span class="match-badge">MATCH</span>
         </div>
         <div class="match-card-actions">
-          <button class="match-btn-chat" onclick="matchSwitchView('matches');setTimeout(()=>matchOpenChatInPanel('${m.id}','${m._perspective||'artist'}'),200)">💬 ABRIR CHAT</button>
-          <button class="match-btn-decline" style="font-size:9px;padding:5px 10px" onclick="matchCancelMatch('${m.id}','${m.teamId||''}','${m.userUid||''}','${window.escHtml(name)}')">✕ CANCELAR</button>
+          <button class="match-btn-chat" onclick="matchSwitchView('matches');setTimeout(()=>matchOpenChatInPanel('${m.id}','${m._perspective || 'artist'}'),200)">💬 ABRIR CHAT</button>
+          <button class="match-btn-decline" style="font-size:9px;padding:5px 10px" onclick="matchCancelMatch('${m.id}','${m.teamId || ''}','${m.userUid || ''}','${window.escHtml(name)}')">✕ CANCELAR</button>
         </div>
       </div>`;
     }).join('');
 
-  } catch(e) {
+  } catch (e) {
     body.innerHTML = `<div class="match-empty-state"><div>Erro: ${window.escHtml(e.message)}</div></div>`;
   }
 }
 
 // ── Accept / Decline Interest ─────────────────────────────────────────────────
-window.matchAcceptInterest = async function(intId, teamName, teamPhoto, teamId, teamOwnerId) {
+window.matchAcceptInterest = async function (intId, teamName, teamPhoto, teamId, teamOwnerId) {
   const item = document.getElementById('minterest-' + intId);
 
   // FASE 2B — verifica limite de conexões antes de qualquer escrita
@@ -1688,15 +1701,15 @@ window.matchAcceptInterest = async function(intId, teamName, teamPhoto, teamId, 
     if (window._matchGetUser) {
       const p = window._myTalentProfile;
       const matchData = {
-        userUid:     window._matchGetUser.uid,
-        userName:    p?.name || '',
-        userPhoto:   p?.photo || '',
-        teamId:      teamId,
-        teamName:    teamName,
-        teamPhoto:   teamPhoto,
+        userUid: window._matchGetUser.uid,
+        userName: p?.name || '',
+        userPhoto: p?.photo || '',
+        teamId: teamId,
+        teamName: teamName,
+        teamPhoto: teamPhoto,
         teamOwnerId: teamOwnerId || '',
-        createdAt:   new Date().toISOString(),
-        intId:       intId,
+        createdAt: new Date().toISOString(),
+        intId: intId,
       };
       const matchId = `match_${teamId}_${window._matchGetUser.uid}`;
       await window.setDoc(window.doc(window.db, 'matches', matchId), matchData);
@@ -1710,7 +1723,7 @@ window.matchAcceptInterest = async function(intId, teamName, teamPhoto, teamId, 
         gridBtn.className = 'match-btn-interest matched';
         gridBtn.textContent = '💛 MATCH! VER';
         gridBtn.disabled = false;
-        gridBtn.onclick = function(e) { matchSwitchView('matches'); e.stopPropagation(); };
+        gridBtn.onclick = function (e) { matchSwitchView('matches'); e.stopPropagation(); };
       }
     }
 
@@ -1724,23 +1737,23 @@ window.matchAcceptInterest = async function(intId, teamName, teamPhoto, teamId, 
     matchShowCelebration(teamName, teamPhoto, window._myTalentProfile?.name || '', window._myTalentProfile?.photo || '', `match_${teamId}_${window._matchGetUser?.uid}`);
     window.toast('🎉 Match com ' + teamName + '!');
 
-  } catch(e) {
+  } catch (e) {
     window.toast('Erro: ' + e.message, 'error');
     if (item) { item.style.opacity = ''; item.style.transform = ''; }
   }
 };
 
-window.matchDeclineInterest = async function(intId) {
+window.matchDeclineInterest = async function (intId) {
   const item = document.getElementById('minterest-' + intId);
   if (item) { item.style.opacity = '0'; item.style.transform = 'translateX(-20px)'; item.style.transition = 'all .3s'; setTimeout(() => item.remove(), 300); }
-  try { await window.updateDoc(window.doc(window.db, 'interests', intId), { status: 'declined' }); } catch(e) {}
+  try { await window.updateDoc(window.doc(window.db, 'interests', intId), { status: 'declined' }); } catch (e) { }
   window.toast('Interesse recusado.', 'info');
 };
 
 // ── Team preview (artist view, right panel) ───────────────────────────────────
 // v5.20.2 — Preview expandido: busca dados reais de team_profiles + teams
 //           exibindo membros reais, projetos publicados, gêneros e atividade recente
-window.matchShowTeamPreview = async function(teamId, teamName, teamPhoto) {
+window.matchShowTeamPreview = async function (teamId, teamName, teamPhoto) {
   const panel = document.getElementById('match-team-preview-body');
   const title = document.getElementById('match-preview-team-name');
   if (!panel) return;
@@ -1774,24 +1787,24 @@ window.matchShowTeamPreview = async function(teamId, teamName, teamPhoto) {
           if (s === 'published' || s === 'lançado') publishedCount++;
           else if (s === 'active' || s === 'ativo') activeCount++;
         });
-      } catch(e) { /* best-effort */ }
+      } catch (e) { /* best-effort */ }
     }
 
     // Prioriza dados do team_profiles, fallback para _matchAllTeams (já carregado)
     const cached = _matchAllTeams.find(x => x.id === teamId);
-    const resolvedName    = teamData?.name    || teamsData?.name  || cached?.name    || teamName  || 'Equipe';
-    const resolvedPhoto   = teamData?.photo   || teamsData?.photo || cached?.photo   || teamPhoto || '';
-    const resolvedBanner  = teamData?.banner  || cached?.banner  || '';
+    const resolvedName = teamData?.name || teamsData?.name || cached?.name || teamName || 'Equipe';
+    const resolvedPhoto = teamData?.photo || teamsData?.photo || cached?.photo || teamPhoto || '';
+    const resolvedBanner = teamData?.banner || cached?.banner || '';
     const resolvedTagline = teamData?.tagline || cached?.tagline || '';
-    const resolvedBio     = teamData?.bio     || teamData?.description || teamsData?.description || cached?.bio || '';
-    const resolvedGenres  = teamData?.genres  || teamsData?.genres || cached?.genres || [];
+    const resolvedBio = teamData?.bio || teamData?.description || teamsData?.description || cached?.bio || '';
+    const resolvedGenres = teamData?.genres || teamsData?.genres || cached?.genres || [];
     const resolvedLocation = teamData?.location || teamsData?.location || '';
     // v5.20.3 — campos adicionais sincronizados com o formulário de edição de perfil
-    const resolvedStory      = teamData?.story || '';
-    const resolvedStage      = teamData?.stage || '';
+    const resolvedStory = teamData?.story || '';
+    const resolvedStage = teamData?.stage || '';
     const resolvedFoundedYear = teamData?.foundedYear || teamData?.year || '';
-    const resolvedLinks      = teamData?.links || {};
-    const resolvedStats      = teamData?.stats || {};
+    const resolvedLinks = teamData?.links || {};
+    const resolvedStats = teamData?.stats || {};
     const resolvedCategories = teamData?.categories || [];
 
     // Membros reais da equipe (array de objetos com name, photo, role)
@@ -1799,8 +1812,8 @@ window.matchShowTeamPreview = async function(teamId, teamName, teamPhoto) {
       : Array.isArray(teamData?.members) ? teamData.members : [];
     const memberCount = members.length || (typeof teamsData?.members === 'object' ? Object.keys(teamsData.members || {}).length : 0) || '—';
 
-    const initials  = (resolvedName[0] || '?').toUpperCase();
-    const avHtml    = resolvedPhoto
+    const initials = (resolvedName[0] || '?').toUpperCase();
+    const avHtml = resolvedPhoto
       ? `<img src="${resolvedPhoto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
       : `<span style="font-weight:800;font-size:18px;color:#fff">${initials}</span>`;
 
@@ -1809,12 +1822,12 @@ window.matchShowTeamPreview = async function(teamId, teamName, teamPhoto) {
       : 'linear-gradient(135deg,var(--a1),var(--a2))';
 
     const vacancies = teamData?.vacancies || teamsData?.vacancies || cached?.vacancies || {};
-    const totalVagas = Object.values(vacancies).reduce((s,v)=>s+Number(v||0),0);
+    const totalVagas = Object.values(vacancies).reduce((s, v) => s + Number(v || 0), 0);
 
     // Gêneros como tags
     const genreTags = Array.isArray(resolvedGenres) && resolvedGenres.length
       ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px">
-          ${resolvedGenres.slice(0,5).map(g => `<span style="font-family:var(--font-mono);font-size:8px;padding:2px 7px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--a1)">${window.escHtml(String(g))}</span>`).join('')}
+          ${resolvedGenres.slice(0, 5).map(g => `<span style="font-family:var(--font-mono);font-size:8px;padding:2px 7px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--a1)">${window.escHtml(String(g))}</span>`).join('')}
          </div>`
       : '';
 
@@ -1822,18 +1835,18 @@ window.matchShowTeamPreview = async function(teamId, teamName, teamPhoto) {
     const memberGrid = members.length
       ? `<div class="match-section-label" style="margin-top:14px;margin-bottom:8px">MEMBROS (${memberCount})</div>
          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
-           ${members.slice(0,6).map(mb => {
-             const mname = mb.name || mb.displayName || '?';
-             const mphoto = mb.photo || mb.photoURL || '';
-             const mrole  = mb.role  || mb.artRole   || '';
-             return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;width:42px">
+           ${members.slice(0, 6).map(mb => {
+        const mname = mb.name || mb.displayName || '?';
+        const mphoto = mb.photo || mb.photoURL || '';
+        const mrole = mb.role || mb.artRole || '';
+        return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;width:42px">
                <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
-                 ${mphoto ? `<img src="${mphoto}" style="width:100%;height:100%;object-fit:cover">` : `<span style="font-size:12px;font-weight:800;color:#fff">${(mname[0]||'?').toUpperCase()}</span>`}
+                 ${mphoto ? `<img src="${mphoto}" style="width:100%;height:100%;object-fit:cover">` : `<span style="font-size:12px;font-weight:800;color:#fff">${(mname[0] || '?').toUpperCase()}</span>`}
                </div>
                <div style="font-size:8px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:42px;color:var(--text2)">${window.escHtml(mname.split(' ')[0])}</div>
              </div>`;
-           }).join('')}
-           ${members.length > 6 ? `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;width:42px"><div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:9px;color:var(--text3)">+${members.length-6}</div></div>` : ''}
+      }).join('')}
+           ${members.length > 6 ? `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;width:42px"><div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:9px;color:var(--text3)">+${members.length - 6}</div></div>` : ''}
          </div>`
       : '';
 
@@ -1857,28 +1870,28 @@ window.matchShowTeamPreview = async function(teamId, teamName, teamPhoto) {
         ${resolvedStats?.views ? `<div class="match-stat-pill"><div class="match-stat-val" style="color:var(--a1)">${window.escHtml(String(resolvedStats.views))}</div><div class="match-stat-lbl">VIEWS</div></div>` : ''}
         ${resolvedStats?.followers ? `<div class="match-stat-pill"><div class="match-stat-val" style="color:var(--a2)">${window.escHtml(String(resolvedStats.followers))}</div><div class="match-stat-lbl">SEGUIDORES</div></div>` : ''}
       </div>
-      ${resolvedCategories.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px">${resolvedCategories.slice(0,6).map(c => `<span style="font-family:var(--font-mono);font-size:8px;padding:2px 7px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text2)">${window.escHtml(String(c))}</span>`).join('')}</div>` : ''}
+      ${resolvedCategories.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px">${resolvedCategories.slice(0, 6).map(c => `<span style="font-family:var(--font-mono);font-size:8px;padding:2px 7px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text2)">${window.escHtml(String(c))}</span>`).join('')}</div>` : ''}
       ${memberGrid}
-      ${(resolvedLinks.youtube||resolvedLinks.spotify||resolvedLinks.instagram||resolvedLinks.tiktok||resolvedLinks.discord||resolvedLinks.site) ? `
+      ${(resolvedLinks.youtube || resolvedLinks.spotify || resolvedLinks.instagram || resolvedLinks.tiktok || resolvedLinks.discord || resolvedLinks.site) ? `
         <div class="match-section-label" style="margin-top:4px;margin-bottom:8px">LINKS</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
-          ${resolvedLinks.youtube   ? `<a href="${window.escHtml(resolvedLinks.youtube)}"   target="_blank" rel="noopener" style="font-family:var(--font-mono);font-size:9px;padding:4px 10px;background:rgba(255,0,0,0.08);border:1px solid rgba(255,0,0,0.2);border-radius:8px;color:#ff4444;text-decoration:none">▶ YouTube</a>` : ''}
-          ${resolvedLinks.spotify   ? `<a href="${window.escHtml(resolvedLinks.spotify)}"   target="_blank" rel="noopener" style="font-family:var(--font-mono);font-size:9px;padding:4px 10px;background:rgba(30,215,96,0.08);border:1px solid rgba(30,215,96,0.2);border-radius:8px;color:#1ed760;text-decoration:none">♫ Spotify</a>` : ''}
+          ${resolvedLinks.youtube ? `<a href="${window.escHtml(resolvedLinks.youtube)}"   target="_blank" rel="noopener" style="font-family:var(--font-mono);font-size:9px;padding:4px 10px;background:rgba(255,0,0,0.08);border:1px solid rgba(255,0,0,0.2);border-radius:8px;color:#ff4444;text-decoration:none">▶ YouTube</a>` : ''}
+          ${resolvedLinks.spotify ? `<a href="${window.escHtml(resolvedLinks.spotify)}"   target="_blank" rel="noopener" style="font-family:var(--font-mono);font-size:9px;padding:4px 10px;background:rgba(30,215,96,0.08);border:1px solid rgba(30,215,96,0.2);border-radius:8px;color:#1ed760;text-decoration:none">♫ Spotify</a>` : ''}
           ${resolvedLinks.instagram ? `<a href="${window.escHtml(resolvedLinks.instagram)}" target="_blank" rel="noopener" style="font-family:var(--font-mono);font-size:9px;padding:4px 10px;background:rgba(225,48,108,0.08);border:1px solid rgba(225,48,108,0.2);border-radius:8px;color:#e1306c;text-decoration:none">📷 Instagram</a>` : ''}
-          ${resolvedLinks.tiktok    ? `<a href="${window.escHtml(resolvedLinks.tiktok)}"    target="_blank" rel="noopener" style="font-family:var(--font-mono);font-size:9px;padding:4px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;color:var(--text2);text-decoration:none">♪ TikTok</a>` : ''}
-          ${resolvedLinks.discord   ? `<a href="${window.escHtml(resolvedLinks.discord)}"   target="_blank" rel="noopener" style="font-family:var(--font-mono);font-size:9px;padding:4px 10px;background:rgba(88,101,242,0.08);border:1px solid rgba(88,101,242,0.2);border-radius:8px;color:#5865f2;text-decoration:none">💬 Discord</a>` : ''}
-          ${resolvedLinks.site      ? `<a href="${window.escHtml(resolvedLinks.site)}"      target="_blank" rel="noopener" style="font-family:var(--font-mono);font-size:9px;padding:4px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--a1);text-decoration:none">🌐 Site</a>` : ''}
+          ${resolvedLinks.tiktok ? `<a href="${window.escHtml(resolvedLinks.tiktok)}"    target="_blank" rel="noopener" style="font-family:var(--font-mono);font-size:9px;padding:4px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;color:var(--text2);text-decoration:none">♪ TikTok</a>` : ''}
+          ${resolvedLinks.discord ? `<a href="${window.escHtml(resolvedLinks.discord)}"   target="_blank" rel="noopener" style="font-family:var(--font-mono);font-size:9px;padding:4px 10px;background:rgba(88,101,242,0.08);border:1px solid rgba(88,101,242,0.2);border-radius:8px;color:#5865f2;text-decoration:none">💬 Discord</a>` : ''}
+          ${resolvedLinks.site ? `<a href="${window.escHtml(resolvedLinks.site)}"      target="_blank" rel="noopener" style="font-family:var(--font-mono);font-size:9px;padding:4px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--a1);text-decoration:none">🌐 Site</a>` : ''}
         </div>
       ` : ''}
       ${Object.keys(vacancies).length ? `
         <div class="match-section-label" style="margin-top:4px">VAGAS ABERTAS</div>
         <div style="margin-top:8px">
         ${Object.keys(vacancies).map(k => {
-          const role = (typeof MATCH_ROLES !== 'undefined' ? MATCH_ROLES : []).find(r => r.id === k);
-          if (!role || !Number(vacancies[k])) return '';
-          const mySkills = window._myTalentProfile?.skills || {};
-          const isSkillMatch = !!mySkills[k];
-          return `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:${isSkillMatch?'rgba(255,60,142,.08)':'var(--bg3)'};border:1px solid ${isSkillMatch?'rgba(255,60,142,.25)':'var(--border)'};border-radius:10px;margin-bottom:6px">
+      const role = (typeof MATCH_ROLES !== 'undefined' ? MATCH_ROLES : []).find(r => r.id === k);
+      if (!role || !Number(vacancies[k])) return '';
+      const mySkills = window._myTalentProfile?.skills || {};
+      const isSkillMatch = !!mySkills[k];
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:${isSkillMatch ? 'rgba(255,60,142,.08)' : 'var(--bg3)'};border:1px solid ${isSkillMatch ? 'rgba(255,60,142,.25)' : 'var(--border)'};border-radius:10px;margin-bottom:6px">
             <div style="display:flex;align-items:center;gap:8px">
               <span style="font-size:15px">${role.icon}</span>
               <div>
@@ -1888,18 +1901,18 @@ window.matchShowTeamPreview = async function(teamId, teamName, teamPhoto) {
             </div>
             <span style="font-family:var(--font-mono);font-size:8px;color:var(--text3)">${vacancies[k]} VAGA(S)</span>
           </div>`;
-        }).join('')}
+    }).join('')}
         </div>
       ` : ''}
     `;
-  } catch(e) {
+  } catch (e) {
     panel.innerHTML = `<div class="match-empty-state"><div>Não foi possível carregar o perfil da equipe.</div></div>`;
   }
 };
 
 // ── All Matches view ──────────────────────────────────────────────────────────
-window.matchRenderMatches = async function() {
-  const list  = document.getElementById('match-all-matches');
+window.matchRenderMatches = async function () {
+  const list = document.getElementById('match-all-matches');
   const badge = document.getElementById('match-total-badge');
   if (!list || !window._matchGetUser) return;
   list.innerHTML = `<div class="match-empty-state"><div style="font-size:28px;margin-bottom:8px">⏳</div><div>CARREGANDO...</div></div>`;
@@ -1914,7 +1927,7 @@ window.matchRenderMatches = async function() {
         const q = window.query(window.collection(window.db, 'matches'), window.where('teamId', '==', window._currentTeamId), window.limit(30));
         const snap = await window.getDocs(q);
         items = snap.docs.map(d => ({ id: d.id, ...d.data(), perspective: 'team' }));
-      } catch(e) { /* ignora erro de permissão da query de team */ }
+      } catch (e) { /* ignora erro de permissão da query de team */ }
     }
     // Query do artista: sempre roda (regra simples: userUid == auth.uid)
     try {
@@ -1923,7 +1936,7 @@ window.matchRenderMatches = async function() {
       snap2.docs.forEach(d => {
         if (!items.find(x => x.id === d.id)) items.push({ id: d.id, ...d.data(), perspective: 'artist' });
       });
-    } catch(e) { /* ignora erro da query de artista */ }
+    } catch (e) { /* ignora erro da query de artista */ }
 
     if (badge) badge.textContent = items.length + ' MATCH' + (items.length !== 1 ? 'ES' : '');
 
@@ -1977,22 +1990,22 @@ window.matchRenderMatches = async function() {
                 items.forEach(m => { if (m.teamId === tid) m.teamName = m.teamName || td2.name || ''; });
               }
             }
-          } catch(e) { /* best-effort por team */ }
+          } catch (e) { /* best-effort por team */ }
         }));
-      } catch(e) { /* best-effort geral */ }
+      } catch (e) { /* best-effort geral */ }
     }
 
     list.innerHTML = items.map(m => {
       const isTeam = m.perspective === 'team';
-      const name   = isTeam ? (m.userName||m.talentName||'Artista') : (m.teamName||'Equipe');
-      const photo  = isTeam ? (m.userPhoto||m.talentPhoto||'') : (m.teamPhoto||'');
-      const avHtml = photo ? `<img src="${photo}" alt="" style="width:100%;height:100%;object-fit:cover">` : (name[0]||'?').toUpperCase();
-      const isOwner = (window._myTeams||[]).find(t=>t.id===window._currentTeamId)?.members?.find?.(mb=>mb.uid===window._matchGetUser?.uid)?.role === 'owner';
+      const name = isTeam ? (m.userName || m.talentName || 'Artista') : (m.teamName || 'Equipe');
+      const photo = isTeam ? (m.userPhoto || m.talentPhoto || '') : (m.teamPhoto || '');
+      const avHtml = photo ? `<img src="${photo}" alt="" style="width:100%;height:100%;object-fit:cover">` : (name[0] || '?').toUpperCase();
+      const isOwner = (window._myTeams || []).find(t => t.id === window._currentTeamId)?.members?.find?.(mb => mb.uid === window._matchGetUser?.uid)?.role === 'owner';
       // For artist perspective we chat with teamOwnerId; for team we chat with userUid
       const chatUid = isTeam ? m.userUid : (m.teamOwnerId || m.teamId || '');
       return `<div class="match-card-item">
         <div class="match-card-pair">
-          <div class="match-card-av ${isTeam?'':'team'}">${avHtml}</div>
+          <div class="match-card-av ${isTeam ? '' : 'team'}">${avHtml}</div>
           <span style="font-size:16px">💛</span>
           <div class="match-card-info">
             <div class="match-card-title">${window.escHtml(name)}</div>
@@ -2001,19 +2014,19 @@ window.matchRenderMatches = async function() {
           <span class="match-badge">MATCH</span>
         </div>
         <div class="match-card-actions">
-          <button class="match-btn-chat" onclick="matchOpenChatInPanel('${m.id}','${m.perspective||'artist'}')">💬 ABRIR CHAT</button>
+          <button class="match-btn-chat" onclick="matchOpenChatInPanel('${m.id}','${m.perspective || 'artist'}')">💬 ABRIR CHAT</button>
           ${isTeam && isOwner && !m.inviteSent ? `<button class="match-btn-invite" onclick="matchSendInvite('${m.id}')">📨 CONVIDAR</button>` : ''}
-          <button class="match-btn-decline" style="font-size:9px;padding:5px 10px" onclick="matchCancelMatch('${m.id}','${m.teamId||''}','${m.userUid||''}','${window.escHtml(name)}')">✕ CANCELAR</button>
+          <button class="match-btn-decline" style="font-size:9px;padding:5px 10px" onclick="matchCancelMatch('${m.id}','${m.teamId || ''}','${m.userUid || ''}','${window.escHtml(name)}')">✕ CANCELAR</button>
         </div>
       </div>`;
     }).join('');
-  } catch(e) {
+  } catch (e) {
     list.innerHTML = `<div class="match-empty-state"><div>Erro: ${e.message}</div></div>`;
   }
 };
 
 // ── View talent profile ───────────────────────────────────────────────────────
-window.matchViewTalent = async function(id) {
+window.matchViewTalent = async function (id) {
   if (typeof window.openProfilePopup !== 'function') return;
   const t = _matchAllTalents.find(x => x.id === id);
   if (!t) return;
@@ -2022,13 +2035,13 @@ window.matchViewTalent = async function(id) {
   // e busca o bannerURL do documento users/{uid} (onde ele é salvo)
   const normalized = {
     ...t,
-    name:    t.name || t.displayName || '?',
-    photo:   t.photo || t.photoURL || '',
-    bio:     t.bio || '',
-    roles:   Object.keys(t.skills || {}),
+    name: t.name || t.displayName || '?',
+    photo: t.photo || t.photoURL || '',
+    bio: t.bio || '',
+    roles: Object.keys(t.skills || {}),
     availability: t.availability || 'open',
-    uid:     t.uid || t.id,
-    id:      t.id,
+    uid: t.uid || t.id,
+    id: t.id,
     // banner do talent_profile vira bannerURL para o popup
     bannerURL: t.bannerURL || t.banner || '',
     stats: [
@@ -2036,7 +2049,7 @@ window.matchViewTalent = async function(id) {
     ],
     skillBars: Object.keys(t.skills || {}).slice(0, 4).map(r => {
       const role = (typeof MATCH_ROLES !== 'undefined' ? MATCH_ROLES : []).find(x => x.id === r);
-      return { n: role?.label || r, w: 60 + (r.charCodeAt(2) % 35), l: ['Iniciante','Médio','Avançado','Expert'][r.charCodeAt(2) % 4] };
+      return { n: role?.label || r, w: 60 + (r.charCodeAt(2) % 35), l: ['Iniciante', 'Médio', 'Avançado', 'Expert'][r.charCodeAt(2) % 4] };
     }),
     activity: [],
     badges: { earned: [], locked: [] },
@@ -2052,14 +2065,14 @@ window.matchViewTalent = async function(id) {
         // Atualiza foto também se mais recente
         if (!normalized.photo && ud.photoURL) normalized.photo = ud.photoURL;
       }
-    } catch(e) { /* ignora erro silenciosamente */ }
+    } catch (e) { /* ignora erro silenciosamente */ }
   }
 
   window.openProfilePopup(normalized, 'team');
 };
 
 // ── Open chat ─────────────────────────────────────────────────────────────────
-window.matchOpenChat = async function(matchId, uidParam, nameParam) {
+window.matchOpenChat = async function (matchId, uidParam, nameParam) {
   if (!matchId) { window.toast('Match inválido.', 'error'); return; }
   const perspectiveHint = (window._currentTeamId && !window._talentStandaloneForceArtistMode)
     ? 'team' : 'artist';
@@ -2072,10 +2085,10 @@ window.matchOpenChat = async function(matchId, uidParam, nameParam) {
 };
 
 // ── Send invite ───────────────────────────────────────────────────────────────
-window.matchSendInvite = async function(matchId) {
+window.matchSendInvite = async function (matchId) {
   if (!window._currentTeamId || !window._matchGetUser) return;
   try {
-    const team = (window._myTeams||[]).find(t => t.id === window._currentTeamId);
+    const team = (window._myTeams || []).find(t => t.id === window._currentTeamId);
     if (!team?.inviteCode) { window.toast('Código de convite não encontrado.', 'error'); return; }
 
     // Busca dados do match para saber quem é o artista
@@ -2097,19 +2110,19 @@ window.matchSendInvite = async function(matchId) {
         window.collection(window.db, 'matches', matchId, 'messages'),
         {
           senderProfileId: window._currentTeamId,  // profileId do perfil ativo = teamId
-          senderType:      'team',
-          senderId:        me.uid,                  // uid Firebase (retrocompat)
-          from:            me.uid,                  // retrocompat legado
-          text:            inviteText,
-          createdAt:       window.serverTimestamp ? window.serverTimestamp() : new Date(),
-          fromIsTeam:      true,
-          fromName:        team.name   || 'Equipe',
-          fromPhoto:       team.photo  || '',
-          teamId:          window._currentTeamId,
-          isInvite:        true,
+          senderType: 'team',
+          senderId: me.uid,                  // uid Firebase (retrocompat)
+          from: me.uid,                  // retrocompat legado
+          text: inviteText,
+          createdAt: window.serverTimestamp ? window.serverTimestamp() : new Date(),
+          fromIsTeam: true,
+          fromName: team.name || 'Equipe',
+          fromPhoto: team.photo || '',
+          teamId: window._currentTeamId,
+          isInvite: true,
         }
       );
-    } catch(e) {
+    } catch (e) {
       // Falha silenciosa na mensagem não cancela o convite
       console.warn('[matchSendInvite] Erro ao salvar msg de convite no Match Chat:', e.message);
     }
@@ -2129,37 +2142,37 @@ window.matchSendInvite = async function(matchId) {
     matchRenderMatches();
     // Atualiza Tab 2 aba Matches caso esteja aberta
     if (_matchInboxTab === 'matches') matchRenderInbox();
-  } catch(e) { window.toast('Erro ao enviar convite: ' + e.message, 'error'); }
+  } catch (e) { window.toast('Erro ao enviar convite: ' + e.message, 'error'); }
 };
 
 // ── Match Chat Inline Panel ───────────────────────────────────────────────────
 // Contexto congelado do chat: definido em matchOpenChatInPanel e lido em toda a engine.
 // Nunca modificado fora de matchOpenChatInPanel.
-window._matchPanelContext        = null;  // {matchId, activeProfileId, activeProfileType, otherProfileId, otherProfileType, otherProfileName, otherProfilePhoto, otherUid, canInvite, teamId, inviteSent}
-window._matchPanelChatUnsub      = null;  // unsubscribe do onSnapshot de mensagens
-window._matchPanelTypingTimer    = null;  // timer de "está digitando"
-window._matchPanelTypingUnsub    = null;  // unsubscribe do onSnapshot de typing
+window._matchPanelContext = null;  // {matchId, activeProfileId, activeProfileType, otherProfileId, otherProfileType, otherProfileName, otherProfilePhoto, otherUid, canInvite, teamId, inviteSent}
+window._matchPanelChatUnsub = null;  // unsubscribe do onSnapshot de mensagens
+window._matchPanelTypingTimer = null;  // timer de "está digitando"
+window._matchPanelTypingUnsub = null;  // unsubscribe do onSnapshot de typing
 
 // Envia sinal de "está digitando" ao Firestore (pm_chats/{chatId})
-window._matchPanelChatTyping = async function() {
+window._matchPanelChatTyping = async function () {
   const otherUid = window._matchPanelContext?.otherUid;
   if (!otherUid || !window._matchGetUser || !window.db) return;
   const chatId = typeof window.pmChatId === 'function'
     ? window.pmChatId(window._matchGetUser.uid, otherUid)
     : [window._matchGetUser.uid, otherUid].sort().join('_');
-  const myKey  = 'typing_' + window._matchGetUser.uid;
+  const myKey = 'typing_' + window._matchGetUser.uid;
   try {
     await window.setDoc(
       window.doc(window.db, 'pm_chats', chatId),
       { [myKey]: window.serverTimestamp ? window.serverTimestamp() : new Date() },
       { merge: true }
     );
-  } catch(e) {}
+  } catch (e) { }
   clearTimeout(window._matchPanelTypingTimer);
   window._matchPanelTypingTimer = setTimeout(async () => {
     try {
       await window.updateDoc(window.doc(window.db, 'pm_chats', chatId), { [myKey]: null });
-    } catch(e) {}
+    } catch (e) { }
   }, 3000);
 };
 
@@ -2168,7 +2181,7 @@ function _matchStartTypingListener(otherUid) {
   if (!window._matchGetUser || !window.db) return;
   // Cancela listener anterior de typing se existir
   if (window._matchPanelTypingUnsub) { window._matchPanelTypingUnsub(); window._matchPanelTypingUnsub = null; }
-  const chatId   = typeof window.pmChatId === 'function'
+  const chatId = typeof window.pmChatId === 'function'
     ? window.pmChatId(window._matchGetUser.uid, otherUid)
     : [window._matchGetUser.uid, otherUid].sort().join('_');
   const otherKey = 'typing_' + otherUid;
@@ -2192,7 +2205,7 @@ function _matchStartTypingListener(otherUid) {
       },
       err => console.warn('[matchTyping] listener error:', err)
     );
-  } catch(e) { console.warn('[matchTyping] setup error:', e); }
+  } catch (e) { console.warn('[matchTyping] setup error:', e); }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -2223,7 +2236,7 @@ function _matchStartTypingListener(otherUid) {
 // Quando ausente (notificações), a heurística m.userUid === authUid é usada.
 // Essa heurística É segura: userUid é o uid Firebase do artista — comparar com
 // authUid é a única inferência permitida quando o call site não passa contexto.
-window.matchOpenChatInPanel = async function(matchId, perspectiveHint) {
+window.matchOpenChatInPanel = async function (matchId, perspectiveHint) {
   if (!matchId || !window._matchGetUser) return;
   const preview = document.getElementById('match-chat-preview');
   if (!preview) return;
@@ -2241,7 +2254,7 @@ window.matchOpenChatInPanel = async function(matchId, perspectiveHint) {
       preview.innerHTML = `<div class="match-empty-state"><div>Match não encontrado.</div></div>`;
       return;
     }
-    const m      = snap.data();
+    const m = snap.data();
     const authUid = window._matchGetUser.uid;
 
     // ── RESOLUÇÃO DE PERSPECTIVA ─────────────────────────────────────────────
@@ -2250,15 +2263,15 @@ window.matchOpenChatInPanel = async function(matchId, perspectiveHint) {
     //   2. m.userUid === authUid → usuário É o artista deste match
     //   3. fallback → equipe (quando uid não bate com userUid)
     let iAmArtist;
-    if (perspectiveHint === 'artist')      { iAmArtist = true;  }
-    else if (perspectiveHint === 'team')   { iAmArtist = false; }
+    if (perspectiveHint === 'artist') { iAmArtist = true; }
+    else if (perspectiveHint === 'team') { iAmArtist = false; }
     else if (m.userUid && m.userUid === authUid) { iAmArtist = true; }
-    else                                   { iAmArtist = false; }
+    else { iAmArtist = false; }
 
     // ── IDENTIDADES CONGELADAS ────────────────────────────────────────────────
-    const activeProfileId   = iAmArtist ? authUid   : m.teamId;
-    const activeProfileType = iAmArtist ? 'artist'  : 'team';
-    const otherProfileType  = iAmArtist ? 'team'    : 'artist';
+    const activeProfileId = iAmArtist ? authUid : m.teamId;
+    const activeProfileType = iAmArtist ? 'artist' : 'team';
+    const otherProfileType = iAmArtist ? 'team' : 'artist';
 
     // ── DADOS DO OUTRO LADO ───────────────────────────────────────────────────
     // Artista abrindo → outro lado é a equipe (dados: m.teamName, m.teamPhoto, m.teamOwnerId)
@@ -2269,10 +2282,10 @@ window.matchOpenChatInPanel = async function(matchId, perspectiveHint) {
 
     if (iAmArtist) {
       // Lado equipe: ID é m.teamId; nome/foto vêm de m.teamName/m.teamPhoto
-      otherProfileId    = m.teamId    || '';
-      otherProfileName  = m.teamName  || 'Equipe';
+      otherProfileId = m.teamId || '';
+      otherProfileName = m.teamName || 'Equipe';
       otherProfilePhoto = m.teamPhoto || '';
-      otherUid          = m.teamOwnerId || '';
+      otherUid = m.teamOwnerId || '';
 
       // Enriquece nome/foto e ownerUid a partir de team_profiles / teams se ausentes
       if ((!otherUid || !otherProfileName || otherProfileName === 'Equipe') && m.teamId) {
@@ -2280,29 +2293,29 @@ window.matchOpenChatInPanel = async function(matchId, perspectiveHint) {
           const tpSnap = await window.getDoc(window.doc(window.db, 'team_profiles', m.teamId));
           if (tpSnap.exists()) {
             const td = tpSnap.data();
-            otherUid          = otherUid          || td.ownerUid || '';
-            otherProfileName  = otherProfileName !== 'Equipe' ? otherProfileName : (td.name  || otherProfileName);
+            otherUid = otherUid || td.ownerUid || '';
+            otherProfileName = otherProfileName !== 'Equipe' ? otherProfileName : (td.name || otherProfileName);
             otherProfilePhoto = otherProfilePhoto || td.photo || '';
           }
-        } catch(e) {}
+        } catch (e) { }
         if (!otherUid) {
           try {
             const tSnap = await window.getDoc(window.doc(window.db, 'teams', m.teamId));
             if (tSnap.exists()) {
               const td = tSnap.data();
               const owner = (td.members || []).find(mb => mb.role === 'owner');
-              otherUid         = owner?.uid || '';
+              otherUid = owner?.uid || '';
               otherProfileName = otherProfileName !== 'Equipe' ? otherProfileName : (td.name || otherProfileName);
             }
-          } catch(e) {}
+          } catch (e) { }
         }
       }
     } else {
       // Lado artista: ID é m.userUid; nome/foto vêm de m.userName/m.userPhoto
-      otherProfileId    = m.userUid   || '';
-      otherProfileName  = m.userName  || 'Artista';
+      otherProfileId = m.userUid || '';
+      otherProfileName = m.userName || 'Artista';
       otherProfilePhoto = m.userPhoto || '';
-      otherUid          = m.userUid   || '';
+      otherUid = m.userUid || '';
 
       // Enriquece nome/foto a partir de talent_profiles se ausentes
       if (otherUid && (!otherProfileName || otherProfileName === 'Artista' || !otherProfilePhoto)) {
@@ -2310,10 +2323,10 @@ window.matchOpenChatInPanel = async function(matchId, perspectiveHint) {
           const tpSnap = await window.getDoc(window.doc(window.db, 'talent_profiles', otherUid));
           if (tpSnap && tpSnap.exists()) {
             const tp = tpSnap.data();
-            if (tp.name)  otherProfileName  = tp.name;
+            if (tp.name) otherProfileName = tp.name;
             if (tp.photo) otherProfilePhoto = tp.photo;
           }
-        } catch(e) {}
+        } catch (e) { }
       }
     }
 
@@ -2327,8 +2340,8 @@ window.matchOpenChatInPanel = async function(matchId, perspectiveHint) {
     // A partir daqui, NENHUMA função do chat lê _currentTeamId, authUid, ou
     // qualquer outra variável global para decidir identidade ou renderização.
     const canInvite = !iAmArtist && !m.inviteSent &&
-      !!((window._myTeams||[]).find(t => t.id === m.teamId)
-          ?.members?.find?.(mb => mb.uid === authUid && mb.role === 'owner'));
+      !!((window._myTeams || []).find(t => t.id === m.teamId)
+        ?.members?.find?.(mb => mb.uid === authUid && mb.role === 'owner'));
 
     window._matchPanelContext = {
       matchId,
@@ -2349,26 +2362,26 @@ window.matchOpenChatInPanel = async function(matchId, perspectiveHint) {
     const ctx = window._matchPanelContext;
     const subLabel = ctx.activeProfileType === 'artist' ? 'CONVERSA COM EQUIPE' : 'CONVERSA COM ARTISTA';
     const matchDate = m.createdAt
-      ? new Date(m.createdAt).toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric'})
+      ? new Date(m.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
       : '';
 
     const avHtml = ctx.otherProfilePhoto
       ? `<img src="${ctx.otherProfilePhoto}" style="width:100%;height:100%;object-fit:cover">`
-      : `<span style="font-size:14px;font-weight:800">${(ctx.otherProfileName[0]||'?').toUpperCase()}</span>`;
+      : `<span style="font-size:14px;font-weight:800">${(ctx.otherProfileName[0] || '?').toUpperCase()}</span>`;
 
     const quickMsgs = ctx.activeProfileType === 'artist'
       ? [
-          { label: 'Olá! Adorei o perfil 🎶',  text: 'Olá! Adorei o perfil da equipe! Gostaria de saber mais 🎶' },
-          { label: 'Posso contribuir com...',    text: 'Tenho experiência em ' + ((window._myTalentProfile?.skills && Object.keys(window._myTalentProfile.skills).length) ? Object.keys(window._myTalentProfile.skills).slice(0,2).join(', ') : 'produção') + ' — posso contribuir bastante!' },
-          { label: 'Marcar call?',               text: 'Podemos marcar uma call para conversar sobre os próximos passos?' },
-          { label: 'Disponibilidade',            text: 'Quando vocês estariam disponíveis para começar um projeto?' },
-        ]
+        { label: 'Olá! Adorei o perfil 🎶', text: 'Olá! Adorei o perfil da equipe! Gostaria de saber mais 🎶' },
+        { label: 'Posso contribuir com...', text: 'Tenho experiência em ' + ((window._myTalentProfile?.skills && Object.keys(window._myTalentProfile.skills).length) ? Object.keys(window._myTalentProfile.skills).slice(0, 2).join(', ') : 'produção') + ' — posso contribuir bastante!' },
+        { label: 'Marcar call?', text: 'Podemos marcar uma call para conversar sobre os próximos passos?' },
+        { label: 'Disponibilidade', text: 'Quando vocês estariam disponíveis para começar um projeto?' },
+      ]
       : [
-          { label: 'Olá! Adorei o perfil 🎶',  text: 'Olá! Adoramos o seu perfil — acreditamos que você seria incrível na nossa equipe! 🎶' },
-          { label: 'Que projetos fazemos',       text: 'Nossa equipe trabalha com projetos de ' + (ctx.teamId ? ((window._myTeams||[]).find(t=>t.id===ctx.teamId)?.name || 'música') : 'música') + '. Quer saber mais?' },
-          { label: 'Marcar call?',               text: 'Podemos marcar uma call para te apresentar a equipe e os projetos?' },
-          { label: 'Disponibilidade',            text: 'Quando você teria disponibilidade para começar a colaborar?' },
-        ];
+        { label: 'Olá! Adorei o perfil 🎶', text: 'Olá! Adoramos o seu perfil — acreditamos que você seria incrível na nossa equipe! 🎶' },
+        { label: 'Que projetos fazemos', text: 'Nossa equipe trabalha com projetos de ' + (ctx.teamId ? ((window._myTeams || []).find(t => t.id === ctx.teamId)?.name || 'música') : 'música') + '. Quer saber mais?' },
+        { label: 'Marcar call?', text: 'Podemos marcar uma call para te apresentar a equipe e os projetos?' },
+        { label: 'Disponibilidade', text: 'Quando você teria disponibilidade para começar a colaborar?' },
+      ];
 
     preview.innerHTML = `
       <div class="mcp-wrap">
@@ -2402,7 +2415,7 @@ window.matchOpenChatInPanel = async function(matchId, perspectiveHint) {
     _matchStartPanelChatListener(Object.assign({}, window._matchPanelContext));
     _matchStartTypingListener(ctx.otherUid);
 
-  } catch(e) {
+  } catch (e) {
     preview.innerHTML = `<div class="match-empty-state"><div>Erro ao abrir chat: ${window.escHtml(e.message)}</div></div>`;
   }
 };
@@ -2426,7 +2439,7 @@ function _matchStartPanelChatListener(frozenCtx) {
       ),
       err => console.warn('[matchPanelChat] listener error:', err.code || err.message)
     );
-  } catch(e) { console.warn('[matchPanelChat] listener setup:', e); }
+  } catch (e) { console.warn('[matchPanelChat] listener setup:', e); }
 }
 
 // ── Renderização de mensagens ─────────────────────────────────────────────────
@@ -2472,18 +2485,18 @@ function _matchRenderPanelMessages(msgs, frozenActiveProfileId) {
 
     const ts = m.createdAt?.toDate ? m.createdAt.toDate() : new Date(m.createdAt || Date.now());
     const dateKey = ts.toLocaleDateString('pt-BR');
-    const time    = ts.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+    const time = ts.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     let sep = '';
     if (dateKey !== lastDate) {
       lastDate = dateKey;
-      const today     = new Date().toLocaleDateString('pt-BR');
-      const yesterday = new Date(Date.now()-86400000).toLocaleDateString('pt-BR');
+      const today = new Date().toLocaleDateString('pt-BR');
+      const yesterday = new Date(Date.now() - 86400000).toLocaleDateString('pt-BR');
       const label = dateKey === today ? 'HOJE' : dateKey === yesterday ? 'ONTEM' : dateKey;
       sep = `<div style="text-align:center;font-family:var(--font-mono);font-size:8px;color:var(--text3);letter-spacing:2px;padding:6px 0">${label}</div>`;
     }
-    return `${sep}<div class="mcp-msg ${mine?'mine':'theirs'}">
-      <div class="mcp-bbl">${window.escHtml ? window.escHtml(m.text||'') : (m.text||'')}</div>
-      <span class="mcp-bbl-time">${time}${mine?' ✓✓':''}</span>
+    return `${sep}<div class="mcp-msg ${mine ? 'mine' : 'theirs'}">
+      <div class="mcp-bbl">${window.escHtml ? window.escHtml(m.text || '') : (m.text || '')}</div>
+      <span class="mcp-bbl-time">${time}${mine ? ' ✓✓' : ''}</span>
     </div>`;
   }).join('');
 
@@ -2492,9 +2505,9 @@ function _matchRenderPanelMessages(msgs, frozenActiveProfileId) {
 
 // ── Envio de mensagem ─────────────────────────────────────────────────────────
 // TODA identidade vem de window._matchPanelContext — sem leitura de outras globais.
-window.matchChatPanelSend = async function() {
+window.matchChatPanelSend = async function () {
   const input = document.getElementById('mcp-input-field');
-  const text  = input?.value.trim();
+  const text = input?.value.trim();
   if (!text || !window._matchGetUser) return;
 
   const ctx = window._matchPanelContext;
@@ -2506,40 +2519,40 @@ window.matchChatPanelSend = async function() {
   try {
     const msgData = {
       senderProfileId: ctx.activeProfileId,    // ID canônico — fonte única de verdade
-      senderType:      ctx.activeProfileType,  // "artist" | "team"
-      senderId:        me.uid,                 // uid Firebase (retrocompat)
-      from:            me.uid,                 // retrocompat legado
+      senderType: ctx.activeProfileType,  // "artist" | "team"
+      senderId: me.uid,                 // uid Firebase (retrocompat)
+      from: me.uid,                 // retrocompat legado
       text,
       createdAt: window.serverTimestamp ? window.serverTimestamp() : new Date(),
       fromIsTeam: ctx.activeProfileType === 'team',
     };
 
     if (ctx.activeProfileType === 'team') {
-      const team = (window._myTeams||[]).find(t => t.id === ctx.teamId);
-      msgData.fromName  = team?.name  || ctx.otherProfileName || 'Equipe';
+      const team = (window._myTeams || []).find(t => t.id === ctx.teamId);
+      msgData.fromName = team?.name || ctx.otherProfileName || 'Equipe';
       msgData.fromPhoto = team?.photo || '';
-      msgData.teamId    = ctx.teamId  || '';
+      msgData.teamId = ctx.teamId || '';
     } else {
       const p = window._myTalentProfile;
-      msgData.fromName  = p?.name  || me.displayName || '';
-      msgData.fromPhoto = p?.photo || me.photoURL    || '';
+      msgData.fromName = p?.name || me.displayName || '';
+      msgData.fromPhoto = p?.photo || me.photoURL || '';
     }
 
     await window.addDoc(
       window.collection(window.db, 'matches', ctx.matchId, 'messages'),
       msgData
     );
-  } catch(e) { window.toast('Erro ao enviar mensagem: ' + e.message, 'error'); }
+  } catch (e) { window.toast('Erro ao enviar mensagem: ' + e.message, 'error'); }
 };
 
-window.matchChatPanelQuick = function(text) {
+window.matchChatPanelQuick = function (text) {
   const input = document.getElementById('mcp-input-field');
   if (input) { input.value = text; input.focus(); }
 };
 
 // matchOpenChatViewProfile: abre o perfil do outro lado do chat.
 // Não recebe parâmetros — lê tudo de _matchPanelContext (fonte única de verdade).
-window.matchOpenChatViewProfile = function() {
+window.matchOpenChatViewProfile = function () {
   const ctx = window._matchPanelContext;
   if (!ctx) return;
   if (ctx.activeProfileType === 'artist') {
@@ -2556,7 +2569,7 @@ window.matchOpenChatViewProfile = function() {
 };
 
 // ── Cancel Match ──────────────────────────────────────────────────────────────
-window.matchCancelMatch = async function(matchId, teamId, artistUid, displayName) {
+window.matchCancelMatch = async function (matchId, teamId, artistUid, displayName) {
   if (!window._matchGetUser) return;
   const confirmed = window.confirm
     ? window.confirm('Cancelar o match com ' + displayName + '?\nEsta ação não pode ser desfeita.')
@@ -2606,7 +2619,7 @@ window.matchCancelMatch = async function(matchId, teamId, artistUid, displayName
           }
         }
       }
-    } catch(resolveErr) {
+    } catch (resolveErr) {
       // Se falhou ao resolver, tenta com o ID original mesmo
       console.warn('[matchCancelMatch] resolve fallback:', resolveErr.message);
     }
@@ -2643,7 +2656,7 @@ window.matchCancelMatch = async function(matchId, teamId, artistUid, displayName
         });
         const allToDelete = [...toDelete, ...toDeleteArtist.filter(d => !toDelete.find(x => x.id === d.id))];
         await Promise.all(allToDelete.map(d => window.deleteDoc(d.ref)));
-      } catch(e) { /* limpeza de interests é best-effort */ }
+      } catch (e) { /* limpeza de interests é best-effort */ }
     }
 
     // 3. Atualiza caches locais conforme o modo
@@ -2677,7 +2690,7 @@ window.matchCancelMatch = async function(matchId, teamId, artistUid, displayName
     matchRenderMatches();
     matchRenderInbox();
     if (_matchIsArtistMode) matchRenderMode();
-  } catch(e) {
+  } catch (e) {
     window.toast('Erro ao cancelar match: ' + e.message, 'error');
   }
 };
@@ -2695,22 +2708,22 @@ async function _matchCreateMatch(artistUid, artistName, artistPhoto, intId1, int
   // FASE 2B — verifica limite de conexões antes de qualquer escrita
   // artistUid é sempre o "userUid" da conexão — o plano a verificar é o dele
   const _limitUserDoc = (artistUid === (window._matchGetUser?.uid)) ? currentUserData : { plan: 'free' };
-  const _canConnect   = await _checkFriendLimit(_limitUserDoc, artistUid);
+  const _canConnect = await _checkFriendLimit(_limitUserDoc, artistUid);
   if (!_canConnect) return undefined; // bloqueado — toast e modal já foram disparados
 
-  const team = (window._myTeams||[]).find(t => t.id === resolvedTeamId);
+  const team = (window._myTeams || []).find(t => t.id === resolvedTeamId);
   const teamOwner = team?.members?.find(m => m.role === 'owner');
   const matchData = {
-    userUid:     artistUid,
-    userName:    artistName,
-    userPhoto:   artistPhoto,
-    teamId:      resolvedTeamId,
-    teamName:    opts?.teamName || team?.name || '',
-    teamPhoto:   opts?.teamPhoto || team?.photo || '',
+    userUid: artistUid,
+    userName: artistName,
+    userPhoto: artistPhoto,
+    teamId: resolvedTeamId,
+    teamName: opts?.teamName || team?.name || '',
+    teamPhoto: opts?.teamPhoto || team?.photo || '',
     teamOwnerId: opts?.teamOwnerId || teamOwner?.uid || window._matchGetUser?.uid || '',
     inviteSent: false,
     // CORREÇÃO: status explícito 'matched' para matchOpenChatInPanel verificar
-    status:    'matched',
+    status: 'matched',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     intId1, intId2,
@@ -2720,9 +2733,9 @@ async function _matchCreateMatch(artistUid, artistName, artistPhoto, intId1, int
   await window.setDoc(window.doc(window.db, 'matches', matchId), matchData);
   _matchConfirmed[artistUid] = { id: matchId, ...matchData };
   // Atualiza status dos interesses
-  try { await window.updateDoc(window.doc(window.db, 'interests', intId1), { status: 'matched', matchId }); } catch(e) {}
+  try { await window.updateDoc(window.doc(window.db, 'interests', intId1), { status: 'matched', matchId }); } catch (e) { }
   if (intId2 && intId2 !== intId1) {
-    try { await window.updateDoc(window.doc(window.db, 'interests', intId2), { status: 'matched', matchId }); } catch(e) {}
+    try { await window.updateDoc(window.doc(window.db, 'interests', intId2), { status: 'matched', matchId }); } catch (e) { }
   }
   return matchId; // retorna matchId para a chamada passar para matchShowCelebration
 }
@@ -2731,7 +2744,7 @@ async function _matchCreateMatch(artistUid, artistName, artistPhoto, intId1, int
 // Delega para showGlobalMatch() — overlay global independente de contexto.
 // Este bloco é sobrescrito pelo patch DOMContentLoaded no script global abaixo,
 // mas mantemos aqui como fallback imediato para chamadas síncronas.
-window.matchShowCelebration = function(name1, photo1, name2, photo2, matchId) {
+window.matchShowCelebration = function (name1, photo1, name2, photo2, matchId) {
   if (typeof window.showGlobalMatch === 'function') {
     window.showGlobalMatch({ name1, photo1, name2, photo2, matchId: matchId || null });
   } else {
@@ -2743,16 +2756,16 @@ window.matchShowCelebration = function(name1, photo1, name2, photo2, matchId) {
     const avs = document.getElementById('match-cel-avatars');
     const nms = document.getElementById('match-cel-names');
     if (avs) {
-      const av1 = photo1 ? `<img src="${photo1}" style="width:100%;height:100%;object-fit:cover">` : (name1[0]||'?').toUpperCase();
-      const av2 = photo2 ? `<img src="${photo2}" style="width:100%;height:100%;object-fit:cover">` : (name2[0]||'?').toUpperCase();
+      const av1 = photo1 ? `<img src="${photo1}" style="width:100%;height:100%;object-fit:cover">` : (name1[0] || '?').toUpperCase();
+      const av2 = photo2 ? `<img src="${photo2}" style="width:100%;height:100%;object-fit:cover">` : (name2[0] || '?').toUpperCase();
       avs.innerHTML = `<div class="match-cel-av">${av1}</div><span class="match-cel-heart">💛</span><div class="match-cel-av team">${av2}</div>`;
     }
-    if (nms) nms.textContent = (name1||'') + ' & ' + (name2||'') + ' se curtiram!';
+    if (nms) nms.textContent = (name1 || '') + ' & ' + (name2 || '') + ' se curtiram!';
     _matchLaunchConfetti();
   }
 };
 
-window.matchHideCelebration = function() {
+window.matchHideCelebration = function () {
   const overlay = document.getElementById('match-celebrate-overlay');
   if (!overlay) return;
   overlay.style.opacity = '0';
@@ -2765,7 +2778,7 @@ window.matchHideCelebration = function() {
 };
 
 function _matchLaunchConfetti() {
-  const colors = ['#ff3c8e','#ffc83c','#3cffc8','#a855f7','#3c8eff','#ff6b35'];
+  const colors = ['#ff3c8e', '#ffc83c', '#3cffc8', '#a855f7', '#3c8eff', '#ff6b35'];
   for (let i = 0; i < 60; i++) {
     setTimeout(() => {
       const el = document.createElement('div');
@@ -2782,20 +2795,20 @@ function _matchLaunchConfetti() {
 }
 
 // ── Member talent profile (used in team popups) ───────────────────────────────
-window.openMemberTalentProfile = async function(uid, triggerEl) {
+window.openMemberTalentProfile = async function (uid, triggerEl) {
   let fallbackData = {};
   if (triggerEl?.dataset?.fallback) {
-    try { fallbackData = JSON.parse(triggerEl.dataset.fallback.replace(/&quot;/g, '"')); } catch(e) {}
+    try { fallbackData = JSON.parse(triggerEl.dataset.fallback.replace(/&quot;/g, '"')); } catch (e) { }
   }
   let p = null;
   if (uid) {
-    try { const snap = await window.getDoc(window.doc(window.db, 'talent_profiles', uid)); if (snap.exists()) p = { id: uid, ...snap.data() }; } catch(e) {}
+    try { const snap = await window.getDoc(window.doc(window.db, 'talent_profiles', uid)); if (snap.exists()) p = { id: uid, ...snap.data() }; } catch (e) { }
   }
   if (!p && fallbackData.name) p = { id: uid, ...fallbackData };
   if (p && typeof window.openProfilePopup === 'function') {
     window.openProfilePopup(p, 'team');
   } else if (p) {
-    window.toast((p.name||'Membro') + ' — ' + (p.bio||'Sem bio').substring(0,60));
+    window.toast((p.name || 'Membro') + ' — ' + (p.bio || 'Sem bio').substring(0, 60));
   }
 };
 
@@ -2809,40 +2822,40 @@ function matchShowProfileEditor() {
 // ── Keyboard shortcuts ────────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
   if (document.getElementById('match-swipe-view')?.style.display !== 'none' && _matchMode === 'swipe') {
-    if (e.key === 'ArrowLeft')  matchSwipeAction('skip');
+    if (e.key === 'ArrowLeft') matchSwipeAction('skip');
     if (e.key === 'ArrowRight') matchSwipeAction('like');
-    if (e.key === 'ArrowUp')    matchSwipeAction('superlike');
+    if (e.key === 'ArrowUp') matchSwipeAction('superlike');
   }
   if (e.key === 'Escape') matchHideCelebration();
 });
 
 // ── Expose to window ──────────────────────────────────────────────────────────
-window.loadTalentsPage         = window.loadTalentsPage;
-window.matchSwitchView         = window.matchSwitchView;
-window.matchSetMode            = window.matchSetMode;
-window.matchFilter             = window.matchFilter;
-window.matchChip               = window.matchChip;
-window.matchSendInterest       = window.matchSendInterest;
-window.matchSwipeAction        = window.matchSwipeAction;
-window.matchInboxTab           = window.matchInboxTab;
-window.matchAcceptInterest     = window.matchAcceptInterest;
-window.matchDeclineInterest    = window.matchDeclineInterest;
-window.matchShowTeamPreview    = window.matchShowTeamPreview;
-window.matchRenderMatches      = window.matchRenderMatches;
-window.matchViewTalent         = window.matchViewTalent;
-window.matchOpenChat           = window.matchOpenChat;
-window.matchSendInvite         = window.matchSendInvite;
-window.matchShowCelebration    = window.matchShowCelebration;
-window.matchHideCelebration    = window.matchHideCelebration;
-window.matchOpenMyProfile      = window.matchOpenMyProfile;
+window.loadTalentsPage = window.loadTalentsPage;
+window.matchSwitchView = window.matchSwitchView;
+window.matchSetMode = window.matchSetMode;
+window.matchFilter = window.matchFilter;
+window.matchChip = window.matchChip;
+window.matchSendInterest = window.matchSendInterest;
+window.matchSwipeAction = window.matchSwipeAction;
+window.matchInboxTab = window.matchInboxTab;
+window.matchAcceptInterest = window.matchAcceptInterest;
+window.matchDeclineInterest = window.matchDeclineInterest;
+window.matchShowTeamPreview = window.matchShowTeamPreview;
+window.matchRenderMatches = window.matchRenderMatches;
+window.matchViewTalent = window.matchViewTalent;
+window.matchOpenChat = window.matchOpenChat;
+window.matchSendInvite = window.matchSendInvite;
+window.matchShowCelebration = window.matchShowCelebration;
+window.matchHideCelebration = window.matchHideCelebration;
+window.matchOpenMyProfile = window.matchOpenMyProfile;
 window.matchArtistSendInterest = window.matchArtistSendInterest;
-window.openMemberTalentProfile  = window.openMemberTalentProfile;
-window.matchCancelMatch         = window.matchCancelMatch;
-window.matchOpenChatInPanel     = window.matchOpenChatInPanel;
-window.matchChatPanelSend       = window.matchChatPanelSend;
-window.matchChatPanelQuick      = window.matchChatPanelQuick;
+window.openMemberTalentProfile = window.openMemberTalentProfile;
+window.matchCancelMatch = window.matchCancelMatch;
+window.matchOpenChatInPanel = window.matchOpenChatInPanel;
+window.matchChatPanelSend = window.matchChatPanelSend;
+window.matchChatPanelQuick = window.matchChatPanelQuick;
 window.matchOpenChatViewProfile = window.matchOpenChatViewProfile;
-window.matchOpenChat            = window.matchOpenChat;
+window.matchOpenChat = window.matchOpenChat;
 
 /* ════════════════════════════════════════════════════════════════════════
    PATCHNOTES — FREQsys Match System
