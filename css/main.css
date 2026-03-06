@@ -18333,3 +18333,370 @@ select:focus {
 }
 
 /* === END GLOBAL MOCKUP FONT OVERRIDES === */
+
+/* ════════════════════════════════════════════════════════════════
+   PROFILE ENHANCEMENTS v2 — Presence, Dots Menu, Launches, Friend
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── Presence Indicator (bolinha de status) ─────────────────────── */
+.user-status {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 3px solid var(--bg2);
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  z-index: 2;
+  transition: background .3s ease;
+}
+
+.status-online {
+  background: #43b581;
+  box-shadow: 0 0 6px rgba(67, 181, 129, .5);
+}
+
+.status-busy {
+  background: #faa61a;
+  box-shadow: 0 0 6px rgba(250, 166, 26, .5);
+}
+
+.status-away {
+  background: #748ffc;
+  box-shadow: 0 0 6px rgba(116, 143, 252, .5);
+}
+
+.status-offline {
+  background: #72767d;
+}
+
+/* Presence in mini popup */
+.pp-status-dot.status-online {
+  background: #43b581 !important;
+  box-shadow: 0 0 6px rgba(67, 181, 129, .5);
+}
+
+.pp-status-dot.status-busy {
+  background: #faa61a !important;
+  box-shadow: 0 0 6px rgba(250, 166, 26, .5);
+}
+
+.pp-status-dot.status-away {
+  background: #748ffc !important;
+  box-shadow: 0 0 6px rgba(116, 143, 252, .5);
+}
+
+.pp-status-dot.status-offline {
+  background: #72767d !important;
+  box-shadow: none;
+}
+
+/* ── Dots Menu (⋯) ────────────────────────────────────────────── */
+.fp-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.fp-dots-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all .18s;
+  position: relative;
+  letter-spacing: 2px;
+  line-height: 1;
+}
+
+.fp-dots-btn:hover {
+  border-color: var(--a2);
+  color: var(--a3);
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.fp-dots-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 200px;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 6px 0;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  opacity: 0;
+  transform: translateY(-6px) scale(0.96);
+  pointer-events: none;
+  transition: all .2s cubic-bezier(.22, .61, .36, 1);
+}
+
+.fp-dots-menu.open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: all;
+}
+
+.fp-dots-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all .12s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.fp-dots-menu-item:hover {
+  background: rgba(139, 92, 246, 0.1);
+  color: var(--a3);
+}
+
+.fp-dots-menu-item.danger:hover {
+  background: rgba(255, 60, 60, 0.1);
+  color: #ff5555;
+}
+
+.fp-dots-menu-sep {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 12px;
+}
+
+/* ── Friend Button ─────────────────────────────────────────────── */
+.fp-friend-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(67, 181, 129, .15), rgba(114, 239, 221, .15));
+  border: 1px solid rgba(67, 181, 129, .3);
+  color: #43b581;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all .18s;
+  white-space: nowrap;
+}
+
+.fp-friend-btn:hover {
+  background: linear-gradient(135deg, rgba(67, 181, 129, .25), rgba(114, 239, 221, .25));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(67, 181, 129, .2);
+}
+
+.fp-friend-btn.pending {
+  background: rgba(255, 200, 60, 0.1);
+  border-color: rgba(255, 200, 60, 0.25);
+  color: rgba(255, 200, 60, 0.7);
+  cursor: default;
+}
+
+.fp-friend-btn.is-friend {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--border);
+  color: var(--text3);
+  cursor: default;
+}
+
+/* ── Edit profile button (own profile) ─────────────────────────── */
+.fp-edit-profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all .18s;
+  white-space: nowrap;
+}
+
+.fp-edit-profile-btn:hover {
+  border-color: var(--a2);
+  color: var(--a3);
+  background: rgba(139, 92, 246, 0.08);
+}
+
+/* ── Launch Feed ───────────────────────────────────────────────── */
+.fp-launch-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 10px;
+  transition: all .18s;
+}
+
+.fp-launch-card:hover {
+  border-color: rgba(139, 92, 246, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.fp-launch-emoji {
+  font-size: 16px;
+  margin-right: 8px;
+}
+
+.fp-launch-title {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.fp-launch-desc {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.fp-launch-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: linear-gradient(135deg, rgba(30, 215, 96, .12), rgba(114, 239, 221, .12));
+  border: 1px solid rgba(30, 215, 96, .25);
+  border-radius: 8px;
+  color: #1ed760;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-decoration: none;
+  transition: all .15s;
+  cursor: pointer;
+}
+
+.fp-launch-link:hover {
+  background: rgba(30, 215, 96, .2);
+  transform: translateY(-1px);
+}
+
+.fp-launch-date {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text3);
+  letter-spacing: 1px;
+  margin-top: 8px;
+}
+
+.fp-launch-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  color: var(--text3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all .18s;
+  margin-top: 8px;
+}
+
+.fp-launch-add-btn:hover {
+  border-color: var(--a2);
+  color: var(--a3);
+  background: rgba(139, 92, 246, 0.06);
+}
+
+/* ── Launch Modal ──────────────────────────────────────────────── */
+.fp-launch-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.fp-launch-modal-body input,
+.fp-launch-modal-body textarea {
+  width: 100%;
+  background: var(--input-bg);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  outline: none;
+  transition: border-color .15s;
+}
+
+.fp-launch-modal-body input:focus,
+.fp-launch-modal-body textarea:focus {
+  border-color: var(--a2);
+}
+
+.fp-launch-modal-body textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+/* ── Presence select in edit profile ───────────────────────────── */
+.upe-presence-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.upe-presence-opt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text2);
+  transition: all .15s;
+}
+
+.upe-presence-opt:hover {
+  border-color: var(--border2);
+}
+
+.upe-presence-opt.active {
+  border-color: var(--a2);
+  background: rgba(139, 92, 246, 0.1);
+  color: var(--a3);
+}
+
+.upe-presence-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}

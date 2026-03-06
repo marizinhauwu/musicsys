@@ -5511,11 +5511,15 @@ function pmListenConversations() {
       query(collection(db, 'pm_convs', currentUser.uid, 'convs'), orderBy('lastTs', 'desc')),
       snap => {
         _pmConversations = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        window._pmConversations = _pmConversations; // Expose to SocialPanel
         _pmConvMap = {};
         _pmConversations.forEach(c => { _pmConvMap[c.otherUid] = c; });
         pmUpdateUnreadBadges();
         pmRenderConvList();
         pmRenderInboxContacts();
+        if (window.SocialPanel && document.getElementById('fs-social-panel')?.classList.contains('fs-sp-open')) {
+          window.SocialPanel.refreshData(); // Live updates na aba!
+        }
       },
       err => console.warn('[PM] conv listener error:', err)
     );
@@ -5545,13 +5549,24 @@ window.pmToggle = function () {
 };
 
 // ── Show list view ──
-window.pmShowList = function () {
+window.pmShowList = function (fromSocialPanel = false) {
+  if (window.SocialPanel && window.SocialPanel.closeChatView && !fromSocialPanel) {
+    const origChat = document.getElementById('pm-chat-view');
+    if (origChat && origChat.parentElement?.id === 'fs-sp-view-chat') {
+      // Se a chamada partiu do motor nativo (ex: pmDeleteConv), 
+      // delegamos o retorno e a limpeza para o SocialPanel, que por sua vez nos chamará com fromSocialPanel=true
+      window.SocialPanel.closeChatView();
+    }
+  }
   document.getElementById('pm-list-view')?.classList.remove('hide');
   document.getElementById('pm-chat-view')?.classList.remove('show');
   document.getElementById('pm-back-area').style.display = 'none';
-  document.getElementById('pm-panel-title').textContent = 'MENSAGENS';
-  document.getElementById('pm-panel-title').onclick = null;
-  document.getElementById('pm-panel-title').style.cursor = 'default';
+  const titleEl = document.getElementById('pm-panel-title');
+  if (titleEl) {
+    titleEl.textContent = 'MENSAGENS';
+    titleEl.onclick = null;
+    titleEl.style.cursor = 'default';
+  }
   _pmUnsubConv?.(); _pmUnsubConv = null; _pmCurrentConvUid = null;
 };
 
@@ -5588,14 +5603,30 @@ window.pmOpenConvByUid = function (uid) {
 // ── Open a conversation in bubble panel ──
 window.pmOpenConv = function (otherUid, otherName, otherPhoto) {
   _pmCurrentConvUid = otherUid; _pmCurrentConvName = otherName; _pmCurrentConvPhoto = otherPhoto;
-  document.getElementById('pm-list-view')?.classList.add('hide');
-  document.getElementById('pm-chat-view')?.classList.add('show');
-  document.getElementById('pm-back-area').style.display = 'flex';
-  // Make name clickable to open profile
-  const titleEl = document.getElementById('pm-panel-title');
-  titleEl.textContent = otherName || 'Chat';
-  titleEl.style.cursor = 'pointer';
-  titleEl.onclick = () => pmOpenProfilePanel(otherUid);
+  // Sincroniza com o inbox grande para expansão perfeita
+  _pmInboxCurrentUid = otherUid; _pmInboxCurrentName = otherName; _pmInboxCurrentPhoto = otherPhoto;
+
+  // Garante que o painel social esteja aberto caso a chamada venha de fora (ex. push card)
+  if (window.SocialPanel && !document.getElementById('fs-social-panel')?.classList.contains('fs-sp-open')) {
+    window.SocialPanel.open();
+  }
+
+  // Prepara e repassa a view pro Social Panel
+  if (window.SocialPanel && window.SocialPanel.openChatView) {
+    window.SocialPanel.openChatView(otherUid, otherName, otherPhoto, true); // true = não loopar de volta pra cá
+  } else {
+    // Fallback pra layout antigo se o hub não estiver por perto
+    document.getElementById('pm-list-view')?.classList.add('hide');
+    document.getElementById('pm-chat-view')?.classList.add('show');
+    document.getElementById('pm-back-area').style.display = 'flex';
+    const titleEl = document.getElementById('pm-panel-title');
+    if (titleEl) {
+      titleEl.textContent = otherName || 'Chat';
+      titleEl.style.cursor = 'pointer';
+      titleEl.onclick = () => pmOpenProfilePanel(otherUid);
+    }
+  }
+
   pmMarkRead(otherUid);
   pmListenMessages(otherUid);
   setTimeout(() => document.getElementById('pm-chat-input')?.focus(), 100);
@@ -5689,6 +5720,8 @@ window.pmStartNewChat = function () { pmOpenInbox(); };
 // pmSendTo e pmChatId precisam ser acessíveis fora do módulo para o chat inline do Match funcionar.
 window.pmSendTo = pmSendTo;
 window.pmChatId = pmChatId;
+window.pmFetchPhoto = pmFetchPhoto;
+window.pmGetPhoto = pmGetPhoto;
 
 // ── Cleanup expired ──
 async function pmCleanupExpired() {
@@ -5759,6 +5792,9 @@ window.pmInboxOpenConvByUid = function (uid) {
 // ── Open conversation in inbox ──
 window.pmInboxOpenConv = function (otherUid, otherName, otherPhoto) {
   _pmInboxCurrentUid = otherUid; _pmInboxCurrentName = otherName; _pmInboxCurrentPhoto = otherPhoto;
+  // Sincroniza com o mini-chat popup
+  _pmCurrentConvUid = otherUid; _pmCurrentConvName = otherName; _pmCurrentConvPhoto = otherPhoto;
+
   pmRenderInboxContacts();
   document.getElementById('pm-inbox-empty-state').style.display = 'none';
   const chatArea = document.getElementById('pm-inbox-chat-area');
@@ -5957,7 +5993,20 @@ window.pmInboxSend = async function () {
 };
 
 // ── Open chat with a specific user ──
-window.pmOpenChatWith = function (uid, name, photo) { pmOpenInbox(uid, name, photo); };
+window.pmOpenChatWith = function (uid, name, photo) {
+  // Se o inbox grande já estiver aberto, abre a conversa lá. 
+  // Caso contrário, abre no modo popup (mini-chat) estilo WhatsApp.
+  const inbox = document.getElementById('pm-inbox-overlay');
+  if (inbox && inbox.classList.contains('open')) {
+    if (window.pmInboxOpenConv) window.pmInboxOpenConv(uid, name, photo);
+  } else {
+    const panel = document.getElementById('pm-panel');
+    if (panel && !panel.classList.contains('open')) {
+      if (window.pmToggle) window.pmToggle();
+    }
+    if (window.pmOpenConv) window.pmOpenConv(uid, name, photo);
+  }
+};
 
 // ─── UPDATE applyPermissions to handle new features ───────────────────────────
 function applyPermissions() {

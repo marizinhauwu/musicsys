@@ -46,7 +46,7 @@ window.SocialPanel = (function () {
                 </div>
                 
                 <div class="fs-sp-nav">
-                    <div class="fs-sp-tab active" id="fs-sp-tab-friends" onclick="window.SocialPanel.switchTab('friends')">Amigos Online</div>
+                    <div class="fs-sp-tab active" id="fs-sp-tab-friends" onclick="window.SocialPanel.switchTab('friends')">Amigos</div>
                     <div class="fs-sp-tab" id="fs-sp-tab-convs" onclick="window.SocialPanel.switchTab('convs')">Conversas</div>
                 </div>
 
@@ -70,6 +70,11 @@ window.SocialPanel = (function () {
                         <div class="fs-sp-list" id="fs-sp-convs-list">
                             <!-- Injetado via JS -->
                         </div>
+                    </div>
+
+                    <!-- View: CHAT (Substitui navegação quando aberto) -->
+                    <div class="fs-sp-view" id="fs-sp-view-chat" style="padding:0; height:100%; display:none; flex-direction:column;">
+                        <!-- Injetado via JS ou repassado do index.html -->
                     </div>
 
                 </div>
@@ -155,6 +160,86 @@ window.SocialPanel = (function () {
         document.getElementById('fs-sp-tab-' + tabId)?.classList.add('active');
         document.getElementById('fs-sp-view-' + tabId)?.classList.add('active');
     }
+
+    function openChatView(otherUid, otherName, otherPhoto, showOnly = false) {
+        // Esconde nav (abas) e footer
+        const nav = document.querySelector('.fs-sp-nav');
+        if (nav) nav.style.display = 'none';
+
+        const footer = document.querySelector('.fs-sp-footer');
+        if (footer) footer.style.display = 'none';
+
+        // Esconde botão de inbox "⤢" pois o chat aqui é mais restrito
+        const actions = document.querySelectorAll('.fs-sp-icon-btn');
+        if (actions.length > 0 && actions[0].title.includes("Completa")) {
+            actions[0].style.display = 'none';
+        }
+
+        // Muda título pro botão Voltar + Nome
+        const titleEl = document.querySelector('.fs-sp-title');
+        if (!titleEl.dataset.originalTitle) {
+            titleEl.dataset.originalTitle = titleEl.innerHTML;
+        }
+        titleEl.innerHTML = `
+            <button onclick="event.stopPropagation(); window.SocialPanel.closeChatView()" style="background:none;border:none;color:#fff;cursor:pointer;font-size:16px;padding-right:8px;" title="Voltar">←</button>
+            <div style="display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="if(window.pmOpenProfilePanel) window.pmOpenProfilePanel('${otherUid}')">
+                ${otherPhoto && !otherPhoto.startsWith('data:image/svg') ? `<img src="${otherPhoto}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;">` : `<span style="font-size:14px">💬</span>`}
+                <span style="font-size:14px">${otherName || 'Chat'}</span>
+            </div>
+        `;
+
+        // Ativa view de chat, esconde as outras
+        document.querySelectorAll('.fs-sp-view').forEach(v => v.classList.remove('active'));
+        const chatView = document.getElementById('fs-sp-view-chat');
+        if (chatView) {
+            chatView.style.display = 'flex';
+            chatView.classList.add('active');
+
+            // Rouba o chat-view do DOM original se ainda não estiver lá
+            const origChat = document.getElementById('pm-chat-view');
+            if (origChat && origChat.parentElement !== chatView) {
+                origChat.style.display = 'flex';
+                origChat.classList.add('show');
+                chatView.appendChild(origChat);
+                // Rouba input wrapper pra input de chat pra corrigir padding
+                const msgsArea = document.getElementById('pm-msgs-area');
+                if (msgsArea) msgsArea.style.height = 'calc(100% - 50px)';
+            }
+        }
+
+        if (!showOnly && window.pmOpenConv) {
+            // Usa o motor existente do firebase-init
+            // O próprio click reescreverá o currentConv variables
+            window.pmOpenConv(otherUid, otherName, otherPhoto);
+        }
+    }
+
+    function closeChatView() {
+        const chatView = document.getElementById('fs-sp-view-chat');
+        if (chatView) chatView.style.display = 'none';
+
+        const nav = document.querySelector('.fs-sp-nav');
+        if (nav) nav.style.display = 'flex';
+
+        const footer = document.querySelector('.fs-sp-footer');
+        if (footer) footer.style.display = 'flex';
+
+        const actions = document.querySelectorAll('.fs-sp-icon-btn');
+        if (actions.length > 0) actions[0].style.display = '';
+
+        const titleEl = document.querySelector('.fs-sp-title');
+        if (titleEl.dataset.originalTitle) {
+            titleEl.innerHTML = titleEl.dataset.originalTitle;
+            delete titleEl.dataset.originalTitle; // Limpa para a próxima abertura limpa
+        }
+
+        // Volta a view antiga dependendo de currentTab
+        switchTab(currentTab);
+
+        // Devolve o chat logico pra view base do PM pra ele não quebrar outras lógicas se fechar por fora
+        if (window.pmShowList) window.pmShowList(true);
+    }
+
 
     // Renderização
     async function refreshData() {
@@ -315,8 +400,7 @@ window.SocialPanel = (function () {
 
         let friends = [];
         try {
-            const fullList = await window.FriendsAPI.getFriendsList();
-            friends = fullList.filter(u => u.status === 'friends');
+            friends = await window.FriendsAPI.getFriendsList();
         } catch (error) {
             console.error('[SocialPanel] Erro ao buscar API de amigos', error);
             friendsListEl.innerHTML = '<div class="fs-sp-empty"><span class="fs-sp-empty-text">Falha de conexão.<br>Tente abrir o painel novamente.</span></div>';
@@ -333,12 +417,17 @@ window.SocialPanel = (function () {
             return;
         }
 
+        // Ordenar: Online > Busy/Away > Offline
+        const presenceWeight = { 'online': 3, 'busy': 2, 'away': 2, 'offline': 1 };
+        friends.sort((a, b) => {
+            const pa = a.presenceStatus || 'offline';
+            const pb = b.presenceStatus || 'offline';
+            return (presenceWeight[pb] || 1) - (presenceWeight[pa] || 1);
+        });
+
         friendsListEl.innerHTML = '';
         friends.forEach(f => {
-            // Mock básico de presença: consideraremos se tem "lastSeen" recente (se existir no PM) ou random pra demo visual. 
-            // Em ambiente real conectaria com presence API.
-            const isOnline = true; // Hardcoded como online pra visual premium. Pode ser puxado se houver no userData
-
+            const presence = f.presenceStatus || 'offline';
             const displayName = f.displayName || f.name || f.username || 'Usuário';
             const avatarUrl = f.avatar || f.photoURL;
 
@@ -363,7 +452,7 @@ window.SocialPanel = (function () {
             }
 
             const statusDot = document.createElement('div');
-            statusDot.className = 'fs-sp-status ' + (isOnline ? 'online' : 'offline');
+            statusDot.className = 'fs-sp-status ' + (presence === 'online' ? 'online' : (presence === 'busy' ? 'busy' : (presence === 'away' ? 'away' : 'offline')));
             avWrap.appendChild(statusDot);
 
             const infoWrap = document.createElement('div');
@@ -371,37 +460,37 @@ window.SocialPanel = (function () {
             const nameEl = document.createElement('div');
             nameEl.className = 'fs-sp-user-name';
             nameEl.textContent = displayName;
+
+            const handleEl = document.createElement('div');
+            handleEl.className = 'fs-sp-user-handle';
+            handleEl.style.fontSize = '9px';
+            handleEl.style.color = 'var(--text3)';
+            handleEl.style.marginTop = '-1px';
+            handleEl.textContent = f.username ? (f.username.startsWith('@') ? f.username : '@' + f.username) : '';
+
             const msgPreview = document.createElement('div');
             msgPreview.className = 'fs-sp-msg-preview';
-            msgPreview.textContent = 'Amigo conectado';
+
+            const statusLabels = { online: 'Online', busy: 'Ocupado', away: 'Ausente', offline: 'Offline' };
+            msgPreview.textContent = statusLabels[presence] || 'Offline';
+
             infoWrap.appendChild(nameEl);
+            infoWrap.appendChild(handleEl);
             infoWrap.appendChild(msgPreview);
 
-            const openProfile = (e) => {
-                e.stopPropagation();
-                close();
-                if (window.openProfilePopup) {
-                    window.openProfilePopup({ id: f.id, name: displayName, handle: f.username, photo: avatarUrl }, 'social', e);
-                }
-            };
-            avWrap.style.cursor = 'pointer';
-            avWrap.onclick = openProfile;
-            infoWrap.style.cursor = 'pointer';
-            infoWrap.onclick = openProfile;
-
-            const actionBtn = document.createElement('button');
-            actionBtn.className = 'fs-sp-item-action';
-            actionBtn.title = 'Mensagem';
-            actionBtn.textContent = '💬';
-            actionBtn.onclick = (e) => {
+            const openChat = (e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 close();
                 if (window.pmOpenChatWith) window.pmOpenChatWith(f.id, displayName, avatarUrl);
             };
 
+            // Todo o card é clicável agora, como no WhatsApp
+            item.style.cursor = 'pointer';
+            item.onclick = openChat;
+
             item.appendChild(avWrap);
             item.appendChild(infoWrap);
-            item.appendChild(actionBtn);
             friendsListEl.appendChild(item);
         });
     }
@@ -434,18 +523,55 @@ window.SocialPanel = (function () {
             const avWrap = document.createElement('div');
             avWrap.className = 'fs-sp-avatar-wrap';
 
-            const letterObj = (c.otherName || '?').charAt(0).toUpperCase();
+            // 1. Cria a estrutura da Imagem (oculta até ter certeza que a URL é válida)
+            const imgEl = document.createElement('img');
+            imgEl.className = 'fs-sp-avatar';
+            imgEl.style.display = 'none';
+            imgEl.style.objectFit = 'cover';
 
-            if (c.otherPhoto && !c.otherPhoto.startsWith('data:image/svg')) {
-                const img = document.createElement('img');
-                img.src = c.otherPhoto;
-                img.className = 'fs-sp-avatar';
-                img.onerror = function () {
-                    this.replaceWith(createFallbackAvatar(letterObj));
-                };
-                avWrap.appendChild(img);
-            } else {
-                avWrap.appendChild(createFallbackAvatar(letterObj));
+            // 2. Cria estrutura do Fallback de letras
+            const letterObj = (c.otherName || '?').charAt(0).toUpperCase();
+            const fallbackEl = createFallbackAvatar(letterObj);
+
+            // Empilha ambos no wrap
+            avWrap.appendChild(imgEl);
+            avWrap.appendChild(fallbackEl);
+
+            // Função que injeta a foto confirmada
+            const applyAvatarUrl = (url) => {
+                if (url && typeof url === 'string' && !url.startsWith('data:image/svg')) {
+                    imgEl.src = url;
+                    imgEl.style.display = 'block';
+                    fallbackEl.style.display = 'none';
+                }
+            };
+
+            // Se a imagem falhar ao carregar no src, reativa as letras
+            imgEl.onerror = () => {
+                imgEl.style.display = 'none';
+                fallbackEl.style.display = 'flex';
+            };
+
+            // 3. Obtém recursivamente a URL, assincronamente se necessário!
+            let avatarUrl = c.otherPhoto;
+
+            if (!avatarUrl && window.SocialBridge) {
+                const friend = window.SocialBridge.getFriends().find(f => f.id === c.otherUid);
+                if (friend && friend.avatarUrl) avatarUrl = friend.avatarUrl;
+            }
+
+            if (!avatarUrl && window.pmGetPhoto) {
+                avatarUrl = window.pmGetPhoto(c.otherUid);
+            }
+
+            if (avatarUrl && avatarUrl.startsWith('http')) {
+                // Se já temos sincronamente
+                applyAvatarUrl(avatarUrl);
+            } else if (window.pmFetchPhoto) {
+                // Última cartada: fetch na source root dos usuários
+                window.pmFetchPhoto(c.otherUid).then(fetchedUrl => {
+                    if (fetchedUrl && fetchedUrl.startsWith('http')) applyAvatarUrl(fetchedUrl);
+                }).catch(() => { });
             }
 
             const infoWrap = document.createElement('div');
@@ -461,17 +587,9 @@ window.SocialPanel = (function () {
             infoWrap.appendChild(nameEl);
             infoWrap.appendChild(msgPreview);
 
-            const openProfile = (e) => {
-                e.stopPropagation();
-                close();
-                if (window.openProfilePopup) {
-                    window.openProfilePopup({ id: c.otherUid, name: c.otherName, handle: c.otherName, photo: c.otherPhoto }, 'social', e);
-                }
-            };
-            avWrap.style.cursor = 'pointer';
-            avWrap.onclick = openProfile;
-            infoWrap.style.cursor = 'pointer';
-            infoWrap.onclick = openProfile;
+            // Removida a substituição de clique pelo ProfilePopup.
+            // O próprio item tratará a abertura do chat.
+            // Para ver o perfil, o usuário clicará no cabeçalho do chat.
 
             // Substituído o item completo por apenas a setinha visual ali para a mensagem ou icone
             const actionBtn = document.createElement('button');
@@ -479,9 +597,17 @@ window.SocialPanel = (function () {
             actionBtn.title = 'Abrir Conversa';
             actionBtn.textContent = '💬'; // ou usar outro icone para diferenciar da aba de amigos. Mantido chat pra harmonia
             actionBtn.onclick = (e) => {
+                e.preventDefault();
                 e.stopPropagation();
-                close();
-                if (window.pmOpenChatWith) window.pmOpenChatWith(c.otherUid, c.otherName, c.otherPhoto);
+                openChatView(c.otherUid, c.otherName, c.otherPhoto);
+            };
+
+            // Todo card é clicável
+            item.style.cursor = 'pointer';
+            item.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                openChatView(c.otherUid, c.otherName, c.otherPhoto);
             };
 
             item.appendChild(avWrap);
@@ -504,7 +630,9 @@ window.SocialPanel = (function () {
         open,
         close,
         switchTab,
-        refreshData
+        refreshData,
+        openChatView,
+        closeChatView
     };
 
 })();

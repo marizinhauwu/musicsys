@@ -59,6 +59,11 @@ function _upeFillForm(p) {
   set('upe-bio', d.bio || '');
   set('upe-story', d.story || '');
   set('upe-availability', d.availability || 'available');
+
+  // Presence status
+  const savedPresence = d.presenceStatus || 'online';
+  window._upePresenceStatus = savedPresence;
+  if (typeof upeSetPresence === 'function') upeSetPresence(savedPresence);
   set('upe-youtube', d.links?.youtube || '');
   set('upe-spotify', d.links?.spotify || '');
   set('upe-discord', d.links?.discord || '');
@@ -320,6 +325,7 @@ window.upeSave = async function () {
     experience: window._myTalentProfile?.experience || [],
     contact: window._myTalentProfile?.contact || '',
     location: window._myTalentProfile?.location || '',
+    presenceStatus: window._upePresenceStatus || 'online',
     isPublic: true,
     updatedAt: new Date().toISOString(),
   };
@@ -460,6 +466,7 @@ window.upeGetProfileForDisplay = function (p) {
     badges: p.badges || { earned: [], locked: [] },
     links: p.links || p.social || {},
     languages: p.languages || [],
+    presenceStatus: p.presenceStatus || 'offline',
   };
 };
 

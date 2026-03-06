@@ -52,7 +52,8 @@ window.FriendsAPI = {
                         username: data.handle || doc.id.substring(0, 8),
                         displayName: data.name || 'Sem nome artístico',
                         avatar: data.photo || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' rx='12' fill='%23181820'/%3E%3Ctext x='40' y='46' text-anchor='middle' font-size='28' fill='%23333'%3E👤%3C/text%3E%3C/svg%3E",
-                        relationship: myRelationships[doc.id] || "none"
+                        relationship: myRelationships[doc.id] || "none",
+                        presenceStatus: data.presenceStatus || 'offline'
                     });
                 }
             });
@@ -192,7 +193,8 @@ window.FriendsAPI = {
                     username: pData.handle || otherUid.substring(0, 8),
                     displayName: pData.name || 'Usuário Sem Nome',
                     avatar: pData.photo || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' rx='12' fill='%23181820'/%3E%3Ctext x='40' y='46' text-anchor='middle' font-size='28' fill='%23333'%3E👤%3C/text%3E%3C/svg%3E",
-                    relationship: relType
+                    relationship: relType,
+                    presenceStatus: pData.presenceStatus || 'offline'
                 });
             }
             return results;
@@ -230,7 +232,8 @@ window.FriendsAPI = {
                     username: pData.handle || otherUid.substring(0, 8),
                     displayName: pData.name || 'Usuário Sem Nome',
                     avatar: pData.photo || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' rx='12' fill='%23181820'/%3E%3Ctext x='40' y='46' text-anchor='middle' font-size='28' fill='%23333'%3E👤%3C/text%3E%3C/svg%3E",
-                    relationship: 'friend'
+                    relationship: 'friend',
+                    presenceStatus: pData.presenceStatus || 'offline'
                 });
             }
             return results;

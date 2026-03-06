@@ -166,6 +166,22 @@
     }
 }
 
+/* ── Sobrescrita pro pm-chat-view roubado pro social-panel ── */
+#fs-sp-view-chat #pm-chat-view {
+    height: 100% !important;
+    border-radius: 0 0 16px 16px !important;
+    border: none !important;
+    background: transparent !important;
+}
+
+#fs-sp-view-chat #pm-chat-input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+
+
 /* ── Lista de Usuários/Conversas ── */
 .fs-sp-list {
     display: flex;
@@ -235,13 +251,16 @@
     background-color: var(--green, #72efdd);
 }
 
-.fs-sp-status.dnd {
+.fs-sp-status.dnd,
+.fs-sp-status.busy {
     background-color: var(--a1, #ff3cb4);
 }
 
-.fs-sp-status.idle {
+.fs-sp-status.idle,
+.fs-sp-status.away {
     background-color: var(--yellow, #ffc83c);
 }
+
 
 /* ── Info do usuário ── */
 .fs-sp-user-info {

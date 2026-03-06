@@ -505,13 +505,17 @@ window.openFullProfile = function (data, context) {
   }
   document.getElementById('fp-banner-mesh').style.background = data.bannerMesh || '';
 
-  // Banner pills
+  // Presence indicator (bolinha de status Discord-style)
+  const presenceStatus = data.presenceStatus || 'offline';
+  const fpPresenceDot = document.getElementById('fp-presence-dot');
+  if (fpPresenceDot) {
+    fpPresenceDot.className = 'user-status status-' + presenceStatus;
+  }
+
+  // Banner pills (sem pill de disponibilidade — agora usa bolinha)
   const pillsEl = document.getElementById('fp-banner-pills');
   const pills = [];
   if (data.location) pills.push({ l: '📍 ' + data.location });
-  if (avail === 'open' || avail === 'available') pills.push({ l: '● DISPONÍVEL', c: 'var(--green)', b: 'rgba(114,239,221,0.25)' });
-  else if (avail === 'part_time') pills.push({ l: '● PARCIAL', c: 'var(--yellow)', b: 'rgba(255,200,60,0.25)' });
-  else if (avail === 'busy') pills.push({ l: '● OCUPADO', c: 'var(--yellow)', b: 'rgba(255,200,60,0.25)' });
   pillsEl.innerHTML = pills.map(p => `<span class="fp-banner-pill-new" style="${p.c ? `color:${p.c};border-color:${p.b}` : ''}">${p.l}</span>`).join('');
 
   // Avatar
@@ -553,30 +557,72 @@ window.openFullProfile = function (data, context) {
     return `<span class="fp-role-badge-new" style="background:var(--input-bg);border:1px solid var(--border);color:var(--text2)">${lbl}</span>`;
   }).join('') || '<span style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">Sem habilidades</span>');
 
-  // Actions
+  // ── Actions: Menu de 3 pontos + Amizade (regras de exibição) ────
   const actionsEl = document.getElementById('fp-actions-new');
-  let actionsHtml = '';
-
-  // Chat: when viewing someone else with a uid
-  if (data.uid && data.uid !== currentUser?.uid) {
-    actionsHtml += `<button class="fp-btn-ghost-new" onclick="fpClose();openMessageModal('${data.uid}','${(data.name || '').replace(/'/g, "\\'")}')">💬 Mensagem</button>`;
-  }
-
-  // Direct invite (owners only)
+  const isOwnProfile = data.uid && data.uid === currentUser?.uid;
   const amOwner = (window._myTeams || []).some(t => t.members?.find(m => m.uid === (window._appCurrentUser?.uid || currentUser?.uid))?.role === 'owner');
-  if (data.uid && data.uid !== currentUser?.uid && amOwner) {
-    actionsHtml += `<button class="fp-btn-ghost-new" onclick="ppOpenInviteModal(_ppCurrentData)">🔗 Convidar para Equipe</button>`;
-  }
 
-  // Rate reputation (owners in team context only, not self)
-  if (data.uid && data.uid !== currentUser?.uid && amOwner) {
-    actionsHtml += `<button class="fp-btn-ghost-new" onclick="ppOpenRateModal(_ppCurrentData)">⭐ Avaliar</button>`;
-  }
+  if (isOwnProfile) {
+    // ── Perfil próprio: botão Editar Perfil ──
+    actionsEl.innerHTML = `<div class="fp-actions-row">
+      <button class="fp-edit-profile-btn" onclick="fpClose();openUnifiedProfileEdit()">✏ Editar Perfil</button>
+    </div>`;
+  } else if (data.uid) {
+    // ── Perfil de outro: botão amizade + menu ⋯ ──
+    let friendBtnHtml = '';
+    let isFriendNow = false;
+    // Check friendship (sync first, fallback async)
+    if (window.SocialBridge && typeof window.SocialBridge.isFriend === 'function') {
+      isFriendNow = window.SocialBridge.isFriend(data.uid);
+    }
+    if (!isFriendNow) {
+      friendBtnHtml = `<button class="fp-friend-btn" id="fp-friend-btn" onclick="fpAddFriend('${data.uid}','${escHtml((data.name || '').replace(/'/g, "\\'"))}')">+ Adicionar amigo</button>`;
+    } else {
+      friendBtnHtml = `<button class="fp-friend-btn is-friend" id="fp-friend-btn">✓ Amigos</button>`;
+    }
 
-  if (_ppCurrentContext === 'team' && data.collabId && typeof canAdmin === 'function' && canAdmin()) {
-    actionsHtml += `<button class="fp-btn-ghost-new" onclick="fpClose();editCollab('${data.collabId}')">✏️ Editar</button>`;
+    // Build dots menu items
+    let menuItems = '';
+    menuItems += `<button class="fp-dots-menu-item" onclick="fpClose();openMessageModal('${data.uid}','${escHtml((data.name || '').replace(/'/g, "\\'"))}')">💬 Mensagem</button>`;
+    if (amOwner) {
+      menuItems += `<button class="fp-dots-menu-item" onclick="ppOpenInviteModal(_ppCurrentData)">🔗 Convidar para Equipe</button>`;
+      menuItems += `<button class="fp-dots-menu-item" onclick="ppOpenRateModal(_ppCurrentData)">⭐ Avaliar</button>`;
+    }
+    if (isFriendNow) {
+      menuItems += `<div class="fp-dots-menu-sep"></div>`;
+      menuItems += `<button class="fp-dots-menu-item danger" onclick="fpRemoveFriend('${data.uid}')">💔 Desfazer amizade</button>`;
+    }
+    if (_ppCurrentContext === 'team' && data.collabId && typeof canAdmin === 'function' && canAdmin()) {
+      menuItems += `<div class="fp-dots-menu-sep"></div>`;
+      menuItems += `<button class="fp-dots-menu-item" onclick="fpClose();editCollab('${data.collabId}')">✏️ Editar membro</button>`;
+    }
+
+    actionsEl.innerHTML = `<div class="fp-actions-row">
+      ${friendBtnHtml}
+      <button class="fp-dots-btn" onclick="fpToggleDotsMenu(event)" title="Mais opções">⋯</button>
+      <div class="fp-dots-menu" id="fp-dots-menu">${menuItems}</div>
+    </div>`;
+
+    // Async friendship check update (in case cache wasn't ready)
+    if (window.SocialBridge && typeof window.SocialBridge.isFriendAsync === 'function') {
+      window.SocialBridge.isFriendAsync(data.uid).then(isFriend => {
+        const btn = document.getElementById('fp-friend-btn');
+        if (!btn) return;
+        if (isFriend && !btn.classList.contains('is-friend')) {
+          btn.className = 'fp-friend-btn is-friend';
+          btn.textContent = '✓ Amigos';
+          btn.onclick = null;
+          // Add "Desfazer amizade" to menu if not already there
+          const menu = document.getElementById('fp-dots-menu');
+          if (menu && !menu.querySelector('.danger')) {
+            menu.insertAdjacentHTML('beforeend', `<div class="fp-dots-menu-sep"></div><button class="fp-dots-menu-item danger" onclick="fpRemoveFriend('${data.uid}')">💔 Desfazer amizade</button>`);
+          }
+        }
+      }).catch(() => { });
+    }
+  } else {
+    actionsEl.innerHTML = '<div style="font-size:11px;color:var(--text3)">—</div>';
   }
-  actionsEl.innerHTML = actionsHtml || '<div style="font-size:11px;color:var(--text3)">—</div>';
 
   // Stats
   const statsGrid = document.getElementById('fp-stats-new');
@@ -643,26 +689,68 @@ window.openFullProfile = function (data, context) {
     })();
   }
 
-  // Skill bars
+  // ── Skill bars — FIX: sempre carrega do Firestore com UID do DONO do perfil ──
   const skillsEl = document.getElementById('fp-skills-new');
-  const skillBars = data.skillBars || [];
-  if (skillBars.length) {
-    skillsEl.innerHTML = skillBars.map(s => `
-      <div class="fp-skill-row-new">
-        <div class="fp-skill-name-new">${s.n}</div>
-        <div class="fp-skill-bar-bg-new"><div class="fp-skill-bar-new" style="width:${s.w}%"></div></div>
-        <div class="fp-skill-lvl-new">${s.l}</div>
-      </div>`).join('');
-  } else if (roles.length) {
-    // Gera barras básicas a partir dos roles
-    skillsEl.innerHTML = roles.slice(0, 5).map(r => {
-      const lbl = _ppRoleLabel(r).replace(/^[^\s]+ /, '');
-      return `<div class="fp-skill-row-new">
-        <div class="fp-skill-name-new">${lbl}</div>
-        <div class="fp-skill-bar-bg-new"><div class="fp-skill-bar-new" style="width:65%"></div></div>
-        <div class="fp-skill-lvl-new">Médio</div>
-      </div>`;
-    }).join('');
+  // Mostra placeholder enquanto carrega
+  skillsEl.innerHTML = '<div style="font-family:var(--font-mono);font-size:10px;color:var(--text3)">Carregando habilidades...</div>';
+  if (data.uid) {
+    (async () => {
+      try {
+        // CRITICAL FIX: usar data.uid (dono do perfil) e NÃO currentUser.uid
+        const tpSnap = await getDoc(doc(db, 'talent_profiles', data.uid));
+        let profileSkills = null;
+        let profileRoles = roles;
+        if (tpSnap.exists()) {
+          const tpData = tpSnap.data();
+          profileSkills = tpData.skillBars || tpData.skills || null;
+          if (tpData.roles && tpData.roles.length) profileRoles = tpData.roles;
+          else if (tpData.skills && typeof tpData.skills === 'object' && !Array.isArray(tpData.skills)) {
+            profileRoles = Object.keys(tpData.skills);
+          }
+        }
+        // Renderiza skill bars
+        if (profileSkills && Array.isArray(profileSkills) && profileSkills.length) {
+          skillsEl.innerHTML = profileSkills.map(s => `
+            <div class="fp-skill-row-new">
+              <div class="fp-skill-name-new">${s.n || s.name || ''}</div>
+              <div class="fp-skill-bar-bg-new"><div class="fp-skill-bar-new" style="width:${s.w || s.level || 50}%"></div></div>
+              <div class="fp-skill-lvl-new">${s.l || s.label || ''}</div>
+            </div>`).join('');
+        } else if (profileSkills && typeof profileSkills === 'object' && !Array.isArray(profileSkills)) {
+          // Object format { skillName: level }
+          const entries = Object.entries(profileSkills);
+          if (entries.length) {
+            const lvlMap = { beginner: 30, intermediate: 55, advanced: 75, expert: 95 };
+            const lvlLabel = { beginner: 'Iniciante', intermediate: 'Médio', advanced: 'Avançado', expert: 'Expert' };
+            skillsEl.innerHTML = entries.slice(0, 8).map(([sk, lv]) => {
+              const pct = typeof lv === 'number' ? lv : (lvlMap[lv] || 50);
+              const label = typeof lv === 'string' ? (lvlLabel[lv] || lv) : '';
+              return `<div class="fp-skill-row-new">
+                <div class="fp-skill-name-new">${_ppRoleLabel(sk).replace(/^[^\s]+ /, '')}</div>
+                <div class="fp-skill-bar-bg-new"><div class="fp-skill-bar-new" style="width:${pct}%"></div></div>
+                <div class="fp-skill-lvl-new">${label}</div>
+              </div>`;
+            }).join('');
+          } else {
+            skillsEl.innerHTML = '<div class="fp-empty-state">Sem habilidades cadastradas</div>';
+          }
+        } else if (profileRoles.length) {
+          skillsEl.innerHTML = profileRoles.slice(0, 5).map(r => {
+            const lbl = _ppRoleLabel(r).replace(/^[^\s]+ /, '');
+            return `<div class="fp-skill-row-new">
+              <div class="fp-skill-name-new">${lbl}</div>
+              <div class="fp-skill-bar-bg-new"><div class="fp-skill-bar-new" style="width:65%"></div></div>
+              <div class="fp-skill-lvl-new">Médio</div>
+            </div>`;
+          }).join('');
+        } else {
+          skillsEl.innerHTML = '<div class="fp-empty-state">Sem habilidades cadastradas</div>';
+        }
+      } catch (e) {
+        console.warn('[Profile] Skills load error:', e);
+        skillsEl.innerHTML = '<div class="fp-empty-state">Sem habilidades cadastradas</div>';
+      }
+    })();
   } else {
     skillsEl.innerHTML = '<div class="fp-empty-state">Sem habilidades cadastradas</div>';
   }
@@ -781,17 +869,21 @@ window.openFullProfile = function (data, context) {
     document.getElementById('fp-badges-preview-card').style.display = 'none';
   }
 
-  // Activity (recente)
-  const actEl = document.getElementById('fp-activity-new');
-  const activity = data.activity || [];
-  actEl.innerHTML = activity.length
-    ? activity.slice(0, 5).map(a => `
-        <div class="fp-activity-item-new">
-          <div class="fp-activity-icon-new">${a.i}</div>
-          <div class="u-flex1">${a.t}</div>
-          <div class="fp-activity-time-new">${a.when}</div>
-        </div>`).join('')
-    : '<div class="fp-empty-state"><div class="fp-empty-state-icon">📭</div>Nenhuma atividade recente.</div>';
+  // ── Feed de Lançamentos (substitui atividade recente) ──────────
+  const launchesFeed = document.getElementById('fp-launches-feed');
+  const launchAddArea = document.getElementById('fp-launch-add-area');
+  if (launchesFeed) {
+    launchesFeed.innerHTML = '<div style="font-family:var(--font-mono);font-size:10px;color:var(--text3)">Carregando lançamentos...</div>';
+    fpLoadLaunches(data.uid);
+  }
+  // Botão de adicionar lançamento — apenas para o dono do perfil
+  if (launchAddArea) {
+    if (isOwnProfile) {
+      launchAddArea.innerHTML = `<div class="fp-launch-add-btn" onclick="openModal('modal-fp-launch')">+ Novo Lançamento</div>`;
+    } else {
+      launchAddArea.innerHTML = '';
+    }
+  }
 
   // Portfolio tab
   const portfolioEl = document.getElementById('fp-portfolio-new');
@@ -839,6 +931,7 @@ window.openFullProfile = function (data, context) {
     : '';
 
   // Activity timeline
+  const activity = data.activity || [];
   document.getElementById('fp-activity-timeline-new').innerHTML = activity.length
     ? activity.map(a => `
         <div class="fp-activity-item-new">
@@ -858,7 +951,156 @@ window.openFullProfile = function (data, context) {
 
 window.fpClose = function () {
   document.getElementById('fp-overlay-new').classList.remove('open');
+  // Close dots menu if open
+  const menu = document.getElementById('fp-dots-menu');
+  if (menu) menu.classList.remove('open');
 };
+
+// ── Toggle dots menu (⋯) ────────────────────────────────────────────────────
+window.fpToggleDotsMenu = function (e) {
+  e.stopPropagation();
+  const menu = document.getElementById('fp-dots-menu');
+  if (menu) menu.classList.toggle('open');
+};
+
+// Close dots menu on outside click
+document.addEventListener('click', function (e) {
+  const menu = document.getElementById('fp-dots-menu');
+  if (menu && menu.classList.contains('open')) {
+    if (!e.target.closest('.fp-dots-btn') && !e.target.closest('.fp-dots-menu')) {
+      menu.classList.remove('open');
+    }
+  }
+});
+
+// ── Add Friend ──────────────────────────────────────────────────────────────
+window.fpAddFriend = async function (uid, name) {
+  const btn = document.getElementById('fp-friend-btn');
+  if (!btn) return;
+  try {
+    btn.className = 'fp-friend-btn pending';
+    btn.textContent = '⏳ Enviando...';
+    if (window.FriendsAPI && typeof window.FriendsAPI.sendFriendRequest === 'function') {
+      await window.FriendsAPI.sendFriendRequest(uid);
+      btn.textContent = '✓ Pedido enviado';
+      if (typeof toast === 'function') toast('📨 Pedido de amizade enviado!');
+    } else {
+      throw new Error('FriendsAPI não disponível');
+    }
+  } catch (e) {
+    btn.className = 'fp-friend-btn';
+    btn.innerHTML = '+ Adicionar amigo';
+    if (typeof toast === 'function') toast('Erro: ' + e.message, 'error');
+  }
+};
+
+// ── Remove Friend ───────────────────────────────────────────────────────────
+window.fpRemoveFriend = async function (uid) {
+  if (!confirm('Deseja realmente desfazer a amizade?')) return;
+  try {
+    // Remove friendship documents from Firestore (bidirectional)
+    const curr = (window._appCurrentUser || window.currentUser)?.uid;
+    if (!curr) return;
+    const friendDocId1 = `${curr}_${uid}`;
+    const friendDocId2 = `${uid}_${curr}`;
+    try { await deleteDoc(doc(db, 'friendships', friendDocId1)); } catch (e) { }
+    try { await deleteDoc(doc(db, 'friendships', friendDocId2)); } catch (e) { }
+    // Refresh SocialBridge cache
+    if (window.SocialBridge && typeof window.SocialBridge.refreshFriendsCache === 'function') {
+      window.SocialBridge.refreshFriendsCache();
+    }
+    // Update UI
+    const btn = document.getElementById('fp-friend-btn');
+    if (btn) {
+      btn.className = 'fp-friend-btn';
+      btn.innerHTML = '+ Adicionar amigo';
+      btn.onclick = function () { fpAddFriend(uid); };
+    }
+    // Remove "Desfazer amizade" from menu
+    const menu = document.getElementById('fp-dots-menu');
+    if (menu) {
+      const dangerItem = menu.querySelector('.danger');
+      if (dangerItem) {
+        const sep = dangerItem.previousElementSibling;
+        if (sep && sep.classList.contains('fp-dots-menu-sep')) sep.remove();
+        dangerItem.remove();
+      }
+    }
+    if (typeof toast === 'function') toast('Amizade desfeita.');
+  } catch (e) {
+    if (typeof toast === 'function') toast('Erro ao desfazer amizade: ' + e.message, 'error');
+  }
+};
+
+// ── Load Launches Feed ──────────────────────────────────────────────────────
+window.fpLoadLaunches = async function (uid) {
+  const feedEl = document.getElementById('fp-launches-feed');
+  if (!feedEl || !uid) return;
+  try {
+    const q = window.query(
+      collection(db, 'profile_launches'),
+      window.where('userId', '==', uid),
+      window.orderBy('createdAt', 'desc'),
+      window.limit(10)
+    );
+    const snap = await getDocs(q);
+    if (!snap.docs.length) {
+      feedEl.innerHTML = '<div class="fp-empty-state"><div class="fp-empty-state-icon">🎧</div>Nenhum lançamento ainda.</div>';
+      return;
+    }
+    feedEl.innerHTML = snap.docs.map(d => {
+      const l = d.data();
+      const date = l.createdAt ? new Date(l.createdAt).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+      return `<div class="fp-launch-card">
+        <div class="fp-launch-title">🎧 ${escHtml(l.title || 'Sem título')}</div>
+        ${l.description ? `<div class="fp-launch-desc">${escHtml(l.description)}</div>` : ''}
+        ${l.link ? `<a class="fp-launch-link" href="${escHtml(l.link)}" target="_blank" rel="noopener">▶ Ouvir agora</a>` : ''}
+        ${date ? `<div class="fp-launch-date">${date}</div>` : ''}
+      </div>`;
+    }).join('');
+  } catch (e) {
+    console.warn('[Profile] Launches load error:', e);
+    feedEl.innerHTML = '<div class="fp-empty-state"><div class="fp-empty-state-icon">🎧</div>Nenhum lançamento ainda.</div>';
+  }
+};
+
+// ── Submit New Launch ───────────────────────────────────────────────────────
+window.fpSubmitLaunch = async function () {
+  const title = document.getElementById('fp-launch-title')?.value.trim();
+  const link = document.getElementById('fp-launch-link')?.value.trim();
+  const desc = document.getElementById('fp-launch-desc')?.value.trim();
+  if (!title) { if (typeof toast === 'function') toast('Preencha o título!', 'error'); return; }
+  const curr = (window._appCurrentUser || window.currentUser);
+  if (!curr?.uid) { if (typeof toast === 'function') toast('Você precisa estar logado.', 'error'); return; }
+  try {
+    await addDoc(collection(db, 'profile_launches'), {
+      userId: curr.uid,
+      title,
+      link: link || '',
+      description: desc || '',
+      createdAt: new Date().toISOString(),
+    });
+    // Clear form
+    if (document.getElementById('fp-launch-title')) document.getElementById('fp-launch-title').value = '';
+    if (document.getElementById('fp-launch-link')) document.getElementById('fp-launch-link').value = '';
+    if (document.getElementById('fp-launch-desc')) document.getElementById('fp-launch-desc').value = '';
+    closeModal('modal-fp-launch');
+    if (typeof toast === 'function') toast('🎧 Lançamento publicado!');
+    // Refresh feed
+    fpLoadLaunches(curr.uid);
+  } catch (e) {
+    if (typeof toast === 'function') toast('Erro: ' + e.message, 'error');
+  }
+};
+
+// ── Presence selector (edit profile) ────────────────────────────────────────
+window.upeSetPresence = function (status) {
+  document.querySelectorAll('.upe-presence-opt').forEach(el => {
+    el.classList.toggle('active', el.getAttribute('data-status') === status);
+  });
+  window._upePresenceStatus = status;
+};
+
 // ── Abre popup de equipe a partir do perfil completo ─────────────────────────
 window.fpOpenTeamPopup = function (teamId) {
   fpClose(); // fecha o perfil completo

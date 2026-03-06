@@ -221,5 +221,15 @@ service cloud.firestore {
       // Criar só se você for o "from" do pedido e se estiver no array de participantes
       allow create: if request.auth != null && request.resource.data.from == request.auth.uid && request.auth.uid in request.resource.data.participants;
     }
+
+    // ── Lançamentos do Perfil (Feed de Lançamentos) ────────────────────────
+    match /profile_launches/{launchId} {
+      // Qualquer autenticado pode ler (perfil público)
+      allow read: if request.auth != null;
+      // Apenas o dono do lançamento pode criar (userId deve ser o próprio)
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      // Apenas o dono pode editar ou deletar
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
   }
 }
