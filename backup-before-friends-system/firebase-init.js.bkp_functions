@@ -230,15 +230,6 @@ function getEffectivePlanForUser(userOrUid) {
     return { plan: 'free', source: 'base' };
   }
 
-  // Cross-reference: se docData não tem planOverride mas é o usuário logado,
-  // usar currentUserData (fonte de verdade com planOverride do onSnapshot).
-  // Isso corrige o bug onde dados de talent_profiles (sem planOverride)
-  // faziam o badge ADVANCED desaparecer no perfil do próprio usuário.
-  if (!docData.planOverride && typeof currentUserData !== 'undefined' && currentUserData &&
-    docData.uid && docData.uid === currentUserData.uid && currentUserData.planOverride) {
-    docData = currentUserData;
-  }
-
   // Check Override
   if (docData.planOverride) {
     try {
@@ -987,27 +978,6 @@ function renderPlanChip(planInfoOrString, style = 'inline') {
 }
 window.renderPlanChip = renderPlanChip;
 
-/**
- * Renderiza o chip de cargo/role da equipe (Admin, Staff, Moderator, Support).
- */
-function renderRoleChip(roleStr) {
-  const r = (roleStr || '').toLowerCase().trim();
-  if (r === 'admin') {
-    return `<span class="role-chip admin"><span class="rc-icon">⭐</span> ADMIN</span>`;
-  }
-  if (r === 'staff') {
-    return `<span class="role-chip staff"><span class="rc-icon">🛡️</span> STAFF</span>`;
-  }
-  if (r === 'moderator') {
-    return `<span class="role-chip moderator"><span class="rc-icon">🔨</span> MODERADOR</span>`;
-  }
-  if (r === 'support') {
-    return `<span class="role-chip support"><span class="rc-icon">🎧</span> SUPORTE</span>`;
-  }
-  return '';
-}
-window.renderRoleChip = renderRoleChip;
-
 // Retrocompat wrappers mapping to unified logic
 function getPlanLabel(planOrDoc) {
   const p = typeof planOrDoc === 'object' ? getEffectivePlanForUser(planOrDoc).plan : (planOrDoc || 'free').toLowerCase();
@@ -1030,26 +1000,9 @@ window.refreshPlanUI = function () {
     const headerRoleEl = document.getElementById('header-role');
     if (headerRoleEl) {
       const effectivePlanInfo = getEffectivePlanForUser(currentUserData);
-
-      // Usa a nova função de badges para os cargos, com fallback textual para roles da equipe (admin, editor, viewer)
-      let roleHtml = renderRoleChip(currentUserData?.staffRole);
-      if (!roleHtml) {
-        const roleText = ({ admin: '⭐ Admin (Equipe)', editor: '✏️ Editor', viewer: '👁️ Viewer' })[currentUserData?.role] || '';
-        roleHtml = roleText ? `<span>${window.escHtml ? window.escHtml(roleText) : roleText}</span>` : '';
-      }
-
+      const roleLabel = ({ admin: '\u2B50 Admin', editor: '\u270F\uFE0F Editor', viewer: '\uD83D\uDC41 Viewer' })[currentUserData?.role] || '';
       const planChipHtml = renderPlanChip(effectivePlanInfo, 'inline');
-
-      // Adiciona o badge de role e depois o planChip
-      const combinedHtml = (roleHtml ? roleHtml : '') + (planChipHtml ? (roleHtml ? ' ' : '') + planChipHtml : '');
-      headerRoleEl.innerHTML = combinedHtml;
-      if (combinedHtml) {
-        headerRoleEl.style.display = 'flex';
-        headerRoleEl.style.alignItems = 'center';
-        headerRoleEl.style.gap = '4px';
-      } else {
-        headerRoleEl.style.display = 'none';
-      }
+      headerRoleEl.innerHTML = (roleLabel ? `<span>${window.escHtml ? window.escHtml(roleLabel) : roleLabel}</span>` : '') + (planChipHtml ? ' ' + planChipHtml : '');
     }
   }
 
@@ -1176,33 +1129,12 @@ const db = getFirestore(fbApp);
 const auth = getAuth(fbApp);
 const gProvider = new GoogleAuthProvider();
 
-// ─── INTEGRAÇÃO DISCORD DIRETA (Bot API) ──────────────────────────────────────
-const BOT_API_URL = 'http://localhost:3000'; // Em produção: https://sua-url-do-bot.onrender.com
-
-// Helpers para comunicação cliente->bot
-async function _botApiCall(endpoint, payload = {}) {
-  const currentUser = auth.currentUser;
-  if (!currentUser) throw new Error('unauthenticated');
-
-  const token = await currentUser.getIdToken();
-  const res = await fetch(`${BOT_API_URL}${endpoint}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify({ data: payload })
-  });
-
-  const responseData = await res.json();
-  if (!res.ok) throw new Error(responseData.error || 'Erro na comunicação com o Bot');
-
-  return { data: responseData };
-}
-
-window._callLinkDiscord = (payload) => _botApiCall('/link-account', payload);
-window._callUnlinkDiscord = () => _botApiCall('/unlink-account', {});
-window._callNotifyBot = (payload) => _botApiCall('/events', payload);
+// ─── CLOUD FUNCTIONS (Discord Integration) ────────────────────────────────────
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-functions.js";
+const _fbFunctions = getFunctions(fbApp);
+window._callLinkDiscord = httpsCallable(_fbFunctions, 'linkDiscordAccount');
+window._callUnlinkDiscord = httpsCallable(_fbFunctions, 'unlinkDiscordAccount');
+window._callNotifyBot = httpsCallable(_fbFunctions, 'notifyDiscordBot');
 
 // Expose Firebase functions to non-module scripts
 window.db = db;
@@ -2616,44 +2548,21 @@ function _mdrLoadDashboard() {
 }
 
 // Aplicar role de staff via drawer
-window.mdrSetStaffRole = async function () {
-  const inputVal = (document.getElementById('mdr-staff-uid')?.value || '').trim();
+window.mdrSetStaffRole = function () {
+  const uid = (document.getElementById('mdr-staff-uid')?.value || '').trim();
   const role = document.getElementById('mdr-staff-role')?.value || '';
-  if (!inputVal) { toast('Informe o UID ou @username do usuário.', 'error'); return; }
-
-  let actualUid = inputVal;
-
-  if (inputVal.startsWith('@')) {
-    const handleTag = inputVal.substring(1).toLowerCase();
-    try {
-      if (typeof showLoading === 'function') showLoading('Buscando usuário...');
-      const q = query(collection(db, 'users'), where('handle', '==', handleTag));
-      const snap = await getDocs(q);
-      if (typeof hideLoading === 'function') hideLoading();
-
-      if (snap.empty) {
-        toast(`Usuário ${inputVal} não foi encontrado no banco.`, 'error');
-        return;
-      }
-      actualUid = snap.docs[0].id;
-    } catch (e) {
-      if (typeof hideLoading === 'function') hideLoading();
-      toast('Erro ao buscar usuário: ' + e.message, 'error');
-      return;
-    }
-  }
-
+  if (!uid) { toast('Informe o UID do usuário.', 'error'); return; }
   // Delega para função existente se disponível, senão faz diretamente
   if (typeof masterSetStaffRole === 'function') {
     // Copia valores para os inputs antigos se existirem, então chama
     const oldUid = document.getElementById('master-staff-uid');
     const oldRole = document.getElementById('master-staff-role');
-    if (oldUid) oldUid.value = actualUid;
+    if (oldUid) oldUid.value = uid;
     if (oldRole) oldRole.value = role;
     masterSetStaffRole();
   } else {
     // Fallback direto
-    const userRef = doc(db, 'users', actualUid);
+    const userRef = doc(db, 'users', uid);
     updateDoc(userRef, { staffRole: role })
       .then(() => { toast(role ? `Role "${role}" aplicada.` : 'Role removida.', 'success'); _mdrLoadDashboard(); })
       .catch(e => toast('Erro: ' + e.message, 'error'));
@@ -4884,10 +4793,10 @@ window.refreshStaffNav = refreshStaffNav;
 
 // P4-A: Carrega Painel Master
 // loadAdminMasterPage() — mantido para retrocompat (masterSetStaffRole chama no final)
-// Delega para _mdrLoadDashboard() que é a implementação real.
+// Delega para _masterLoadDashboard() que é a implementação real.
 function loadAdminMasterPage() {
   if (!isStaff()) { toast('Acesso restrito a staff.', 'error'); return; }
-  _mdrLoadDashboard();
+  _masterLoadDashboard();
 }
 
 // openAdminMasterPanel / closeAdminMasterPanel — aliases para retrocompat
@@ -5396,31 +5305,18 @@ function _tsUpdateUserBar() {
     if (ud?.photoURL) av.innerHTML = `<img src="${escHtml(ud.photoURL)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
     else av.textContent = (ud?.name || currentUser?.email || '?')[0].toUpperCase();
   }
-  // PATCH 5.4A — nome isolado para suporte ao ellipsis, com badges movidas para o ts-plan-value
+  // PATCH 5.4A — nome apenas no nameEl; chip inline via renderPlanInlineChip (sistema novo)
+  // Remove: fallback p.toUpperCase(), texto manual PRO/ADVANCED, classes legadas plan-pro-val etc.
   const nameEl = document.getElementById('ts-user-name');
   if (nameEl) {
     const uname = ud?.name || currentUser?.email || '—';
-    nameEl.textContent = uname;
+    const p = resolveUserPlan(ud);
+    const chip = (typeof renderPlanInlineChip === 'function') ? renderPlanInlineChip(p) : '';
+    nameEl.innerHTML = `<span style="font-weight:700">${escHtml(uname)}</span>${chip}`;
   }
-
-  // Utiliza o #ts-plan-value para acomodar os badges sem serem cortados por limites de texto
+  // Garante que #ts-plan-value (elemento legado) permaneça oculto e sem texto
   const planEl = document.getElementById('ts-plan-value');
-  if (planEl) {
-    const p = typeof getEffectivePlanForUser === 'function' ? getEffectivePlanForUser(ud) : ud;
-    const planChip = typeof renderPlanChip === 'function' ? renderPlanChip(p, 'inline') : '';
-    const roleChip = typeof renderRoleChip === 'function' ? renderRoleChip(ud?.staffRole) : '';
-
-    const combinedChips = (roleChip ? roleChip : '') + (planChip ? (roleChip ? ' ' : '') + planChip : '');
-    if (combinedChips) {
-      planEl.innerHTML = combinedChips;
-      planEl.style.display = 'flex';
-      planEl.style.alignItems = 'center';
-      planEl.style.gap = '4px';
-    } else {
-      planEl.innerHTML = '';
-      planEl.style.display = 'none';
-    }
-  }
+  if (planEl) { planEl.textContent = ''; planEl.style.display = 'none'; planEl.className = 'ump-plan'; }
   // Show PM button
   const tsPm = document.getElementById('ts-pm-btn');
   if (tsPm) tsPm.style.display = 'flex';
@@ -5989,8 +5885,7 @@ function applyPermissions() {
   if (usernameEl && window._myTalentProfile?.name) usernameEl.textContent = window._myTalentProfile.name;
   // PATCH 5.3B — #header-role: role label + plan chip via sistema novo (renderPlanChip)
   // Utilizamos a função centralizada refreshPlanUI() para unificar as tags da sidebar.
-  const planInfo = typeof getEffectivePlanForUser === 'function' ? getEffectivePlanForUser(ud) : ud;
-  const plan = planInfo ? planInfo.plan : 'free';
+  const plan = resolveUserPlan(ud);
   if (typeof refreshPlanUI === 'function') {
     refreshPlanUI();
   }

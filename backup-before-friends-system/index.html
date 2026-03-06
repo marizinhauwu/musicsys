@@ -88,8 +88,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Figtree:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=mmeik1h5">
-  <link rel="stylesheet" href="css/friends.css?v=mmeik1h5">
+  <link rel="stylesheet" href="css/main.css?v=mme4hlib">
 </head>
 
 <body>
@@ -982,10 +981,6 @@
       <div class="ts-nav-item ts-s3" onclick="showTalentsStandalone()">
         <span style="font-size:15px">🔍</span><span>Procurar Equipe</span>
       </div>
-      <!-- Amigos -->
-      <div class="ts-nav-item ts-s3" onclick="openModal('modal-friends')">
-        <span style="font-size:15px">🌍</span><span>Amigos e Rede</span>
-      </div>
 
       <!-- Painel Master — visível apenas para staff (isStaff()) -->
       <div id="ts-staff-section" style="display:none">
@@ -1393,48 +1388,6 @@
     </div>
   </div>
 
-  <!-- MODAL AMIGOS (MÓDULO) -->
-  <div class="modal-overlay hidden" id="modal-friends" style="z-index: 10001;">
-    <div class="modal" style="max-width:600px;padding:0;background:transparent;box-shadow:none;border:none">
-      <button class="close-btn" onclick="closeModal('modal-friends')"
-        style="top:16px;right:16px;z-index:10;color:var(--text);background:var(--bg3);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border)">×</button>
-      <div class="fs-friends-container" style="margin:0;width:100%;max-width:100%">
-        <header class="fs-friends-header">
-          <h2 class="fs-friends-title">Buscar e Adicionar</h2>
-          <p class="fs-friends-subtitle">Conecte-se com produtores, vocais e artistas encontrando pelo @nome</p>
-        </header>
-        <nav class="fs-friends-tabs">
-          <div class="fs-tab fs-active" id="fs-tab-search">Busca</div>
-          <div class="fs-tab" id="fs-tab-requests">Pedidos</div>
-          <div class="fs-tab" id="fs-tab-friends">Amigos</div>
-        </nav>
-        <div class="fs-tab-content fs-active" id="fs-content-search">
-          <div class="fs-friends-search-area">
-            <div class="fs-friends-input-wrapper">
-              <span class="fs-friends-input-icon">@</span>
-              <input type="text" id="fs-friends-search-input" class="fs-friends-input"
-                placeholder="Digite o usuário de quem deseja adicionar...">
-              <div class="fs-friends-loading-spinner" id="fs-friends-search-spinner"></div>
-            </div>
-          </div>
-          <div class="fs-friends-results" id="fs-friends-results">
-            <div class="fs-state-empty">Digite o @username para buscar...</div>
-          </div>
-        </div>
-        <div class="fs-tab-content" id="fs-content-requests">
-          <div class="fs-friends-results" id="fs-friends-requests-list"></div>
-        </div>
-        <div class="fs-tab-content" id="fs-content-friends">
-          <div class="fs-friends-results" id="fs-friends-friends-list"></div>
-        </div>
-        <div class="fs-toast" id="fs-friends-toast">
-          <i>🔔</i>
-          <span id="fs-friends-toast-msg">Mensagem padrão</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
 
   <!-- SIDEBAR -->
@@ -1485,9 +1438,6 @@
       </button>
 
       <div class="nav-section-label">Configurações</div>
-      <button class="nav-btn" onclick="openModal('modal-friends')">
-        <span class="nav-icon">🌍</span> <span class="nav-btn-label">Amigos</span>
-      </button>
       <button class="nav-btn" onclick="openSettingsModal()">
         <span class="nav-icon">⚙</span> <span class="nav-btn-label">Configurações Gerais</span>
       </button>
@@ -3746,8 +3696,8 @@
     onerror="console.warn('[FREQsys] Google GSI client não carregou (normal em ambiente local). Autenticação YouTube indisponível.')"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <!-- Script auxiliar landing (executado antes do módulo) -->
-  <script src="js/landing.js?v=mmeik1h5"></script>
-  <script type="module" src="js/firebase-init.js?v=mmeik1h5"></script>
+  <script src="js/landing.js?v=mme4hlib"></script>
+  <script type="module" src="js/firebase-init.js?v=mme4hlib"></script>
 
   <!-- ═══════════════════════════════════════════════════════
      TEAM PROFILE MODAL
@@ -4243,7 +4193,7 @@
       </div>
     </div>
   </div>
-  <script src="js/spotlight.js?v=mmeik1h5"></script>
+  <script src="js/spotlight.js?v=mme4hlib"></script>
 
   <!-- ═══════════════════════════════════════════════════════
      PROFILE POPUP OVERLAY (Discord-style mini card)
@@ -4510,7 +4460,7 @@
     </div>
   </div>
 
-  <script src="js/profile-popup.js?v=mmeik1h5"></script>
+  <script src="js/profile-popup.js?v=mme4hlib"></script>
 
 
   <!-- ══ PRIVATE MESSAGING SYSTEM ══ -->
@@ -4665,7 +4615,7 @@
 
 
 
-  <script src="js/profile-edit.js?v=mmeik1h5"></script>
+  <script src="js/profile-edit.js?v=mme4hlib"></script>
   <!-- ═══════════════════════════════════════════════════════
      UNIFIED PROFILE EDIT MODAL
      ═══════════════════════════════════════════════════════ -->
@@ -4844,7 +4794,7 @@
   <div class="toast-container" id="toasts"></div>
 
   <!-- ══ MATCH SYSTEM v2 ══ -->
-  <script src="js/match-system.js?v=mmeik1h5"></script>
+  <script src="js/match-system.js?v=mme4hlib"></script>
 
 
 
@@ -5216,11 +5166,7 @@
   </div>
 
 
-  <script src="js/global-match-listener.js?v=mmeik1h5"></script>
-
-  <!-- FREQsys Friends Module -->
-  <script src="js/modules/friends/friends-api.js?v=mmeik1h5"></script>
-  <script src="js/modules/friends/friends-ui.js?v=mmeik1h5"></script>
+  <script src="js/global-match-listener.js?v=mme4hlib"></script>
 
 </body>
 
