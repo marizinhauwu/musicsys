@@ -293,18 +293,19 @@ window.SocialPanel = (function () {
 
         friendsListEl.innerHTML = '<div class="fs-sp-empty"><span class="fs-sp-empty-text">Carregando amigos...</span></div>';
 
-        // Usa o SocialBridge cache se existir e estiver populado
+        if (!window.FriendsAPI) {
+            friendsListEl.innerHTML = '<div class="fs-sp-empty"><span class="fs-sp-empty-text">Sistema de Amigos offline.</span></div>';
+            return;
+        }
+
         let friends = [];
-        if (window.SocialBridge && window.SocialBridge.getFriendsCache) {
-            friends = Array.from(window.SocialBridge.getFriendsCache() || []);
-            // Como a cache guarda só IDs, precisamos do FriendsAPI
-            if (friends.length > 0 && window.FriendsAPI) {
-                const fullList = await window.FriendsAPI.getFriendsList();
-                friends = fullList.filter(u => u.status === 'friends');
-            }
-        } else if (window.FriendsAPI) {
+        try {
             const fullList = await window.FriendsAPI.getFriendsList();
             friends = fullList.filter(u => u.status === 'friends');
+        } catch (error) {
+            console.error('[SocialPanel] Erro ao buscar API de amigos', error);
+            friendsListEl.innerHTML = '<div class="fs-sp-empty"><span class="fs-sp-empty-text">Falha de conexão.<br>Tente abrir o painel novamente.</span></div>';
+            return;
         }
 
         if (friends.length === 0) {
