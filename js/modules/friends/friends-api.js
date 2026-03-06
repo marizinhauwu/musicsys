@@ -113,6 +113,7 @@ window.FriendsAPI = {
 
     /**
      * Aceita um pedido recebido.
+     * Retorna os dados do usuário aceito para o caller poder usar diretamente.
      */
     acceptFriendRequest: async (targetUserId) => {
         const myUid = window.currentUser ? window.currentUser.uid : null;
@@ -126,7 +127,26 @@ window.FriendsAPI = {
                 status: 'accepted',
                 updatedAt: serverTimestamp()
             });
-            return { success: true, status: 'friend' };
+
+            // Busca perfil do amigo aceito para retornar ao caller
+            let userData = { id: targetUserId, displayName: 'Amigo', avatar: '', username: '' };
+            try {
+                const profileSnap = await getDoc(doc(window.db, 'talent_profiles', targetUserId));
+                if (profileSnap.exists()) {
+                    const pd = profileSnap.data();
+                    userData = {
+                        id: targetUserId,
+                        displayName: pd.name || 'Amigo',
+                        avatar: pd.photo || '',
+                        username: pd.handle || ''
+                    };
+                }
+            } catch (profileErr) {
+                // Não-crítico — usa fallback
+                console.warn('[FriendsAPI] Perfil do amigo aceito indisponível:', profileErr);
+            }
+
+            return { success: true, status: 'friend', userData };
         } catch (e) {
             console.error("Erro acceptFriendRequest:", e);
             return { success: false };

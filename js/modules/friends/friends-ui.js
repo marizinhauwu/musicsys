@@ -138,6 +138,7 @@ const FriendsUI = (() => {
         users.forEach(user => {
             const card = document.createElement('div');
             card.className = 'fs-user-card';
+            card.setAttribute('data-user-id', user.id);
 
             const infoHtml = `
                 <img src="${user.avatar}" class="fs-user-avatar" alt="Avatar" style="cursor:pointer" onclick="window.openProfilePopup({ id: '${user.id}', name: '${user.displayName}', handle: '${user.username}', photo: '${user.avatar}'}, 'friend', event)">
@@ -209,6 +210,23 @@ const FriendsUI = (() => {
             showToast('Amizade aceita!', true);
             if (context === 'search') handleSearch(DOM.searchInput.value.trim());
             if (context === 'requests') loadRequests();
+            loadFriends(); // Atualiza lista de amigos
+
+            // ── SOCIAL BRIDGE: notifica o módulo social para abrir chat ──
+            // Usa os dados retornados diretamente por acceptFriendRequest (sem buscar lista inteira)
+            try {
+                if (window.SocialBridge && typeof window.SocialBridge.onFriendshipAccepted === 'function') {
+                    const ud = res.userData || {};
+                    window.SocialBridge.onFriendshipAccepted(
+                        userId,
+                        ud.displayName || 'Amigo',
+                        ud.avatar || ''
+                    );
+                }
+            } catch (bridgeErr) {
+                // Silencia — o aceite já funcionou, bridge é opcional
+                console.warn('[SocialBridge] onFriendshipAccepted fallback:', bridgeErr);
+            }
         }
     };
 

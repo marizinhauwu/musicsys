@@ -187,16 +187,20 @@ window.SocialPanel = (function () {
                 const item = document.createElement('div');
                 item.className = 'fs-sp-user-item';
 
+                const displayName = user.displayName || user.name || user.username || 'Usuário';
+                const avatarUrl = user.avatar || user.photoURL;
+                const relationship = user.relationship || user.status || 'none';
+
                 // Content wrap
                 const avWrap = document.createElement('div');
                 avWrap.className = 'fs-sp-avatar-wrap';
 
                 // Fallback para caso sem foto
-                const letterObj = (user.name || user.username || '?').charAt(0).toUpperCase();
+                const letterObj = displayName.charAt(0).toUpperCase();
 
-                if (user.photoURL) {
+                if (avatarUrl && !avatarUrl.startsWith('data:image/svg')) {
                     const img = document.createElement('img');
-                    img.src = user.photoURL;
+                    img.src = avatarUrl;
                     img.className = 'fs-sp-avatar';
                     img.onerror = function () {
                         this.replaceWith(createFallbackAvatar(letterObj));
@@ -211,7 +215,7 @@ window.SocialPanel = (function () {
 
                 const nameEl = document.createElement('div');
                 nameEl.className = 'fs-sp-user-name';
-                nameEl.textContent = user.name || user.username;
+                nameEl.textContent = displayName;
 
                 const handleEl = document.createElement('div');
                 handleEl.className = 'fs-sp-msg-preview';
@@ -221,25 +225,36 @@ window.SocialPanel = (function () {
                 infoWrap.appendChild(nameEl);
                 infoWrap.appendChild(handleEl);
 
+                // Clique para abrir o perfil sobrepõe o painel
+                const openProfile = (e) => {
+                    e.stopPropagation();
+                    close();
+                    if (window.openProfilePopup) {
+                        window.openProfilePopup({ id: user.id, name: displayName, handle: user.username, photo: avatarUrl }, 'social', e);
+                    }
+                };
+                avWrap.style.cursor = 'pointer';
+                avWrap.onclick = openProfile;
+                infoWrap.style.cursor = 'pointer';
+                infoWrap.onclick = openProfile;
+
                 const actionWrap = document.createElement('div');
                 actionWrap.style.flexShrink = '0';
 
                 // Determina o status para exibir o botão correto
-                if (user.isFriend || user.status === 'friends') {
+                if (relationship === 'friend' || relationship === 'friends') {
                     const btn = document.createElement('button');
-                    btn.className = 'fs-sp-btn-pending';
-                    btn.style.color = 'var(--green)';
-                    btn.style.borderColor = 'var(--green)';
-                    btn.textContent = 'Amigo';
+                    btn.className = 'fs-sp-item-action';
+                    btn.title = 'Mensagem';
+                    btn.textContent = '💬';
+                    btn.onclick = (e) => { e.stopPropagation(); close(); if (window.pmOpenChatWith) window.pmOpenChatWith(user.id, displayName, avatarUrl); };
                     actionWrap.appendChild(btn);
-
-                    item.onclick = () => { close(); window.pmOpenChatWith(user.id, user.name || user.username, user.photoURL); };
-                } else if (user.status === 'pending_sent') {
+                } else if (relationship === 'sent' || relationship === 'pending_sent') {
                     const btn = document.createElement('button');
                     btn.className = 'fs-sp-btn-pending';
                     btn.textContent = 'Enviado';
                     actionWrap.appendChild(btn);
-                } else if (user.status === 'pending_received') {
+                } else if (relationship === 'received' || relationship === 'pending_received') {
                     const btn = document.createElement('button');
                     btn.className = 'fs-sp-btn-add';
                     btn.textContent = 'Responder';
@@ -324,21 +339,20 @@ window.SocialPanel = (function () {
             // Em ambiente real conectaria com presence API.
             const isOnline = true; // Hardcoded como online pra visual premium. Pode ser puxado se houver no userData
 
+            const displayName = f.displayName || f.name || f.username || 'Usuário';
+            const avatarUrl = f.avatar || f.photoURL;
+
             const item = document.createElement('div');
             item.className = 'fs-sp-user-item';
-            item.onclick = () => {
-                close();
-                if (window.pmOpenChatWith) window.pmOpenChatWith(f.id, f.name || f.username, f.photoURL);
-            };
 
             const avWrap = document.createElement('div');
             avWrap.className = 'fs-sp-avatar-wrap';
 
-            const letterObj = (f.name || f.username || '?').charAt(0).toUpperCase();
+            const letterObj = displayName.charAt(0).toUpperCase();
 
-            if (f.photoURL) {
+            if (avatarUrl && !avatarUrl.startsWith('data:image/svg')) {
                 const img = document.createElement('img');
-                img.src = f.photoURL;
+                img.src = avatarUrl;
                 img.className = 'fs-sp-avatar';
                 img.onerror = function () {
                     this.replaceWith(createFallbackAvatar(letterObj));
@@ -356,17 +370,34 @@ window.SocialPanel = (function () {
             infoWrap.className = 'fs-sp-user-info';
             const nameEl = document.createElement('div');
             nameEl.className = 'fs-sp-user-name';
-            nameEl.textContent = f.name || f.username;
+            nameEl.textContent = displayName;
             const msgPreview = document.createElement('div');
             msgPreview.className = 'fs-sp-msg-preview';
             msgPreview.textContent = 'Amigo conectado';
             infoWrap.appendChild(nameEl);
             infoWrap.appendChild(msgPreview);
 
+            const openProfile = (e) => {
+                e.stopPropagation();
+                close();
+                if (window.openProfilePopup) {
+                    window.openProfilePopup({ id: f.id, name: displayName, handle: f.username, photo: avatarUrl }, 'social', e);
+                }
+            };
+            avWrap.style.cursor = 'pointer';
+            avWrap.onclick = openProfile;
+            infoWrap.style.cursor = 'pointer';
+            infoWrap.onclick = openProfile;
+
             const actionBtn = document.createElement('button');
             actionBtn.className = 'fs-sp-item-action';
             actionBtn.title = 'Mensagem';
             actionBtn.textContent = '💬';
+            actionBtn.onclick = (e) => {
+                e.stopPropagation();
+                close();
+                if (window.pmOpenChatWith) window.pmOpenChatWith(f.id, displayName, avatarUrl);
+            };
 
             item.appendChild(avWrap);
             item.appendChild(infoWrap);
@@ -396,10 +427,6 @@ window.SocialPanel = (function () {
         convs.forEach(c => {
             const item = document.createElement('div');
             item.className = 'fs-sp-user-item';
-            item.onclick = () => {
-                close();
-                if (window.pmOpenChatWith) window.pmOpenChatWith(c.otherUid, c.otherName, c.otherPhoto);
-            };
 
             const unreadCount = c.unread || 0;
             const previewText = c.lastMsg ? c.lastMsg.substring(0, 30) + (c.lastMsg.length > 30 ? '...' : '') : '—';
@@ -409,7 +436,7 @@ window.SocialPanel = (function () {
 
             const letterObj = (c.otherName || '?').charAt(0).toUpperCase();
 
-            if (c.otherPhoto) {
+            if (c.otherPhoto && !c.otherPhoto.startsWith('data:image/svg')) {
                 const img = document.createElement('img');
                 img.src = c.otherPhoto;
                 img.className = 'fs-sp-avatar';
@@ -434,8 +461,32 @@ window.SocialPanel = (function () {
             infoWrap.appendChild(nameEl);
             infoWrap.appendChild(msgPreview);
 
+            const openProfile = (e) => {
+                e.stopPropagation();
+                close();
+                if (window.openProfilePopup) {
+                    window.openProfilePopup({ id: c.otherUid, name: c.otherName, handle: c.otherName, photo: c.otherPhoto }, 'social', e);
+                }
+            };
+            avWrap.style.cursor = 'pointer';
+            avWrap.onclick = openProfile;
+            infoWrap.style.cursor = 'pointer';
+            infoWrap.onclick = openProfile;
+
+            // Substituído o item completo por apenas a setinha visual ali para a mensagem ou icone
+            const actionBtn = document.createElement('button');
+            actionBtn.className = 'fs-sp-item-action';
+            actionBtn.title = 'Abrir Conversa';
+            actionBtn.textContent = '💬'; // ou usar outro icone para diferenciar da aba de amigos. Mantido chat pra harmonia
+            actionBtn.onclick = (e) => {
+                e.stopPropagation();
+                close();
+                if (window.pmOpenChatWith) window.pmOpenChatWith(c.otherUid, c.otherName, c.otherPhoto);
+            };
+
             item.appendChild(avWrap);
             item.appendChild(infoWrap);
+            item.appendChild(actionBtn);
 
             if (unreadCount > 0) {
                 const unreadBadge = document.createElement('div');
