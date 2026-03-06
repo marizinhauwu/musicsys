@@ -1,0 +1,79 @@
+/**
+ * social.css — v2.0 HARDENED
+ * ═══════════════════════════════════════════════════════════════
+ * Estilos complementares para o módulo Social Bridge.
+ * Namespace isolado: fs-social-* para não conflitar com CSS existente.
+ *
+ * COMO REMOVER:
+ * Deletar <link href="css/social.css"> do index.html.
+ * ═══════════════════════════════════════════════════════════════
+ */
+
+/* ── Botão Chat nos cards de amigos ── */
+.fs-social-chat-btn {
+    background: linear-gradient(135deg, var(--a1, #ff3cb4), var(--a2, #ff6b3d)) !important;
+    border: none !important;
+    color: #fff !important;
+    font-family: var(--font-mono, 'Fira Code', monospace) !important;
+    font-size: 10px !important;
+    letter-spacing: 0.5px !important;
+    padding: 6px 14px !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap !important;
+}
+
+.fs-social-chat-btn:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(255, 60, 180, 0.3) !important;
+    filter: brightness(1.1) !important;
+}
+
+.fs-social-chat-btn:active {
+    transform: translateY(0) !important;
+    filter: brightness(0.95) !important;
+}
+
+/* ── Toast de sucesso social (override para fs-toast) ── */
+.fs-toast.fs-toast-success {
+    border-color: rgba(114, 239, 221, 0.5) !important;
+    box-shadow: 0 4px 20px rgba(114, 239, 221, 0.15) !important;
+}
+
+/* ── Badge "Amigo" com indicador de chat disponível ── */
+.fs-social-friend-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-family: var(--font-mono, 'Fira Code', monospace);
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: var(--green, #72efdd);
+    background: rgba(114, 239, 221, 0.08);
+    border: 1px solid rgba(114, 239, 221, 0.25);
+}
+
+/* ── Animação sutil de "novo amigo" ── */
+@keyframes fs-social-pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(114, 239, 221, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 0 6px rgba(114, 239, 221, 0);
+    }
+}
+
+.fs-social-new-friend {
+    animation: fs-social-pulse 1.5s ease-in-out 3;
+}
+
+/* ── Proteção: botão chat não aparece duplicado ── */
+.fs-user-actions .fs-social-chat-btn~.fs-social-chat-btn {
+    display: none !important;
+}
