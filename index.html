@@ -88,8 +88,10 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Figtree:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=mmeik1h5">
-  <link rel="stylesheet" href="css/friends.css?v=mmeik1h5">
+  <link rel="stylesheet" href="css/main.css?v=mmenkg9e">
+  <link rel="stylesheet" href="css/friends.css?v=mmenkg9e">
+  <link rel="stylesheet" href="css/social.css?v=mmenkg9e">
+  <link rel="stylesheet" href="css/social-panel.css?v=mmenkg9e">
 </head>
 
 <body>
@@ -984,7 +986,7 @@
       </div>
       <!-- Amigos -->
       <div class="ts-nav-item ts-s3" onclick="openModal('modal-friends')">
-        <span style="font-size:15px">🌍</span><span>Amigos e Rede</span>
+        <span style="font-size:15px">🌍</span><span>Social</span>
       </div>
 
       <!-- Painel Master — visível apenas para staff (isStaff()) -->
@@ -1486,7 +1488,7 @@
 
       <div class="nav-section-label">Configurações</div>
       <button class="nav-btn" onclick="openModal('modal-friends')">
-        <span class="nav-icon">🌍</span> <span class="nav-btn-label">Amigos</span>
+        <span class="nav-icon">🌍</span> <span class="nav-btn-label">Social</span>
       </button>
       <button class="nav-btn" onclick="openSettingsModal()">
         <span class="nav-icon">⚙</span> <span class="nav-btn-label">Configurações Gerais</span>
@@ -3746,8 +3748,8 @@
     onerror="console.warn('[FREQsys] Google GSI client não carregou (normal em ambiente local). Autenticação YouTube indisponível.')"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <!-- Script auxiliar landing (executado antes do módulo) -->
-  <script src="js/landing.js?v=mmeik1h5"></script>
-  <script type="module" src="js/firebase-init.js?v=mmeik1h5"></script>
+  <script src="js/landing.js?v=mmenkg9e"></script>
+  <script type="module" src="js/firebase-init.js?v=mmenkg9e"></script>
 
   <!-- ═══════════════════════════════════════════════════════
      TEAM PROFILE MODAL
@@ -4243,7 +4245,7 @@
       </div>
     </div>
   </div>
-  <script src="js/spotlight.js?v=mmeik1h5"></script>
+  <script src="js/spotlight.js?v=mmenkg9e"></script>
 
   <!-- ═══════════════════════════════════════════════════════
      PROFILE POPUP OVERLAY (Discord-style mini card)
@@ -4510,7 +4512,7 @@
     </div>
   </div>
 
-  <script src="js/profile-popup.js?v=mmeik1h5"></script>
+  <script src="js/profile-popup.js?v=mmenkg9e"></script>
 
 
   <!-- ══ PRIVATE MESSAGING SYSTEM ══ -->
@@ -4554,7 +4556,8 @@
 
     <!-- Bubble trigger -->
     <div style="position:relative">
-      <button class="pm-bubble" onclick="pmToggle()" title="Mensagens Privadas" id="pm-bubble-btn" style="font-size:0">
+      <button class="pm-bubble" onclick="try{window.SocialPanel.toggle()}catch(e){pmToggle()}"
+        title="Social & Mensagens" id="pm-bubble-btn" style="font-size:0">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="white" style="flex-shrink:0">
           <path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z" />
         </svg>
@@ -4653,7 +4656,8 @@
       <div class="pm-inbox-right hidden" id="pm-inbox-right">
         <div class="pm-rp-banner" id="pm-rp-banner">
           <div class="pm-rp-av-wrap">
-            <div class="pm-rp-av" id="pm-rp-av" style="background:linear-gradient(135deg,var(--a1),var(--a2))"></div>
+            <div class="pm-rp-av" id="pm-rp-av" style="background:linear-gradient(135deg,var(--a1),var(--a2))">
+            </div>
           </div>
         </div>
         <div class="pm-rp-body" id="pm-rp-body">
@@ -4665,7 +4669,7 @@
 
 
 
-  <script src="js/profile-edit.js?v=mmeik1h5"></script>
+  <script src="js/profile-edit.js?v=mmenkg9e"></script>
   <!-- ═══════════════════════════════════════════════════════
      UNIFIED PROFILE EDIT MODAL
      ═══════════════════════════════════════════════════════ -->
@@ -4701,7 +4705,8 @@
               onchange="upeHandlePhoto(this)">
             <div style="flex:1;padding-bottom:6px">
               <div id="upe-preview-name"
-                style="font-family:var(--font-body);font-size:15px;font-weight:800;color:var(--text2)">Seu nome</div>
+                style="font-family:var(--font-body);font-size:15px;font-weight:800;color:var(--text2)">Seu nome
+              </div>
               <div id="upe-preview-role" style="font-family:var(--font-mono);font-size:10px;color:var(--text3)">Sua
                 função principal</div>
             </div>
@@ -4731,7 +4736,8 @@
             <div class="upe-char-count"><span id="upe-bio-count">0</span>/200</div>
           </div>
           <div class="upe-form-group" style="margin-bottom:12px">
-            <label class="upe-label">MINHA HISTÓRIA <span style="color:var(--text3)">(perfil completo)</span></label>
+            <label class="upe-label">MINHA HISTÓRIA <span style="color:var(--text3)">(perfil
+                completo)</span></label>
             <textarea class="upe-textarea" id="upe-story" maxlength="500" rows="4"
               placeholder="Sua trajetória, o que te inspira..."
               oninput="upeCountChars('upe-story','upe-story-count',500)"></textarea>
@@ -4844,7 +4850,7 @@
   <div class="toast-container" id="toasts"></div>
 
   <!-- ══ MATCH SYSTEM v2 ══ -->
-  <script src="js/match-system.js?v=mmeik1h5"></script>
+  <script src="js/match-system.js?v=mmenkg9e"></script>
 
 
 
@@ -4889,7 +4895,8 @@
           <div class="match-empty-hero">
             <div style="font-size:52px;margin-bottom:16px">👥</div>
             <div class="match-hero-title">VOCÊ PRECISA DE UMA EQUIPE</div>
-            <div class="match-hero-sub">Apenas membros de equipes podem buscar talentos.<br>Crie ou entre em uma equipe
+            <div class="match-hero-sub">Apenas membros de equipes podem buscar talentos.<br>Crie ou entre em uma
+              equipe
               para começar.</div>
           </div>
         </div>
@@ -4899,7 +4906,8 @@
           <div class="match-empty-hero">
             <div style="font-size:52px;margin-bottom:16px">🎨</div>
             <div class="match-hero-title">Crie seu Perfil de Talento</div>
-            <div class="match-hero-sub">Antes de buscar equipes, crie seu perfil para que as equipes também possam te
+            <div class="match-hero-sub">Antes de buscar equipes, crie seu perfil para que as equipes também possam
+              te
               encontrar.<br>Leva menos de 2 minutos!</div>
             <button class="match-cta-btn" onclick="matchOpenMyProfile()">✨ CRIAR MEU PERFIL</button>
           </div>
@@ -4914,7 +4922,8 @@
               EQUIPE</button>
             <button class="match-vbtn" id="match-vbtn-artist" onclick="matchSwitchView('artist')">🎤 VISÃO DO
               ARTISTA</button>
-            <button class="match-vbtn" id="match-vbtn-matches" onclick="matchSwitchView('matches')">💛 MATCHES</button>
+            <button class="match-vbtn" id="match-vbtn-matches" onclick="matchSwitchView('matches')">💛
+              MATCHES</button>
           </div>
           <div class="match-view match-view-active" id="match-view-team">
             <div class="match-two-col">
@@ -5004,7 +5013,8 @@
               <div class="match-panel">
                 <div class="match-panel-hdr">
                   <div class="match-panel-title">
-                    <div class="match-panel-icon" style="background:linear-gradient(135deg,#ffc83c,#ff6b35)">💛</div>
+                    <div class="match-panel-icon" style="background:linear-gradient(135deg,#ffc83c,#ff6b35)">💛
+                    </div>
                     Interesses Enviados
                   </div>
                   <span id="match-sent-badge"
@@ -5041,7 +5051,8 @@
               <div class="match-panel">
                 <div class="match-panel-hdr">
                   <div class="match-panel-title">
-                    <div class="match-panel-icon" style="background:linear-gradient(135deg,var(--a1),#ff8c00)">🎤</div>
+                    <div class="match-panel-icon" style="background:linear-gradient(135deg,var(--a1),#ff8c00)">🎤
+                    </div>
                     <div>
                       <div>Caixa de Interesses</div>
                       <div
@@ -5108,7 +5119,8 @@
               <div class="match-panel">
                 <div class="match-panel-hdr">
                   <div class="match-panel-title">
-                    <div class="match-panel-icon" style="background:linear-gradient(135deg,#ffc83c,#ff6b35)">💛</div>
+                    <div class="match-panel-icon" style="background:linear-gradient(135deg,#ffc83c,#ff6b35)">💛
+                    </div>
                     Seus Matches
                   </div>
                   <span id="match-total-badge"
@@ -5127,7 +5139,8 @@
                   <div id="match-flow-steps" style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
                     <div class="match-flow-step"><span class="match-flow-icon">💛</span>
                       <div>
-                        <div style="font-size:11px;font-weight:700;margin-bottom:2px">Equipe demonstra interesse</div>
+                        <div style="font-size:11px;font-weight:700;margin-bottom:2px">Equipe demonstra interesse
+                        </div>
                         <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">Artista recebe
                           notificação</div>
                       </div>
@@ -5149,7 +5162,8 @@
                       <div>
                         <div style="font-size:11px;font-weight:700;margin-bottom:2px;color:var(--a3)">MATCH! Chat
                           desbloqueado</div>
-                        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">Conversa + convite
+                        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">Conversa +
+                          convite
                           formal</div>
                       </div>
                     </div>
@@ -5158,7 +5172,8 @@
                       style="border-color:rgba(60,255,200,.2);background:rgba(60,255,200,.04)"><span
                         class="match-flow-icon">✅</span>
                       <div>
-                        <div style="font-size:11px;font-weight:700;margin-bottom:2px;color:var(--green)">Artista entra
+                        <div style="font-size:11px;font-weight:700;margin-bottom:2px;color:var(--green)">Artista
+                          entra
                           na equipe</div>
                         <div style="font-family:var(--font-mono);font-size:9px;color:var(--text3)">Convite aceito →
                           membro confirmado</div>
@@ -5216,11 +5231,33 @@
   </div>
 
 
-  <script src="js/global-match-listener.js?v=mmeik1h5"></script>
+  <script src="js/global-match-listener.js?v=mmenkg9e"></script>
 
   <!-- FREQsys Friends Module -->
-  <script src="js/modules/friends/friends-api.js?v=mmeik1h5"></script>
-  <script src="js/modules/friends/friends-ui.js?v=mmeik1h5"></script>
+  <script src="js/modules/friends/friends-api.js?v=mmenkg9e"></script>
+  <script src="js/modules/friends/friends-ui.js?v=mmenkg9e"></script>
+
+  <!-- FREQsys Social Bridge (Amigos + Chat unificado) -->
+  <script src="js/modules/social/social-bridge.js?v=mmenkg9e"></script>
+
+  <!-- FREQsys Social Panel (Hub compacto flutuante) -->
+  <script src="js/modules/social/social-panel.js?v=mmenkg9e"></script>
+
+  <script>
+    // Failsafe: último recurso se o auto-init do social-bridge não disparou
+    // O módulo já tem auto-init com polling (10 tentativas, 500ms cada = 5s)
+    // Este bloco é um safety net que tenta UMA VEZ após 4s
+    try {
+      setTimeout(() => {
+        if (window.SocialBridge && !window.SocialBridge.__initialized && window.currentUser) {
+          window.SocialBridge.init();
+        }
+      }, 4000);
+    } catch (e) {
+      // Silencia — site não é afetado se o social falhar
+      console.error('[SocialBridge] Failsafe catch:', e);
+    }
+  </script>
 
 </body>
 

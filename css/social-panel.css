@@ -1,0 +1,447 @@
+/**
+ * social-panel.css
+ * ═══════════════════════════════════════════════════════════════
+ * Estilos para o HUB Social compacto atrelado ao botão flutuante.
+ * Interface premium glassmorphism dark, similar ao Discord/Slack.
+ * Namespace: fs-sp-*
+ * ═══════════════════════════════════════════════════════════════
+ */
+
+.fs-sp-panel {
+    position: fixed;
+    bottom: 90px;
+    right: 24px;
+    width: 360px;
+    height: 520px;
+    max-height: calc(100vh - 120px);
+    background: rgba(14, 14, 20, 0.85);
+    /* Fundo dark translúcido */
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+    display: flex;
+    flex-direction: column;
+    z-index: 9999;
+    opacity: 0;
+    transform: translateY(20px) scale(0.96);
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    background-clip: padding-box;
+}
+
+.fs-sp-panel.fs-sp-open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: all;
+}
+
+/* ── Header ── */
+.fs-sp-header {
+    flex-shrink: 0;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.fs-sp-title {
+    font-family: var(--font-body, 'Figtree', sans-serif);
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.fs-sp-title-icon {
+    font-size: 18px;
+}
+
+.fs-sp-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.fs-sp-icon-btn {
+    background: transparent;
+    border: none;
+    color: var(--text3, #888);
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+}
+
+.fs-sp-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+/* ── Corpo: Abas ── */
+.fs-sp-nav {
+    display: flex;
+    padding: 0 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.fs-sp-tab {
+    padding: 12px 16px;
+    font-family: var(--font-mono, 'Fira Code', monospace);
+    font-size: 11px;
+    color: var(--text3, #888);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+    flex: 1;
+    text-align: center;
+    letter-spacing: 0.5px;
+}
+
+.fs-sp-tab:hover {
+    color: var(--text, #ddd);
+}
+
+.fs-sp-tab.active {
+    color: var(--a1, #ff3cb4);
+    border-bottom-color: var(--a1, #ff3cb4);
+    font-weight: 600;
+}
+
+/* ── Container principal ── */
+.fs-sp-content {
+    flex: 1;
+    overflow-y: auto;
+    position: relative;
+    padding: 12px 0;
+}
+
+/* Custom Scrollbar minimalista */
+.fs-sp-content::-webkit-scrollbar {
+    width: 4px;
+}
+
+.fs-sp-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.fs-sp-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.fs-sp-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* ── Views (Abas) ── */
+.fs-sp-view {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+}
+
+.fs-sp-view.active {
+    display: flex;
+    animation: fs-sp-fade 0.2s ease forwards;
+}
+
+@keyframes fs-sp-fade {
+    from {
+        opacity: 0;
+        transform: translateX(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ── Lista de Usuários/Conversas ── */
+.fs-sp-list {
+    display: flex;
+    flex-direction: column;
+    padding: 0 12px;
+    gap: 2px;
+}
+
+.fs-sp-user-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    position: relative;
+    border: 1px solid transparent;
+}
+
+.fs-sp-user-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+/* ── Avatar e Status ── */
+.fs-sp-avatar-wrap {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+}
+
+.fs-sp-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--surface);
+}
+
+.fs-sp-avatar-fallback {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--a1), var(--a1-hover));
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+    user-select: none;
+}
+
+.fs-sp-status {
+    position: absolute;
+    bottom: -1px;
+    right: -1px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid rgba(14, 14, 20, 1);
+    background-color: var(--text3, #666);
+}
+
+.fs-sp-status.online {
+    background-color: var(--green, #72efdd);
+}
+
+.fs-sp-status.dnd {
+    background-color: var(--a1, #ff3cb4);
+}
+
+.fs-sp-status.idle {
+    background-color: var(--yellow, #ffc83c);
+}
+
+/* ── Info do usuário ── */
+.fs-sp-user-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.fs-sp-user-name {
+    font-family: var(--font-body, 'Figtree', sans-serif);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text, #fff);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+}
+
+.fs-sp-msg-preview {
+    font-family: var(--font-mono, 'Fira Code', monospace);
+    font-size: 10px;
+    color: var(--text3, #888);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 3px;
+}
+
+/* Unread Badge */
+.fs-sp-unread {
+    background: var(--a1, #ff3cb4);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    font-family: var(--font-mono, 'Fira Code', monospace);
+    padding: 2px 6px;
+    border-radius: 10px;
+    display: inline-block;
+    box-shadow: 0 0 8px rgba(255, 60, 180, 0.4);
+}
+
+/* ── Action Buttons nos items ── */
+.fs-sp-item-action {
+    opacity: 0;
+    transform: scale(0.9);
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 12px;
+}
+
+.fs-sp-user-item:hover .fs-sp-item-action {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.fs-sp-item-action:hover {
+    background: var(--a1, #ff3cb4);
+    box-shadow: 0 2px 10px rgba(255, 60, 180, 0.4);
+}
+
+/* ── Empty States ── */
+.fs-sp-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 20px;
+    text-align: center;
+    height: 100%;
+}
+
+.fs-sp-empty-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.fs-sp-empty-text {
+    font-family: var(--font-body, 'Figtree', sans-serif);
+    font-size: 13px;
+    color: var(--text2, #aaa);
+    line-height: 1.5;
+}
+
+/* ── Search Bar (Dentro da aba Amigos) ── */
+.fs-sp-search-box {
+    padding: 0 12px 12px 12px;
+}
+
+.fs-sp-search-input-wrap {
+    position: relative;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    transition: all 0.2s ease;
+}
+
+.fs-sp-search-input-wrap:focus-within {
+    border-color: rgba(255, 60, 180, 0.5);
+    box-shadow: 0 0 0 2px rgba(255, 60, 180, 0.15);
+}
+
+.fs-sp-search-input {
+    background: transparent;
+    border: none;
+    color: #fff;
+    padding: 10px 0 10px 8px;
+    font-size: 12px;
+    font-family: var(--font-body, 'Figtree', sans-serif);
+    width: 100%;
+    outline: none;
+}
+
+.fs-sp-search-input::placeholder {
+    color: var(--text3, #666);
+}
+
+/* ── Footer ── */
+.fs-sp-footer {
+    padding: 12px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 0 0 16px 16px;
+}
+
+.fs-sp-ft-btn {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text, #fff);
+    font-family: var(--font-mono, 'Fira Code', monospace);
+    font-size: 11px;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.fs-sp-ft-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* ── Botão Adicionar direto ── */
+.fs-sp-btn-add {
+    background: rgba(114, 239, 221, 0.15);
+    color: var(--green, #72efdd);
+    border: 1px solid rgba(114, 239, 221, 0.3);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-family: var(--font-mono, 'Fira Code', monospace);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.fs-sp-btn-add:hover {
+    background: rgba(114, 239, 221, 0.3);
+}
+
+.fs-sp-btn-add:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.fs-sp-btn-pending {
+    background: transparent;
+    border: 1px solid var(--text3);
+    color: var(--text3);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    pointer-events: none;
+}
+
+/* Status dots */
+.fs-sp-ping {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    display: inline-block;
+    box-shadow: 0 0 6px currentColor;
+}
