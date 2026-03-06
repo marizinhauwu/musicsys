@@ -182,7 +182,7 @@ window.SocialPanel = (function () {
         }
         titleEl.innerHTML = `
             <button onclick="event.stopPropagation(); window.SocialPanel.closeChatView()" style="background:none;border:none;color:#fff;cursor:pointer;font-size:16px;padding-right:8px;" title="Voltar">←</button>
-            <div style="display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="if(window.pmOpenProfilePanel) window.pmOpenProfilePanel('${otherUid}')">
+            <div style="display:flex;align-items:center;gap:8px;cursor:pointer;" data-uid="${otherUid}" data-name="${otherName ? otherName.replace(/"/g, '&quot;') : ''}" data-photo="${otherPhoto || ''}" onclick="if(window.openProfilePopup) { event.stopPropagation(); window.openProfilePopup({ id: this.dataset.uid, name: this.dataset.name, handle: this.dataset.name, photo: this.dataset.photo }, 'social', event); }">
                 ${otherPhoto && !otherPhoto.startsWith('data:image/svg') ? `<img src="${otherPhoto}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;">` : `<span style="font-size:14px">💬</span>`}
                 <span style="font-size:14px">${otherName || 'Chat'}</span>
             </div>
