@@ -182,7 +182,7 @@ window.SocialPanel = (function () {
         }
         titleEl.innerHTML = `
             <button onclick="event.stopPropagation(); window.SocialPanel.closeChatView()" style="background:none;border:none;color:#fff;cursor:pointer;font-size:16px;padding-right:8px;" title="Voltar">←</button>
-            <div style="display:flex;align-items:center;gap:8px;cursor:pointer;" data-uid="${otherUid}" data-name="${otherName ? otherName.replace(/"/g, '&quot;') : ''}" data-photo="${otherPhoto || ''}" onclick="if(window.openProfilePopup) { event.stopPropagation(); window.openProfilePopup({ id: this.dataset.uid, name: this.dataset.name, handle: this.dataset.name, photo: this.dataset.photo }, 'social', event); }">
+            <div style="display:flex;align-items:center;gap:8px;cursor:pointer;" data-uid="${otherUid}" data-name="${otherName ? otherName.replace(/"/g, '&quot;') : ''}" data-photo="${otherPhoto || ''}" onclick="window.SocialPanel.openProfileAsync(this.dataset.uid, this.dataset.name, this.dataset.photo, event)">
                 ${otherPhoto && !otherPhoto.startsWith('data:image/svg') ? `<img src="${otherPhoto}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;">` : `<span style="font-size:14px">💬</span>`}
                 <span style="font-size:14px">${otherName || 'Chat'}</span>
             </div>
@@ -624,6 +624,50 @@ window.SocialPanel = (function () {
         });
     }
 
+    // Função que busca dados na nuvem e abre o popup de perfil ancorando na posição original do mouse
+    async function openProfileAsync(uid, fallbackName, fallbackPhoto, ev) {
+        if (ev) ev.stopPropagation();
+        if (!window.openProfilePopup || !uid) return;
+
+        // Salva coordenadas físicas pois o objeto event original pode expirar na espera assíncrona
+        const syntheticEvent = { clientX: ev.clientX, clientY: ev.clientY };
+
+        let data = {
+            id: uid,
+            uid: uid,
+            name: fallbackName || 'Usuário',
+            handle: fallbackName ? fallbackName.replace(/\s/g, '').toLowerCase() : 'user',
+            photo: fallbackPhoto || ''
+        };
+
+        try {
+            // Se o Firebase estiver ativo, vamos buscar!
+            if (window.getDoc && window.doc && window.db) {
+                const [uSnap, tpSnap] = await Promise.all([
+                    window.getDoc(window.doc(window.db, 'users', uid)).catch(() => null),
+                    window.getDoc(window.doc(window.db, 'talent_profiles', uid)).catch(() => null)
+                ]);
+
+                const uData = uSnap && uSnap.exists() ? uSnap.data() : {};
+                const tpData = tpSnap && tpSnap.exists() ? tpSnap.data() : {};
+
+                data = {
+                    ...data,
+                    ...uData,
+                    ...tpData,
+                    name: tpData.name || uData.name || data.name,
+                    photo: tpData.photo || uData.photoURL || data.photo,
+                    bio: tpData.bio || '',
+                    roles: Object.keys(tpData.skills || {}),
+                    bannerURL: uData.bannerURL || tpData.bannerURL || '',
+                    availability: tpData.availability || 'open'
+                };
+            }
+        } catch (e) { console.warn('[SocialPanel] Erro ao buscar dados pro popup:', e); }
+
+        window.openProfilePopup(data, 'social', syntheticEvent);
+    }
+
     return {
         init,
         toggle,
@@ -632,7 +676,7 @@ window.SocialPanel = (function () {
         switchTab,
         refreshData,
         openChatView,
-        closeChatView
+        closeChatView,
+        openProfileAsync
     };
-
 })();
