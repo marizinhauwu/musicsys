@@ -564,13 +564,13 @@ window.SocialPanel = (function () {
                 avatarUrl = window.pmGetPhoto(c.otherUid);
             }
 
-            if (avatarUrl && avatarUrl.startsWith('http')) {
+            if (avatarUrl && typeof avatarUrl === 'string' && avatarUrl.trim() !== '') {
                 // Se já temos sincronamente
                 applyAvatarUrl(avatarUrl);
             } else if (window.pmFetchPhoto) {
                 // Última cartada: fetch na source root dos usuários
                 window.pmFetchPhoto(c.otherUid).then(fetchedUrl => {
-                    if (fetchedUrl && fetchedUrl.startsWith('http')) applyAvatarUrl(fetchedUrl);
+                    if (fetchedUrl && typeof fetchedUrl === 'string' && fetchedUrl.trim() !== '') applyAvatarUrl(fetchedUrl);
                 }).catch(() => { });
             }
 
