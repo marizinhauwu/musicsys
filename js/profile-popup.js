@@ -1039,17 +1039,19 @@ window.fpLoadLaunches = async function (uid) {
   try {
     const q = window.query(
       collection(db, 'profile_launches'),
-      window.where('userId', '==', uid),
-      window.orderBy('createdAt', 'desc'),
-      window.limit(10)
+      window.where('userId', '==', uid)
     );
     const snap = await getDocs(q);
-    if (!snap.docs.length) {
+
+    const launches = snap.docs.map(d => d.data());
+    launches.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    const topLaunches = launches.slice(0, 10);
+
+    if (!topLaunches.length) {
       feedEl.innerHTML = '<div class="fp-empty-state"><div class="fp-empty-state-icon">🎧</div>Nenhum lançamento ainda.</div>';
       return;
     }
-    feedEl.innerHTML = snap.docs.map(d => {
-      const l = d.data();
+    feedEl.innerHTML = topLaunches.map(l => {
       const date = l.createdAt ? new Date(l.createdAt).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
       return `<div class="fp-launch-card">
         <div class="fp-launch-title">🎧 ${escHtml(l.title || 'Sem título')}</div>
