@@ -629,7 +629,6 @@ window.SocialPanel = (function () {
         if (ev) ev.stopPropagation();
         if (!window.openProfilePopup || !uid) return;
 
-        // Salva coordenadas físicas pois o objeto event original pode expirar na espera assíncrona
         const syntheticEvent = { clientX: ev.clientX, clientY: ev.clientY };
 
         let data = {
@@ -641,7 +640,6 @@ window.SocialPanel = (function () {
         };
 
         try {
-            // Se o Firebase estiver ativo, vamos buscar!
             if (window.getDoc && window.doc && window.db) {
                 const [uSnap, tpSnap] = await Promise.all([
                     window.getDoc(window.doc(window.db, 'users', uid)).catch(() => null),
@@ -663,7 +661,9 @@ window.SocialPanel = (function () {
                     availability: tpData.availability || 'open'
                 };
             }
-        } catch (e) { console.warn('[SocialPanel] Erro ao buscar dados pro popup:', e); }
+        } catch (e) {
+            console.warn('[SocialPanel] Erro ao buscar dados pro popup:', e);
+        }
 
         window.openProfilePopup(data, 'social', syntheticEvent);
     }
@@ -679,4 +679,5 @@ window.SocialPanel = (function () {
         closeChatView,
         openProfileAsync
     };
+
 })();
