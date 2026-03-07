@@ -193,3 +193,66 @@ window.FormValidator = {
     }
 };
 // ────────────────────────────────────────────────────────────────────────────
+// ─── LOADING INDICATORS ────────────────────────────────────────────────────────
+window.showLoading = function (message = 'Carregando...') {
+    window.hideLoading();
+    const loader = document.createElement('div');
+    loader.id = 'global-loader';
+    loader.innerHTML = `
+    <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(8,8,14,0.92);
+                display:flex;align-items:center;justify-content:center;z-index:99999;backdrop-filter:blur(8px)">
+      <style>
+        @keyframes freqSplashReveal{0%{opacity:0;transform:translateY(16px) scale(0.9);letter-spacing:24px}100%{opacity:1;transform:translateY(0) scale(1);letter-spacing:4px}}
+        @keyframes freqSplashFade{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:translateY(0)}}
+        @keyframes freqLoadBar{0%{width:0%}40%{width:55%}80%{width:82%}100%{width:100%}}
+        @keyframes freqCircle{0%{opacity:0.35;transform:translate(-50%,-50%) scale(0.7)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.4)}}
+        @keyframes freqFwBar{0%,100%{transform:scaleY(1);opacity:1}50%{transform:scaleY(0.25);opacity:0.4}}
+        .freq-splash-logo{animation:freqSplashReveal 1s cubic-bezier(.16,1,.3,1) forwards;opacity:0}
+        .freq-splash-sub{animation:freqSplashFade 1s 0.5s ease-out forwards;opacity:0}
+        .freq-splash-bar-wrap{animation:freqSplashFade 0.8s 0.8s ease-out forwards;opacity:0}
+        .freq-splash-loadbar{animation:freqLoadBar 2.8s 1s ease-in-out forwards;width:0%}
+        .freq-circle-1{animation:freqCircle 3.5s 0.2s ease-out infinite}
+        .freq-circle-2{animation:freqCircle 3.5s 1s ease-out infinite}
+        .freq-circle-3{animation:freqCircle 3.5s 1.8s ease-out infinite}
+        .freq-fw-s1{animation:freqFwBar 1.2s 0s ease-in-out infinite}
+        .freq-fw-s2{animation:freqFwBar 1.2s 0.15s ease-in-out infinite}
+        .freq-fw-s3{animation:freqFwBar 1.2s 0.3s ease-in-out infinite}
+        .freq-fw-s4{animation:freqFwBar 1.2s 0.45s ease-in-out infinite}
+        .freq-fw-s5{animation:freqFwBar 1.2s 0.6s ease-in-out infinite}
+      </style>
+      <!-- circles -->
+      <div style="position:absolute;top:50%;left:50%;pointer-events:none">
+        <div class="freq-circle-1" style="position:absolute;width:220px;height:220px;border-radius:50%;border:1px solid rgba(255,60,180,0.1);transform:translate(-50%,-50%)"></div>
+        <div class="freq-circle-2" style="position:absolute;width:380px;height:380px;border-radius:50%;border:1px solid rgba(255,107,61,0.07);transform:translate(-50%,-50%)"></div>
+        <div class="freq-circle-3" style="position:absolute;width:540px;height:540px;border-radius:50%;border:1px solid rgba(255,200,60,0.05);transform:translate(-50%,-50%)"></div>
+      </div>
+      <div style="position:relative;text-align:center;z-index:1">
+        <!-- waveform icon -->
+        <div style="display:flex;align-items:center;justify-content:center;gap:4px;height:44px;margin-bottom:20px">
+          <div class="freq-fw-s1" style="width:5px;height:14px;border-radius:3px;background:linear-gradient(180deg,#ff3cb4,#ffc83c)"></div>
+          <div class="freq-fw-s2" style="width:5px;height:28px;border-radius:3px;background:linear-gradient(180deg,#ff3cb4,#ffc83c);opacity:.85"></div>
+          <div class="freq-fw-s3" style="width:5px;height:44px;border-radius:3px;background:linear-gradient(180deg,#ff3cb4,#ffc83c)"></div>
+          <div class="freq-fw-s4" style="width:5px;height:32px;border-radius:3px;background:linear-gradient(180deg,#ff3cb4,#ffc83c);opacity:.9"></div>
+          <div class="freq-fw-s5" style="width:5px;height:18px;border-radius:3px;background:linear-gradient(180deg,#ff3cb4,#ffc83c);opacity:.7"></div>
+        </div>
+        <!-- logo text -->
+        <div class="freq-splash-logo" style="font-family:'Bebas Neue',sans-serif;font-size:72px;letter-spacing:4px;background:linear-gradient(135deg,#ff3cb4 0%,#ff6b3d 50%,#ffc83c 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1">
+          FREQ<span style="font-family:'IBM Plex Mono',monospace;font-size:32px;font-weight:600;color:rgba(255,255,255,0.35);-webkit-text-fill-color:rgba(255,255,255,0.35);letter-spacing:2px;vertical-align:middle">sys</span>
+        </div>
+        <div class="freq-splash-sub" style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:5px;color:rgba(255,255,255,0.2);text-transform:uppercase;margin-top:8px">${message}</div>
+        <!-- loader bar -->
+        <div class="freq-splash-bar-wrap" style="display:flex;justify-content:center;margin-top:40px">
+          <div style="width:200px;height:2px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden">
+            <div class="freq-splash-loadbar" style="height:100%;background:linear-gradient(90deg,#ff3cb4,#ffc83c);border-radius:2px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+    document.body.appendChild(loader);
+};
+
+window.hideLoading = function () {
+    const loader = document.getElementById('global-loader');
+    if (loader) loader.remove();
+};
