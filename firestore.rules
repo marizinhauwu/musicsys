@@ -187,7 +187,8 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     match /pm_convs/{userId}/convs/{convId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      // CORREÇÃO DE SEGURANÇA: Permite que o remetente (convId) atualize a caixa de entrada do destinatário (userId)
+      allow read, write: if request.auth != null && (request.auth.uid == userId || request.auth.uid == convId);
     }
 
     // ── Notificações do usuário ────────────────────────────────────────────
