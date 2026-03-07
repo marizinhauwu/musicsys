@@ -1177,7 +1177,13 @@ const auth = getAuth(fbApp);
 const gProvider = new GoogleAuthProvider();
 
 // ─── INTEGRAÇÃO DISCORD DIRETA (Bot API) ──────────────────────────────────────
-const BOT_API_URL = 'http://localhost:3000'; // Em produção: https://sua-url-do-bot.onrender.com
+// Detecção automática de ambiente: localhost → dev, qualquer outro domínio → produção.
+// Em produção, configure a URL do bot via meta tag no index.html:
+//   <meta name="bot-api-url" content="https://sua-url-do-bot.onrender.com">
+// Ou altere a constante BOT_API_URL_PRODUCTION abaixo.
+const _isLocalhost = ['localhost', '127.0.0.1', ''].includes(window.location.hostname);
+const BOT_API_URL_PRODUCTION = document.querySelector('meta[name="bot-api-url"]')?.content || '';
+const BOT_API_URL = _isLocalhost ? 'http://localhost:3000' : BOT_API_URL_PRODUCTION;
 
 // Helpers para comunicação cliente->bot
 async function _botApiCall(endpoint, payload = {}) {
