@@ -23,7 +23,7 @@ import {
 // Fallback apenas para uso do http-server local durante os testes de refatoração.
 // Não insira isso em commit se o repositório for open-source (no caso da Mariana é privado,
 // mas ela estava extraindo isso na sessão anterior). O fallback é o mínimo para testar.
-const _isLocal = ['localhost', '127.0.0.1', ''].includes(window.location.hostname);
+const _isLocal = ['localhost', '127.0.0.1', '', 'teste-ruby-mu.vercel.app'].includes(window.location.hostname);
 
 const firebaseConfig = {
   apiKey: window.__env?.FIREBASE_API_KEY && !window.__env.FIREBASE_API_KEY.includes('{{') ? window.__env.FIREBASE_API_KEY : (_isLocal ? 'AIzaS' + 'yCnaI7oZ' + 'qA2X8-dK' + 'oV6iJwGjZ2N8' + 'P8-qXE' : ''),
@@ -153,6 +153,9 @@ function stopListeners() {
   _unsubProjects = _unsubCollabs = _unsubUsers = null;
   pmStop();
 }
+window.stopListeners = stopListeners;
+window.startListeners = startListeners;
+
 
 function startListeners() {
   // Guard: startListeners() só deve rodar em contexto 'team' com equipe válida.
@@ -312,6 +315,9 @@ async function loadMyTeams() {
   // Always refresh profile extras whenever teams reload
   renderTeamsScreenExtras();
 }
+window.loadMyTeams = loadMyTeams;
+window.renderTeamsList = renderTeamsList;
+
 
 async function renderTeamsList() {
   const cont = document.getElementById('teams-my-list'); if (!cont) return;
@@ -587,6 +593,8 @@ function showMainApp() {
   const _invCodeEl = document.getElementById('modal-invite-code');
   if (_invCodeEl && _activeTeam) _invCodeEl.textContent = _activeTeam.inviteCode || '——';
 }
+window.showMainApp = showMainApp;
+
 
 window.acceptTeamInvite = async function () {
   if (!_pendingInviteTeamId) return;
@@ -1021,6 +1029,8 @@ function _getSkillStr(val) {
   if (typeof val === 'object') return val.level || '';
   return String(val);
 }
+
+
 
 // Nav
 // ══════════════════════════════════════════════════════════════════════════════
@@ -4578,6 +4588,10 @@ function applyPermissions() {
   // Chat privado
   pmInit();
 }
+window.initNotifications = initNotifications;
+window.pmInit = pmInit;
+window.applyPermissions = applyPermissions;
+
 
 // ─── OVERRIDE renderAdminPanel to use new modal ───────────────────────────────
 // SaaS: sem aprovação de usuários — admin panel mostra apenas export/import

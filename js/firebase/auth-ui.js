@@ -7,10 +7,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 // ─── AUTH STATE ───────────────────────────────────────────────────────────────
-// Usamos as instâncias globais inicializadas no core (firebase-init.js por enquanto)
+// Usamos as instâncias globais inicializadas no core (firebase-init.js)
 // Como este arquivo é um módulo, ele roda após a inicialização se colocado na ordem correta.
-const auth = window.auth;
-const db = window.db;
+// Removidos const locais no topo para evitar 'undefined' se houver micro-atrasos.
 const gProvider = new GoogleAuthProvider();
 
 let currentUser = null;
@@ -183,99 +182,110 @@ window.doLogout = async function () {
 };
 
 // ─── AUTH STATE OBSERVER ──────────────────────────────────────────────────────
-onAuthStateChanged(window.auth, async user => {
-    if (!user) {
-        document.getElementById('auth-screen').style.display = 'block';
-        document.getElementById('pending-screen').style.display = 'none';
-        document.getElementById('teams-screen').style.display = 'none';
-        const sb = document.getElementById('sidebar'); if (sb) sb.style.display = 'none';
-        const mc = document.querySelector('.main-content'); if (mc) mc.style.display = 'none';
-        document.querySelector('.app').style.display = 'none';
-
-        window._myTalentProfile = null;
-        window._adbCurrentProfile = null;
-        currentUser = null;
-        currentUserData = null;
-        if (typeof hideLoading === 'function') hideLoading();
+const initAuthObserver = () => {
+    if (!window.auth) {
+        console.warn('[auth-ui] window.auth não encontrado. Tentando novamente em 50ms...');
+        setTimeout(initAuthObserver, 50);
         return;
     }
 
-    currentUser = user;
-    window._appCurrentUser = user;
-    if (typeof showLoading === 'function') showLoading('Carregando workspace...');
-    document.getElementById('auth-screen').style.display = 'none';
-    if (typeof hideAuthPanel === 'function') hideAuthPanel();
+    onAuthStateChanged(window.auth, async user => {
+        if (!user) {
+            document.getElementById('auth-screen').style.display = 'block';
+            document.getElementById('pending-screen').style.display = 'none';
+            document.getElementById('teams-screen').style.display = 'none';
+            const sb = document.getElementById('sidebar'); if (sb) sb.style.display = 'none';
+            const mc = document.querySelector('.main-content'); if (mc) mc.style.display = 'none';
+            document.querySelector('.app').style.display = 'none';
 
-    let userData = null;
-    try {
-        const userSnap = await getDoc(doc(window.db, 'users', user.uid));
-        if (userSnap.exists()) userData = userSnap.data();
-    } catch (e) { }
-
-    if (!userData) {
-        userData = { uid: user.uid, name: user.displayName || user.email, email: user.email, role: 'member', plan: 'free', status: 'approved', discordId: null, createdAt: new Date().toISOString() };
-        await setDoc(doc(window.db, 'users', user.uid), userData);
-        if (typeof _syncTalentPlan === 'function') _syncTalentPlan(user.uid, 'free').catch(() => { });
-    }
-
-    currentUserData = userData;
-
-    if (typeof getPlanConfig === 'function') {
-        const _bootPlan = getUserPlan(currentUserData);
-        const _bootConfig = getPlanConfig(_bootPlan);
-        console.info(`[PlanEngine] uid=${userData.uid} | plan=${_bootPlan}`);
-    }
-
-    if (typeof refreshEffectivePriority === 'function' && typeof userData.effectivePriority !== 'number') {
-        refreshEffectivePriority(user.uid).catch(() => { });
-    }
-
-    // Chamar inicializadores do app que ficaram no firebase-init.js (ou outros módulos)
-    if (typeof loadMyTeams === 'function') await loadMyTeams();
-
-    if (typeof hideLoading === 'function') hideLoading();
-
-    // Redirecionamento por Invite Code ou Restore Last Team
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlInviteCode = urlParams.get('code');
-
-    if (urlInviteCode) {
-        const url = new URL(window.location.href);
-        url.searchParams.delete('code');
-        window.history.replaceState({}, '', url);
-
-        const alreadyMemberTeam = window._myTeams?.find(t => t.inviteCode === urlInviteCode);
-        if (alreadyMemberTeam && typeof enterTeam === 'function') {
-            enterTeam(alreadyMemberTeam.id);
+            window._myTalentProfile = null;
+            window._adbCurrentProfile = null;
+            currentUser = null;
+            currentUserData = null;
+            if (typeof hideLoading === 'function') hideLoading();
             return;
         }
-        window._pendingInviteCode = urlInviteCode;
-        const codeInput = document.getElementById('join-team-code');
-        if (codeInput) codeInput.value = urlInviteCode;
-    }
 
-    const lastTeamId = localStorage.getItem('last_team_id');
-    if (lastTeamId && window._myTeams?.find(t => t.id === lastTeamId) && !urlInviteCode) {
-        if (typeof enterTeam === 'function') {
-            enterTeam(lastTeamId);
-            return;
+        currentUser = user;
+        window._appCurrentUser = user;
+        if (typeof showLoading === 'function') showLoading('Carregando workspace...');
+        document.getElementById('auth-screen').style.display = 'none';
+        if (typeof hideAuthPanel === 'function') hideAuthPanel();
+
+        let userData = null;
+        try {
+            const userSnap = await getDoc(doc(window.db, 'users', user.uid));
+            if (userSnap.exists()) userData = userSnap.data();
+        } catch (e) { }
+
+        if (!userData) {
+            userData = { uid: user.uid, name: user.displayName || user.email, email: user.email, role: 'member', plan: 'free', status: 'approved', discordId: null, createdAt: new Date().toISOString() };
+            await setDoc(doc(window.db, 'users', user.uid), userData);
+            if (typeof _syncTalentPlan === 'function') _syncTalentPlan(user.uid, 'free').catch(() => { });
         }
-    }
 
-    document.getElementById('pending-screen').style.display = 'none';
-    { const _s = document.getElementById('sidebar'); if (_s) _s.style.display = 'none'; }
-    { const _m = document.querySelector('.main-content'); if (_m) _m.style.display = 'none'; }
-    { const _a = document.querySelector('.app'); if (_a) _a.style.display = 'none'; }
-    document.getElementById('teams-screen').style.display = 'flex';
+        currentUserData = userData;
 
-    if (typeof renderTeamsList === 'function') renderTeamsList();
-    if (typeof renderTeamsScreenExtras === 'function') renderTeamsScreenExtras();
-    if (typeof initNotifications === 'function') initNotifications();
-    if (typeof pmInit === 'function') pmInit();
-    if (typeof intStartUserNotifListener === 'function') intStartUserNotifListener();
+        if (typeof getPlanConfig === 'function') {
+            const _bootPlan = getUserPlan(currentUserData);
+            const _bootConfig = getPlanConfig(_bootPlan);
+            console.info(`[PlanEngine] uid=${userData.uid} | plan=${_bootPlan}`);
+        }
 
-    setTimeout(() => {
+        if (typeof refreshEffectivePriority === 'function' && typeof userData.effectivePriority !== 'number') {
+            refreshEffectivePriority(user.uid).catch(() => { });
+        }
+
+        // Chamar inicializadores do app que ficaram no firebase-init.js (ou outros módulos)
+        if (typeof loadMyTeams === 'function') await loadMyTeams();
+
+        if (typeof hideLoading === 'function') hideLoading();
+
+        // Redirecionamento por Invite Code ou Restore Last Team
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlInviteCode = urlParams.get('code');
+
+        if (urlInviteCode) {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('code');
+            window.history.replaceState({}, '', url);
+
+            const alreadyMemberTeam = window._myTeams?.find(t => t.inviteCode === urlInviteCode);
+            if (alreadyMemberTeam && typeof enterTeam === 'function') {
+                enterTeam(alreadyMemberTeam.id);
+                return;
+            }
+            window._pendingInviteCode = urlInviteCode;
+            const codeInput = document.getElementById('join-team-code');
+            if (codeInput) codeInput.value = urlInviteCode;
+        }
+
+        const lastTeamId = localStorage.getItem('last_team_id');
+        if (lastTeamId && window._myTeams?.find(t => t.id === lastTeamId) && !urlInviteCode) {
+            if (typeof enterTeam === 'function') {
+                enterTeam(lastTeamId);
+                return;
+            }
+        }
+
+        document.getElementById('pending-screen').style.display = 'none';
+        { const _s = document.getElementById('sidebar'); if (_s) _s.style.display = 'none'; }
+        { const _m = document.querySelector('.main-content'); if (_m) _m.style.display = 'none'; }
+        { const _a = document.querySelector('.app'); if (_a) _a.style.display = 'none'; }
+        document.getElementById('teams-screen').style.display = 'flex';
+
+        if (typeof renderTeamsList === 'function') renderTeamsList();
         if (typeof renderTeamsScreenExtras === 'function') renderTeamsScreenExtras();
-        if (typeof intUpdateBadges === 'function') intUpdateBadges();
-    }, 1500);
-});
+        if (typeof initNotifications === 'function') initNotifications();
+        if (typeof pmInit === 'function') pmInit();
+        if (typeof intStartUserNotifListener === 'function') intStartUserNotifListener();
+
+        setTimeout(() => {
+            if (typeof renderTeamsScreenExtras === 'function') renderTeamsScreenExtras();
+            if (typeof intUpdateBadges === 'function') intUpdateBadges();
+        }, 1500);
+    });
+};
+
+// Inicia o observador
+initAuthObserver();
