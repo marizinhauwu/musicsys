@@ -1163,12 +1163,12 @@ import {
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCNlX0Q0ZItzNxRL7GP_-3VQHhR9RqyvvA",
-  authDomain: "wimusys.firebaseapp.com",
-  projectId: "wimusys",
-  storageBucket: "wimusys.firebasestorage.app",
-  messagingSenderId: "196026743376",
-  appId: "1:196026743376:web:b181b8bed49bd9c6bf2f55"
+  apiKey: window.__env?.FIREBASE_API_KEY || '',
+  authDomain: window.__env?.FIREBASE_AUTH_DOMAIN || '',
+  projectId: window.__env?.FIREBASE_PROJECT_ID || '',
+  storageBucket: window.__env?.FIREBASE_STORAGE_BUCKET || '',
+  messagingSenderId: window.__env?.FIREBASE_MESSAGING_SENDER_ID || '',
+  appId: window.__env?.FIREBASE_APP_ID || ''
 };
 
 const fbApp = initializeApp(firebaseConfig);
