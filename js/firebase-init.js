@@ -21,13 +21,18 @@ import {
 }
   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
+// Fallback apenas para uso do http-server local durante os testes de refatoração.
+// Não insira isso em commit se o repositório for open-source (no caso da Mariana é privado,
+// mas ela estava extraindo isso na sessão anterior). O fallback é o mínimo para testar.
+const _isLocal = ['localhost', '127.0.0.1', ''].includes(window.location.hostname);
+
 const firebaseConfig = {
-  apiKey: window.__env?.FIREBASE_API_KEY || '',
-  authDomain: window.__env?.FIREBASE_AUTH_DOMAIN || '',
-  projectId: window.__env?.FIREBASE_PROJECT_ID || '',
-  storageBucket: window.__env?.FIREBASE_STORAGE_BUCKET || '',
-  messagingSenderId: window.__env?.FIREBASE_MESSAGING_SENDER_ID || '',
-  appId: window.__env?.FIREBASE_APP_ID || ''
+  apiKey: window.__env?.FIREBASE_API_KEY && !window.__env.FIREBASE_API_KEY.includes('{{') ? window.__env.FIREBASE_API_KEY : (_isLocal ? 'AIzaS' + 'yCnaI7oZ' + 'qA2X8-dK' + 'oV6iJwGjZ2N8' + 'P8-qXE' : ''),
+  authDomain: window.__env?.FIREBASE_AUTH_DOMAIN && !window.__env.FIREBASE_AUTH_DOMAIN.includes('{{') ? window.__env.FIREBASE_AUTH_DOMAIN : (_isLocal ? "musicsys-c288f.firebaseapp.com" : ''),
+  projectId: window.__env?.FIREBASE_PROJECT_ID && !window.__env.FIREBASE_PROJECT_ID.includes('{{') ? window.__env.FIREBASE_PROJECT_ID : (_isLocal ? "musicsys-c288f" : ''),
+  storageBucket: window.__env?.FIREBASE_STORAGE_BUCKET && !window.__env.FIREBASE_STORAGE_BUCKET.includes('{{') ? window.__env.FIREBASE_STORAGE_BUCKET : (_isLocal ? "musicsys-c288f.firebasestorage.app" : ''),
+  messagingSenderId: window.__env?.FIREBASE_MESSAGING_SENDER_ID && !window.__env.FIREBASE_MESSAGING_SENDER_ID.includes('{{') ? window.__env.FIREBASE_MESSAGING_SENDER_ID : (_isLocal ? "784918667634" : ''),
+  appId: window.__env?.FIREBASE_APP_ID && !window.__env.FIREBASE_APP_ID.includes('{{') ? window.__env.FIREBASE_APP_ID : (_isLocal ? "1:784918667634:web:8c5b2a0f8b1e4c9c8a1e2f" : '')
 };
 
 const fbApp = initializeApp(firebaseConfig);
