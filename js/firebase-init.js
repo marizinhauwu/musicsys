@@ -24,7 +24,7 @@ import {
 // Fallback apenas para uso do http-server local durante os testes de refatoração.
 // Não insira isso em commit se o repositório for open-source (no caso da Mariana é privado,
 // mas ela estava extraindo isso na sessão anterior). O fallback é o mínimo para testar.
-const _isLocal = ['localhost', '127.0.0.1', '', 'teste-ruby-mu.vercel.app'].includes(window.location.hostname);
+const _isLocal = ['localhost', '127.0.0.1', ''].includes(window.location.hostname);
 
 const firebaseConfig = {
   apiKey: window.__env?.FIREBASE_API_KEY && !window.__env.FIREBASE_API_KEY.includes('{{') ? window.__env.FIREBASE_API_KEY : (_isLocal ? 'AIzaS' + 'yCnaI7oZ' + 'qA2X8-dK' + 'oV6iJwGjZ2N8' + 'P8-qXE' : ''),
