@@ -8,3 +8,13 @@ node_modules/
 # Ambiente e Logs
 .env
 *.log
+
+# Backups e Arquivos Temporários
+backups/
+backup-*/
+functions_backup*/
+*.bkp_functions
+*mockup*.html
+*mockup*.js
+*mockup*.css
+test*.js
