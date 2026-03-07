@@ -18,10 +18,12 @@ let currentUserData = null;
 // Sincroniza com o window para compatibilidade com outros scripts
 Object.defineProperty(window, 'currentUser', {
     get() { return currentUser; },
+    set(val) { currentUser = val; },
     configurable: true
 });
 Object.defineProperty(window, 'currentUserData', {
     get() { return currentUserData; },
+    set(val) { currentUserData = val; },
     configurable: true
 });
 
