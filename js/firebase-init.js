@@ -35,6 +35,11 @@ const db = getFirestore(fbApp);
 const auth = getAuth(fbApp);
 const gProvider = new GoogleAuthProvider();
 
+// Expoe Firebase para scripts extraídos
+window.fbApp = fbApp;
+window.db = db;
+window.auth = auth;
+
 // ─── INTEGRAÇÃO DISCORD DIRETA (Bot API) ──────────────────────────────────────
 // Detecção automática de ambiente: localhost → dev, qualquer outro domínio → produção.
 // Em produção, configure a URL do bot via meta tag no index.html:
